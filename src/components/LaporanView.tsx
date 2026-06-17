@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, UnitInfo } from '../types';
-import { ClipboardList, TrendingUp, BarChart2, Shield, DollarSign, Pill, Layers, Layers3, Activity, Download, Filter, HelpCircle, Server, FileText } from 'lucide-react';
+import { ClipboardList, TrendingUp, BarChart2, Shield, DollarSign, Pill, Layers, Layers3, Activity, Download, Filter, HelpCircle, Server, FileText, AlertCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
 interface LaporanViewProps {

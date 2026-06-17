@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Medicine, UnitInfo, StockStore, DailyUsage, DailyUsageItem } from '../types';
-import { ClipboardList, Plus, Database, Table, CheckCircle, ArrowUpRight, Zap, AlertCircle, Trash2 } from 'lucide-react';
+import { ClipboardList, Plus, Database, Table, CheckCircle, ArrowUpRight, Zap, AlertCircle, Trash2, Edit, X } from 'lucide-react';
 
 interface UsageUnitViewProps {
   medicines: Medicine[];
@@ -17,6 +17,7 @@ interface UsageUnitViewProps {
   onSetSimulationUnit: (unitId: string) => void;
   onAddUsage: (usage: DailyUsage) => void;
   onDeleteUsage?: (usageId: string) => void;
+  onUpdateUsage?: (usageId: string, updatedUsage: DailyUsage) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
 }
@@ -31,6 +32,7 @@ export default function UsageUnitView({
   onSetSimulationUnit,
   onAddUsage,
   onDeleteUsage,
+  onUpdateUsage,
   systemDate,
   onNotify,
 }: UsageUnitViewProps) {
@@ -63,6 +65,76 @@ export default function UsageUnitView({
   const satelliteUnits = useMemo(() => {
     return units.filter(u => u.id !== 'gudang');
   }, [units]);
+
+  // DAILY USAGE EDITING STATE
+  const [editingUsage, setEditingUsage] = useState<DailyUsage | null>(null);
+  const [editOfficerName, setEditOfficerName] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editItems, setEditItems] = useState<DailyUsageItem[]>([]);
+
+  // Selected item addition inside Edit Modal
+  const [editSelectedMedId, setEditSelectedMedId] = useState('');
+  const [editMSearchTerm, setEditMSearchTerm] = useState('');
+  const [editQty, setEditQty] = useState<number>(0);
+
+  const initiateEditUsage = (use: DailyUsage) => {
+    setEditingUsage(use);
+    setEditOfficerName(use.officerName);
+    setEditDate(use.date);
+    setEditItems([...use.items]);
+  };
+
+  const handleAddEditItem = () => {
+    if (!editSelectedMedId || editQty <= 0) {
+      showNotice('warning', 'Peringatan: Silakan pilih jenis obat dan tentukan volume pengeluaran/pemakaian!');
+      return;
+    }
+
+    // Check available stock in current simulated unit
+    const unitStockObj = stocks[editingUsage?.unitId || activeUnitId] || {};
+    const availableTotalSlot = unitStockObj[editSelectedMedId]?.total || 0;
+    if (editQty > availableTotalSlot) {
+      showNotice('warning', `Stok unit tidak mencukupi. Sisa stok: ${availableTotalSlot} pcs.`);
+    }
+
+    const newItem: DailyUsageItem = {
+      medicineId: editSelectedMedId,
+      qtyUsed: editQty
+    };
+
+    setEditItems([...editItems, newItem]);
+    setEditSelectedMedId('');
+    setEditQty(0);
+  };
+
+  const handleRemoveEditItem = (idx: number) => {
+    setEditItems(editItems.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveEditUsage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUsage || !onUpdateUsage) return;
+
+    if (!editOfficerName || !editDate) {
+      showNotice('error', 'Gagal menyimpan: Kolom tanggal dan nama petugas tidak boleh kosong!');
+      return;
+    }
+
+    if (editItems.length === 0) {
+      showNotice('error', 'Gagal menyimpan: Mohon masukkan minimal 1 sediaan obat yang dikeluarkan!');
+      return;
+    }
+
+    const updatedUsage: DailyUsage = {
+      ...editingUsage,
+      officerName: editOfficerName,
+      date: editDate,
+      items: editItems
+    };
+
+    onUpdateUsage(editingUsage.id, updatedUsage);
+    setEditingUsage(null);
+  };
 
   const activeUnitDetails = useMemo(() => {
     return units.find(u => u.id === activeUnitId) || units[1];
@@ -411,6 +483,16 @@ export default function UsageUnitView({
                   <div className="flex justify-between items-center text-[11px] border-b border-slate-200/50 pb-2 font-sans">
                     <div className="flex items-center gap-1.5">
                       <span className="font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 border border-slate-200 rounded">{use.id}</span>
+                      {onUpdateUsage && (activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
+                        <button
+                          onClick={() => initiateEditUsage(use)}
+                          className="p-1 text-slate-400 hover:text-emerald-650 hover:bg-emerald-50 rounded transition"
+                          title="Edit / Koreksi Laporan Pengeluaran"
+                          id={`edit-use-${use.id}`}
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {onDeleteUsage && (activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
                         <button
                           onClick={() => onDeleteUsage(use.id)}
@@ -458,6 +540,180 @@ export default function UsageUnitView({
           </div>
         </div>
       </div>
+
+      {/* PROFESSIONAL EDIT UNIT DAILY USAGE DISPENSING MODAL */}
+      {editingUsage && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="edit-usage-modal-backdrop">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in duration-200" id="edit-usage-modal-content">
+            
+            {/* Header */}
+            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-emerald-600" /> Edit / Koreksi Laporan Pengeluaran Harian
+                </h3>
+                <p className="text-[11px] text-slate-500 font-mono mt-0.5">ID Log: {editingUsage.id} &bull; Unit: {units.find(u => u.id === editingUsage.unitId)?.name || editingUsage.unitId}</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingUsage(null)}
+                className="p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body Form */}
+            <form onSubmit={handleSaveEditUsage} className="p-4 md:p-6 space-y-5 flex-1">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Nama Petugas Penanggung Jawab</label>
+                  <input
+                    type="text"
+                    value={editOfficerName}
+                    onChange={(e) => setEditOfficerName(e.target.value)}
+                    placeholder="Nama Petugas"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal Pengeluaran / Pemakaian</label>
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Items in editItems loop */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Daftar Obat Terpakai ({editItems.length})</h4>
+                  <span className="text-[10px] text-slate-400 italic">Tambahkan obat baru di panel pengisian bawah</span>
+                </div>
+
+                {/* Items list inside Modal editor */}
+                {editItems.length === 0 ? (
+                  <div className="p-4 bg-white/70 border border-dashed border-slate-200 rounded-lg text-center text-xs text-slate-400">
+                    Daftar pemakaian obat kosong. Silakan tambahkan item obat yang dikeluarkan.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-2xs max-h-36">
+                    <table className="w-full text-left text-xs" id="table-edit-usage-items">
+                      <thead className="bg-slate-100 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200">
+                        <tr>
+                          <th className="p-2 pl-3">Obat</th>
+                          <th className="p-2 text-right">Volume Keluar</th>
+                          <th className="p-2 text-center w-12">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium text-slate-705">
+                        {editItems.map((it, idx) => {
+                          const medMatch = medicines.find(m => m.id === it.medicineId);
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50">
+                              <td className="p-2 pl-3 font-semibold text-slate-800">{medMatch ? medMatch.name : 'Unknown'}</td>
+                              <td className="p-2 text-right text-red-650 font-bold">-{it.qtyUsed} {medMatch?.unit || 'pcs'}</td>
+                              <td className="p-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveEditItem(idx)}
+                                  className="text-red-500 hover:text-red-700 p-1 hover:bg-rose-50 rounded animate-in"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Inline item input builder */}
+                <div className="bg-slate-100 p-3 rounded-lg border border-slate-200/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  
+                  <div className="md:col-span-7">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nama Sediaan Obat</label>
+                    <input
+                      type="text"
+                      value={editMSearchTerm}
+                      onChange={(e) => setEditMSearchTerm(e.target.value)}
+                      placeholder="Cari obat unit..."
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-205 outline-none mb-1"
+                    />
+                    <select
+                      value={editSelectedMedId}
+                      onChange={(e) => setEditSelectedMedId(e.target.value)}
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200 font-medium"
+                    >
+                      <option value="">-- Pilih Obat --</option>
+                      {medicines
+                        .filter(m => m.name.toLowerCase().includes(editMSearchTerm.toLowerCase()))
+                        .map(m => {
+                          const uStock = stocks[editingUsage.unitId]?.[m.id]?.total || 0;
+                          return (
+                            <option key={m.id} value={m.id}>
+                              {m.name} [Sediaan: {uStock} {m.unit}]
+                            </option>
+                          );
+                        })
+                      }
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Jumlah Pemakaian</label>
+                    <input
+                      type="number"
+                      value={editQty === 0 ? '' : editQty}
+                      onChange={(e) => setEditQty(Number(e.target.value))}
+                      placeholder="Qty"
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 text-center">
+                    <button
+                      type="button"
+                      onClick={handleAddEditItem}
+                      className="w-full text-xs p-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg flex items-center justify-center gap-1 transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Tambah
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Save / Footer */}
+              <div className="mt-8 border-t border-slate-100 pt-4 flex justify-end gap-3 font-sans">
+                <button
+                  type="button"
+                  onClick={() => setEditingUsage(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 shadow-sm transition-all"
+                >
+                  <CheckCircle className="w-4 h-4" /> Simpan Koreksi Pengeluaran
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

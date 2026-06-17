@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Medicine, Receipt, ReceiptItem, getDrugDefaultPrice } from '../types';
-import { Plus, Check, Trash2, ShieldCheck, ClipboardCheck, ArrowDownLeft, AlertCircle, Sparkles } from 'lucide-react';
+import { Plus, Check, Trash2, ShieldCheck, ClipboardCheck, ArrowDownLeft, AlertCircle, Sparkles, Edit, X } from 'lucide-react';
 
 interface PenerimaanGudangViewProps {
   medicines: Medicine[];
@@ -15,6 +15,7 @@ interface PenerimaanGudangViewProps {
   onAddReceipt: (receipt: Receipt) => void;
   onVerifyReceipt: (receiptId: string, apjName: string) => void;
   onDeleteReceipt?: (receiptId: string) => void;
+  onUpdateReceipt?: (receiptId: string, updatedReceipt: Receipt) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
 }
@@ -27,6 +28,7 @@ export default function PenerimaanGudangView({
   onAddReceipt,
   onVerifyReceipt,
   onDeleteReceipt,
+  onUpdateReceipt,
   systemDate,
   onNotify,
 }: PenerimaanGudangViewProps) {
@@ -54,6 +56,97 @@ export default function PenerimaanGudangView({
   const [expDate, setExpDate] = useState('');
   const [fundSource, setFundSource] = useState<'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF'>('DAK');
   const [priceInput, setPriceInput] = useState<number>(0);
+
+  // EDIT STATE FOR MODAL
+  const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
+  
+  // EDIT FORM STATE
+  const [editSourceType, setEditSourceType] = useState<'Instalasi Farmasi Kota' | 'PBF'>('Instalasi Farmasi Kota');
+  const [editDocumentType, setEditDocumentType] = useState<'BAP' | 'Faktur' | 'Surat Jalan'>('BAP');
+  const [editDocumentNo, setEditDocumentNo] = useState('');
+  const [editGudangOfficer, setEditGudangOfficer] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editItems, setEditItems] = useState<ReceiptItem[]>([]);
+
+  // Selected item addition inside Edit Modal
+  const [editSelectedMedId, setEditSelectedMedId] = useState('');
+  const [editMSearchTerm, setEditMSearchTerm] = useState('');
+  const [editQty, setEditQty] = useState<number>(0);
+  const [editBatchNo, setEditBatchNo] = useState('');
+  const [editExpDate, setEditExpDate] = useState('');
+  const [editFundSource, setEditFundSource] = useState<'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF'>('DAK');
+  const [editPrice, setEditPrice] = useState<number>(0);
+
+  const initiateEdit = (rcp: Receipt) => {
+    setEditingReceipt(rcp);
+    setEditSourceType(rcp.sourceType);
+    setEditDocumentType(rcp.documentType);
+    setEditDocumentNo(rcp.documentNo);
+    setEditGudangOfficer(rcp.gudangOfficer);
+    setEditDate(rcp.date);
+    setEditItems([...rcp.items]);
+  };
+
+  const handleAddEditItem = () => {
+    if (!editSelectedMedId || editQty <= 0 || !editBatchNo || !editExpDate) {
+      showNotice('warning', 'Peringatan: Mohon pilih obat, isi jumlah masuk, nomor batch, dan kedaluwarsa dengan lengkap!');
+      return;
+    }
+
+    const priceToSet = editPrice > 0 ? editPrice : getDrugDefaultPrice(editSelectedMedId);
+
+    const newItem: ReceiptItem = {
+      medicineId: editSelectedMedId,
+      quantity: editQty,
+      batchNo: editBatchNo,
+      expDate: editExpDate,
+      source: editFundSource,
+      condition: 'Baik',
+      price: priceToSet
+    };
+
+    setEditItems([...editItems, newItem]);
+    
+    // Clear item fields
+    setEditSelectedMedId('');
+    setEditMSearchTerm('');
+    setEditQty(0);
+    setEditBatchNo('');
+    setEditExpDate('');
+    setEditPrice(0);
+  };
+
+  const handleRemoveEditItem = (idx: number) => {
+    setEditItems(editItems.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingReceipt || !onUpdateReceipt) return;
+
+    if (!editDocumentNo || !editGudangOfficer || !editDate) {
+      showNotice('error', 'Gagal menyimpan: Informasi dokumen utama tidak boleh kosong!');
+      return;
+    }
+
+    if (editItems.length === 0) {
+      showNotice('error', 'Gagal menyimpan: Mohon masukkan minimal 1 item obat yang diterima!');
+      return;
+    }
+
+    const updatedRcp: Receipt = {
+      ...editingReceipt,
+      sourceType: editSourceType,
+      documentType: editDocumentType,
+      documentNo: editDocumentNo,
+      gudangOfficer: editGudangOfficer,
+      date: editDate,
+      items: editItems
+    };
+
+    onUpdateReceipt(editingReceipt.id, updatedRcp);
+    setEditingReceipt(null);
+  };
 
   const filteredMedicines = medicines.filter(m => 
     m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) || 
@@ -496,6 +589,18 @@ export default function PenerimaanGudangView({
                               </span>
                             )}
 
+                            {/* EDIT BUTTON WITH ROLE RESTRICTION */}
+                            {(activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onUpdateReceipt && (
+                              <button
+                                onClick={() => initiateEdit(rcp)}
+                                className="text-[10px] text-teal-650 hover:text-teal-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-teal-50 rounded-md transition duration-150"
+                                title="Edit / Koreksi Dokumen Penerimaan ini"
+                                id={`edit-rcp-${rcp.id}`}
+                              >
+                                <Edit className="w-3 h-3" /> Edit / Koreksi
+                              </button>
+                            )}
+
                             {/* DELETE BUTTON WITH ROLE RESTRICTION */}
                             {(activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onDeleteReceipt && (
                               <button
@@ -552,6 +657,286 @@ export default function PenerimaanGudangView({
           </div>
         )}
       </div>
+
+      {/* PROFESSIONAL EDIT RECEIPT MODAL */}
+      {editingReceipt && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="edit-receipt-modal-backdrop">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in duration-200" id="edit-receipt-modal-content">
+            
+            {/* Modal Header */}
+            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-teal-600" /> Edit / Koreksi Dokumen Penerimaan Gudang
+                </h3>
+                <p className="text-[11px] text-slate-500 font-mono mt-0.5">ID Dokumen: {editingReceipt.id}</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingReceipt(null)}
+                className="p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSaveEdit} className="p-4 md:p-6 space-y-6 flex-1">
+              
+              {/* Alert Warning if Already Verified */}
+              {editingReceipt.verifiedByAPJ && (
+                <div className="p-3 bg-amber-55/60 rounded-lg border border-amber-200 flex gap-3 text-xs text-amber-800">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                  <div>
+                    <span className="font-bold">Perhatian:</span> Dokumen penerimaan ini telah diverifikasi oleh APJ. 
+                    Mengubah item di sini akan otomatis merevisian saldo fisik obat dan detail batch di Gudang secara real-time.
+                  </div>
+                </div>
+              )}
+
+              {/* Grid 1: Document Metadata */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Sumber Pengirim</label>
+                  <select
+                    value={editSourceType}
+                    onChange={(e) => setEditSourceType(e.target.value as any)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 bg-white"
+                  >
+                    <option value="Instalasi Farmasi Kota">Instalasi Farmasi Kota</option>
+                    <option value="PBF">PBF (Pedagang Besar Farmasi)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Jenis Dokumen</label>
+                  <select
+                    value={editDocumentType}
+                    onChange={(e) => setEditDocumentType(e.target.value as any)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500 bg-white"
+                  >
+                    <option value="BAP">BAP</option>
+                    <option value="Faktur">Faktur</option>
+                    <option value="Surat Jalan">Surat Jalan</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">No. Dokumen</label>
+                  <input
+                    type="text"
+                    value={editDocumentNo}
+                    onChange={(e) => setEditDocumentNo(e.target.value)}
+                    placeholder="Contoh: BAP/112/2026"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal Dokumen / Masuk</label>
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Petugas Penerima</label>
+                  <input
+                    type="text"
+                    value={editGudangOfficer}
+                    onChange={(e) => setEditGudangOfficer(e.target.value)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Sub-section: Items Table in editItems callback */}
+              <div className="border border-slate-150 rounded-xl overflow-hidden bg-slate-50 p-3 md:p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Item Diterima ({editItems.length})</h4>
+                  <span className="text-[10px] text-slate-400 font-medium italic">Tambahkan obat baru atau hapus melalui baris pengisian di bawah</span>
+                </div>
+
+                {/* Edit Items List */}
+                {editItems.length === 0 ? (
+                  <div className="p-4 bg-white/60 border border-dashed border-slate-200 rounded-lg text-center text-xs text-slate-400">
+                    Belum ada obat dalam rincian ini. Silakan pilih dan masukkan obat.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-2xs max-h-48 scrollbar-thin">
+                    <table className="w-full text-left text-xs" id="table-edit-items-receipt">
+                      <thead className="bg-slate-100 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200">
+                        <tr>
+                          <th className="p-2 pl-3">Obat</th>
+                          <th className="p-2">Batch</th>
+                          <th className="p-2 text-rose-600">Kadaluarsa</th>
+                          <th className="p-2">Sumber</th>
+                          <th className="p-2 text-right">Jumlah</th>
+                          <th className="p-2 text-right">Harga Satuan</th>
+                          <th className="p-2 text-center w-12">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {editItems.map((it, idx) => {
+                          const originalMed = medicines.find(m => m.id === it.medicineId);
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50">
+                              <td className="p-2 pl-3 font-medium text-slate-800">{originalMed ? originalMed.name : 'Unknown'}</td>
+                              <td className="p-2 font-mono text-slate-600">{it.batchNo}</td>
+                              <td className="p-2 text-rose-650 font-medium">{it.expDate}</td>
+                              <td className="p-2"><span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-650">{it.source}</span></td>
+                              <td className="p-2 text-right font-bold text-slate-700">{it.quantity} pcs</td>
+                              <td className="p-2 text-right font-bold text-emerald-700">Rp {(it.price ?? getDrugDefaultPrice(it.medicineId)).toLocaleString('id-ID')}</td>
+                              <td className="p-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveEditItem(idx)}
+                                  className="text-red-500 hover:text-red-700 p-1 hover:bg-red-55 rounded"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Form to insert item inside edit list */}
+                <div className="bg-slate-100/90 p-3 rounded-lg border border-slate-200/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  
+                  <div className="md:col-span-4">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nama Obat</label>
+                    <input
+                      type="text"
+                      value={editMSearchTerm}
+                      onChange={(e) => setEditMSearchTerm(e.target.value)}
+                      placeholder="Cari obat..."
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    />
+                    <select
+                      value={editSelectedMedId}
+                      onChange={(e) => {
+                        setEditSelectedMedId(e.target.value);
+                        const standardPrice = getDrugDefaultPrice(e.target.value);
+                        setEditPrice(standardPrice);
+                      }}
+                      className="w-full text-xs p-1.5 mt-1 bg-white rounded-md border border-slate-200"
+                    >
+                      <option value="">-- Pilih Obat --</option>
+                      {medicines
+                        .filter(m => m.name.toLowerCase().includes(editMSearchTerm.toLowerCase()))
+                        .map(m => (
+                          <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
+                        ))
+                      }
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Batch</label>
+                    <input
+                      type="text"
+                      value={editBatchNo}
+                      onChange={(e) => setEditBatchNo(e.target.value.toUpperCase())}
+                      placeholder="No Batch"
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200 font-mono"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Kadaluarsa</label>
+                    <input
+                      type="date"
+                      value={editExpDate}
+                      onChange={(e) => setEditExpDate(e.target.value)}
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Anggaran</label>
+                    <select
+                      value={editFundSource}
+                      onChange={(e) => setEditFundSource(e.target.value as any)}
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    >
+                      <option value="DAK">DAK</option>
+                      <option value="DAU">DAU</option>
+                      <option value="Program">Program</option>
+                      <option value="JKN">JKN</option>
+                      <option value="PBF">PBF</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Jumlah</label>
+                    <input
+                      type="number"
+                      value={editQty === 0 ? '' : editQty}
+                      onChange={(e) => setEditQty(Number(e.target.value))}
+                      placeholder="Qty"
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    />
+                  </div>
+
+                  <div className="md:col-span-1 text-center">
+                    <button
+                      type="button"
+                      onClick={handleAddEditItem}
+                      className="w-full text-xs p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-md flex items-center justify-center gap-1 transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Tambah
+                    </button>
+                  </div>
+
+                  {/* Pricing field */}
+                  <div className="md:col-span-12 mt-2 bg-emerald-55/60 p-2 rounded-md border border-emerald-100 flex flex-wrap items-center gap-4">
+                    <label className="text-[10px] font-bold text-emerald-800 uppercase shrink-0">Atur Harga Masuk Khusus:</label>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-500">Rp</span>
+                      <input
+                        type="number"
+                        value={editPrice === 0 ? '' : editPrice}
+                        onChange={(e) => setEditPrice(Number(e.target.value))}
+                        placeholder="Harga masuk"
+                        className="text-xs p-1 w-32 bg-white rounded-md border border-slate-200 font-bold text-emerald-700"
+                      />
+                      <span className="text-[10px] text-slate-400">(Biarkan kosong untuk menggunakan harga acuan obat)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Footer Buttons */}
+              <div className="mt-8 border-t border-slate-100 pt-4 flex justify-end gap-3.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingReceipt(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 shadow-sm transition-all"
+                >
+                  <Check className="w-4 h-4" /> Simpan Perubahan
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

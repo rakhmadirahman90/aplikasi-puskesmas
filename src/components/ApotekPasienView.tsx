@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Medicine, Prescription, PrescriptionItem, StockStore } from '../types';
-import { FileText, Plus, Search, Trash2, CheckCircle, Database, AlertCircle, ShoppingBag, Eye, Calendar } from 'lucide-react';
+import { FileText, Plus, Search, Trash2, CheckCircle, Database, AlertCircle, ShoppingBag, Eye, Calendar, Edit, X } from 'lucide-react';
 
 interface ApotekPasienViewProps {
   medicines: Medicine[];
@@ -13,6 +13,7 @@ interface ApotekPasienViewProps {
   stocks: StockStore;
   onAddPrescription: (prescription: Prescription) => void;
   onDeletePrescription?: (rxId: string) => void;
+  onUpdatePrescription?: (rxId: string, updatedRx: Prescription) => void;
   activeRole?: string;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
@@ -24,6 +25,7 @@ export default function ApotekPasienView({
   stocks,
   onAddPrescription,
   onDeletePrescription,
+  onUpdatePrescription,
   activeRole,
   systemDate,
   onNotify,
@@ -63,6 +65,83 @@ export default function ApotekPasienView({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchDr, setSearchDr] = useState('');
   const [searchDate, setSearchDate] = useState('');
+
+  // PRESCRIPTION EDITING ACTION STATE
+  const [editingRx, setEditingRx] = useState<Prescription | null>(null);
+  const [editPatientName, setEditPatientName] = useState('');
+  const [editDrName, setEditDrName] = useState('');
+  const [editAge, setEditAge] = useState<number>(0);
+  const [editRxType, setEditRxType] = useState<'Rawat Jalan' | 'Rawat Inap'>('Rawat Jalan');
+  const [editRxDate, setEditRxDate] = useState('');
+  const [editLines, setEditLines] = useState<PrescriptionItem[]>([]);
+
+  // Selected item addition inside Edit Modal
+  const [editSelectedMedId, setEditSelectedMedId] = useState('');
+  const [editMSearchTerm, setEditMSearchTerm] = useState('');
+  const [editQty, setEditQty] = useState<number>(0);
+  const [editDosage, setEditDosage] = useState('');
+  const [editIsCompound, setEditIsCompound] = useState(false);
+
+  const initiateEditRx = (rx: Prescription) => {
+    setEditingRx(rx);
+    setEditPatientName(rx.patientName);
+    setEditDrName(rx.drName);
+    setEditAge(rx.age);
+    setEditRxType(rx.type);
+    setEditRxDate(rx.date || systemDate);
+    setEditLines([...rx.items]);
+  };
+
+  const handleAddEditLine = () => {
+    if (!editSelectedMedId || editQty <= 0 || !editDosage) {
+      showNotice('warning', 'Peringatan: Silakan pilih obat, tentukan jumlah, dan cara pakai dengan lengkap!');
+      return;
+    }
+
+    const newLine: PrescriptionItem = {
+      medicineId: editSelectedMedId,
+      qty: editQty,
+      dosage: editDosage,
+      isCompound: editIsCompound
+    };
+
+    setEditLines([...editLines, newLine]);
+    setEditSelectedMedId('');
+    setEditQty(0);
+    setEditDosage('');
+  };
+
+  const handleRemoveEditLine = (idx: number) => {
+    setEditLines(editLines.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveEditRx = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRx || !onUpdatePrescription) return;
+
+    if (!editPatientName || !editDrName || editAge <= 0) {
+      showNotice('error', 'Gagal menyimpan: Informasi pasien, usia, dan dokter tidak boleh kosong!');
+      return;
+    }
+
+    if (editLines.length === 0) {
+      showNotice('error', 'Gagal menyimpan: Mohon masukkan minimal 1 sediaan obat dalam resep!');
+      return;
+    }
+
+    const updatedRx: Prescription = {
+      ...editingRx,
+      patientName: editPatientName,
+      drName: editDrName,
+      age: editAge,
+      type: editRxType,
+      date: editRxDate,
+      items: editLines
+    };
+
+    onUpdatePrescription(editingRx.id, updatedRx);
+    setEditingRx(null);
+  };
 
   // Active Ruang Farmasi Stocks
   const apotekStock = useMemo(() => {
@@ -483,6 +562,17 @@ export default function ApotekPasienView({
                       <span className="font-mono text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-150 px-2 py-0.5 rounded-md">
                         {rx.id}
                       </span>
+                      {onUpdatePrescription && (activeRole === 'farmasi' || activeRole === 'apj') && (
+                        <button
+                          onClick={() => initiateEditRx(rx)}
+                          className="p-1 text-slate-400 hover:text-emerald-650 transition rounded hover:bg-emerald-50"
+                          title="Edit / Koreksi Isi Resep Pasien"
+                          id={`edit-rx-${rx.id}`}
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      
                       {onDeletePrescription && (activeRole === 'farmasi' || activeRole === 'apj') && (
                         <button
                           onClick={() => onDeletePrescription(rx.id)}
@@ -573,6 +663,243 @@ export default function ApotekPasienView({
           })}
         </div>
       </div>
+
+      {/* PROFESSIONAL EDIT PRESCRIPTION MODAL */}
+      {editingRx && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="edit-prescription-modal-backdrop">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in duration-200" id="edit-prescription-modal-content">
+            
+            {/* Header */}
+            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50' sticky top-0 z-10">
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-indigo-600" /> Edit / Koreksi Resep Pasien
+                </h3>
+                <p className="text-[11px] text-slate-500 font-mono mt-0.5">ID Resep: {editingRx.id}</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingRx(null)}
+                className="p-1.5 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-lg transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body Form */}
+            <form onSubmit={handleSaveEditRx} className="p-4 md:p-6 space-y-5 flex-1">
+              
+              {/* Patient and Dr Details Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Nama Pasien</label>
+                  <input
+                    type="text"
+                    value={editPatientName}
+                    onChange={(e) => setEditPatientName(e.target.value)}
+                    placeholder="Nama Lengkap Pasien"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Usia (Tahun)</label>
+                  <input
+                    type="number"
+                    value={editAge || ''}
+                    onChange={(e) => setEditAge(Number(e.target.value))}
+                    placeholder="Usia"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Jenis Layanan</label>
+                  <select
+                    value={editRxType}
+                    onChange={(e) => setEditRxType(e.target.value as any)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-indigo-500 bg-white font-medium"
+                  >
+                    <option value="Rawat Jalan">Rawat Jalan</option>
+                    <option value="Rawat Inap">Rawat Inap</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Dokter Penulis Resep</label>
+                  <input
+                    type="text"
+                    value={editDrName}
+                    onChange={(e) => setEditDrName(e.target.value)}
+                    placeholder="Nama Dokter Penulis"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal Resep</label>
+                  <input
+                    type="date"
+                    value={editRxDate}
+                    onChange={(e) => setEditRxDate(e.target.value)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-200 focus:ring-1 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Items List in editLines */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 p-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Item Obat / Sediaan ({editLines.length})</h4>
+                  <span className="text-[10px] text-slate-400 italic">Tambahkan obat atau resep di panel input bawah</span>
+                </div>
+
+                {/* Lines List Table */}
+                {editLines.length === 0 ? (
+                  <div className="p-4 bg-white/70 border border-dashed border-slate-200 rounded-lg text-center text-xs text-slate-450">
+                    Sediaan resep kosong. Silakan tambahkan obat.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto bg-white rounded-lg border border-slate-200 shadow-2xs max-h-40">
+                    <table className="w-full text-left text-xs" id="table-edit-prescription-lines">
+                      <thead className="bg-slate-100 text-[10px] font-semibold text-slate-500 uppercase border-b border-slate-200">
+                        <tr>
+                          <th className="p-2.5 pl-3">Obat</th>
+                          <th className="p-2.5">Sediaan Formula</th>
+                          <th className="p-2.5 text-right">Jumlah</th>
+                          <th className="p-2.5 text-right">Signa Aturan</th>
+                          <th className="p-2.5 text-center w-12">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {editLines.map((it, idx) => {
+                          const medMatch = medicines.find(m => m.id === it.medicineId);
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50 text-slate-700">
+                              <td className="p-2 pl-3 font-semibold text-slate-800">{medMatch ? medMatch.name : 'Unknown'}</td>
+                              <td className="p-2 text-slate-500 font-mono text-[10px]">{it.isCompound ? 'Racikan' : 'Non-Racikan'}</td>
+                              <td className="p-2 text-right font-bold text-indigo-700">{it.qty} {medMatch?.unit || 'pcs'}</td>
+                              <td className="p-2 text-right italic font-mono text-slate-600 text-[11px]">{it.dosage}</td>
+                              <td className="p-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveEditLine(idx)}
+                                  className="text-red-500 hover:text-red-700 p-1 hover:bg-rose-50 rounded"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Sub-form input selector inside Modal */}
+                <div className="bg-slate-100 p-3 rounded-lg border border-slate-200/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  
+                  <div className="md:col-span-5">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Pilih Obat</label>
+                    <input
+                      type="text"
+                      value={editMSearchTerm}
+                      onChange={(e) => setEditMSearchTerm(e.target.value)}
+                      placeholder="Ketik cari nama obat..."
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200 outline-none mb-1"
+                    />
+                    <select
+                      value={editSelectedMedId}
+                      onChange={(e) => setEditSelectedMedId(e.target.value)}
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    >
+                      <option value="">-- Pilih Sediaan Obat --</option>
+                      {medicines
+                        .filter(m => m.name.toLowerCase().includes(editMSearchTerm.toLowerCase()))
+                        .map(m => (
+                          <option key={m.id} value={m.id}>
+                            {m.name} [Stok Apotek: {apotekStock[m.id]?.total || 0} {m.unit}]
+                          </option>
+                        ))
+                      }
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Jumlah</label>
+                    <input
+                      type="number"
+                      value={editQty === 0 ? '' : editQty}
+                      onChange={(e) => setEditQty(Number(e.target.value))}
+                      placeholder="Qty"
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Signa Aturan (3x1 tab)</label>
+                    <input
+                      type="text"
+                      value={editDosage}
+                      onChange={(e) => setEditDosage(e.target.value)}
+                      placeholder="Contoh: 3x1 tablet"
+                      className="w-full text-xs p-1.5 bg-white rounded-md border border-slate-200"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 text-center">
+                    <button
+                      type="button"
+                      onClick={handleAddEditLine}
+                      className="w-full text-xs p-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg flex items-center justify-center gap-1 transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Tambah
+                    </button>
+                  </div>
+
+                  {/* Racikan checkbox */}
+                  <div className="md:col-span-12 flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="edit-is-compound"
+                      checked={editIsCompound}
+                      onChange={(e) => setEditIsCompound(e.target.checked)}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-505"
+                    />
+                    <label htmlFor="edit-is-compound" className="text-[11px] font-semibold text-slate-600 cursor-pointer">
+                      Sediaan Formula merupakan Racikan Apoteker
+                    </label>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Save / Footer */}
+              <div className="mt-8 border-t border-slate-100 pt-4 flex justify-end gap-3 font-sans">
+                <button
+                  type="button"
+                  onClick={() => setEditingRx(null)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-sm transition-all"
+                >
+                  <CheckCircle className="w-4 h-4" /> Simpan Koreksi Resep & Atur Stok
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -261,6 +261,61 @@ export default function App() {
     }
   };
 
+  const handleUpdateReceipt = async (receiptId: string, updatedReceipt: Receipt) => {
+    try {
+      const originalReceipt = receipts.find(r => r.id === receiptId);
+      if (!originalReceipt) return;
+
+      // When modifying an already verified receipt, correct the stocks
+      if (originalReceipt.verifiedByAPJ) {
+        const currentStocks = JSON.parse(JSON.stringify(stocks));
+        if (currentStocks['gudang']) {
+          // 1. Deduct old quantities
+          originalReceipt.items.forEach(item => {
+            const currentItem = currentStocks['gudang'][item.medicineId];
+            if (currentItem) {
+              currentItem.total = Math.max(0, currentItem.total - item.quantity);
+              if (currentItem.batches) {
+                const batchIdx = currentItem.batches.findIndex((b: any) => b.batchNo === item.batchNo && b.expDate === item.expDate);
+                if (batchIdx !== -1) {
+                  currentItem.batches[batchIdx].quantity = Math.max(0, currentItem.batches[batchIdx].quantity - item.quantity);
+                }
+                currentItem.batches = currentItem.batches.filter((b: any) => b.quantity > 0);
+              }
+            }
+          });
+
+          // 2. Add new quantities
+          updatedReceipt.items.forEach(item => {
+            if (!currentStocks['gudang'][item.medicineId]) {
+              currentStocks['gudang'][item.medicineId] = { total: 0, batches: [] };
+            }
+            const currentItem = currentStocks['gudang'][item.medicineId];
+            currentItem.total += item.quantity;
+            if (!currentItem.batches) {
+              currentItem.batches = [];
+            }
+            currentItem.batches.push({
+              batchNo: item.batchNo,
+              expDate: item.expDate,
+              quantity: item.quantity,
+              source: item.source,
+              price: item.price || 0
+            });
+          });
+
+          await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang']);
+        }
+      }
+
+      await setDoc(doc(db, 'receipts', receiptId), updatedReceipt);
+      addNotification('success', `Dokumen penerimaan ${receiptId} berhasil disinkronkan dan diperbarui secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memperbarui dokumen penerimaan.");
+    }
+  };
+
   // APJ confirms Receipt and actually stocks increase in Gudang
   const handleVerifyReceipt = async (receiptId: string, apjName: string) => {
     try {
@@ -419,6 +474,37 @@ export default function App() {
     }
   };
 
+  const handleUpdatePrescription = async (rxId: string, updatedRx: Prescription) => {
+    try {
+      const originalRx = prescriptions.find(p => p.id === rxId);
+      if (!originalRx) return;
+
+      const currentStocks = JSON.parse(JSON.stringify(stocks));
+      if (!currentStocks['ruang_farmasi']) currentStocks['ruang_farmasi'] = {};
+
+      // 1. Return old quantities
+      originalRx.items.forEach(item => {
+        const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
+        rfObj.total += item.qty;
+        currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
+      });
+
+      // 2. Deduct new quantities
+      updatedRx.items.forEach(item => {
+        const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
+        rfObj.total = Math.max(0, rfObj.total - item.qty);
+        currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
+      });
+
+      await setDoc(doc(db, 'stocks', 'ruang_farmasi'), currentStocks['ruang_farmasi'] || {});
+      await setDoc(doc(db, 'prescriptions', rxId), updatedRx);
+      addNotification('success', `Resep ${rxId} berhasil diperbarui secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memperbarui resep.");
+    }
+  };
+
   // DAILY SATELLITE USAGE RECORD
   const handleAddUsage = async (newUsage: DailyUsage) => {
     try {
@@ -442,6 +528,38 @@ export default function App() {
     } catch (e) {
       console.error(e);
       addNotification('error', "Gagal merekam pemakaian harian.");
+    }
+  };
+
+  const handleUpdateUsage = async (usageId: string, updatedUsage: DailyUsage) => {
+    try {
+      const originalUsage = usages.find(u => u.id === usageId);
+      if (!originalUsage) return;
+
+      const currentStocks = JSON.parse(JSON.stringify(stocks));
+      const targetUnit = originalUsage.unitId;
+      if (!currentStocks[targetUnit]) currentStocks[targetUnit] = {};
+
+      // 1. Return old quantities
+      originalUsage.items.forEach(item => {
+        const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
+        unitObj.total += item.qtyUsed;
+        currentStocks[targetUnit][item.medicineId] = unitObj;
+      });
+
+      // 2. Deduct new quantities
+      updatedUsage.items.forEach(item => {
+        const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
+        unitObj.total = Math.max(0, unitObj.total - item.qtyUsed);
+        currentStocks[targetUnit][item.medicineId] = unitObj;
+      });
+
+      await setDoc(doc(db, 'stocks', targetUnit), currentStocks[targetUnit] || {});
+      await setDoc(doc(db, 'usages', usageId), updatedUsage);
+      addNotification('success', `Laporan pemakaian ${usageId} berhasil diperbarui secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memperbarui laporan pemakaian.");
     }
   };
 
@@ -777,6 +895,7 @@ export default function App() {
               onAddReceipt={handleAddReceipt}
               onVerifyReceipt={handleVerifyReceipt}
               onDeleteReceipt={handleDeleteReceipt}
+              onUpdateReceipt={handleUpdateReceipt}
               systemDate={systemDate}
               onNotify={addNotification}
             />
@@ -806,6 +925,7 @@ export default function App() {
               stocks={stocks}
               onAddPrescription={handleAddPrescription}
               onDeletePrescription={handleDeletePrescription}
+              onUpdatePrescription={handleUpdatePrescription}
               activeRole={activeRole}
               systemDate={systemDate}
               onNotify={addNotification}
@@ -823,6 +943,7 @@ export default function App() {
               onSetSimulationUnit={(uid) => handleSwitchRole('unit', uid)}
               onAddUsage={handleAddUsage}
               onDeleteUsage={handleDeleteUsage}
+              onUpdateUsage={handleUpdateUsage}
               systemDate={systemDate}
               onNotify={addNotification}
             />
