@@ -228,7 +228,7 @@ export default function UsageUnitView({
                       placeholder="🔍 Ketik nama obat..."
                       value={mSearchTerm}
                       onChange={(e) => setMSearchTerm(e.target.value)}
-                      className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1 text-xs text-slate-705 placeholder-slate-400 font-medium"
+                      className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1 text-xs text-slate-700 placeholder-slate-400 font-medium"
                       id="usage-med-search"
                     />
                     <select
