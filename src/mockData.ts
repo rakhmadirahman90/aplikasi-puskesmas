@@ -41,23 +41,23 @@ export const INITIAL_STOCKS: StockStore = {
     'med-01': {
       total: 5500,
       batches: [
-        { batchNo: 'B-PCT01', expDate: '2026-09-15', quantity: 1500, source: 'DAK' }, // < 6 months (Red)
-        { batchNo: 'B-PCT02', expDate: '2027-02-10', quantity: 2000, source: 'JKN' }, // 7 - 12 months (Yellow)
-        { batchNo: 'B-PCT03', expDate: '2028-06-20', quantity: 2000, source: 'DAU' }  // Clear
+        { batchNo: 'B-PCT01', expDate: '2026-09-15', quantity: 1500, source: 'DAK', price: 350 }, // < 6 months (Red)
+        { batchNo: 'B-PCT02', expDate: '2027-02-10', quantity: 2000, source: 'JKN', price: 420 }, // 7 - 12 months (Yellow, custom price!)
+        { batchNo: 'B-PCT03', expDate: '2028-06-20', quantity: 2000, source: 'DAU', price: 450 }  // Clear, custom price!
       ]
     },
     'med-02': {
       total: 3200,
       batches: [
-        { batchNo: 'B-AMX01', expDate: '2026-08-30', quantity: 1200, source: 'Program' }, // < 6 months (Red)
-        { batchNo: 'B-AMX02', expDate: '2027-10-15', quantity: 2000, source: 'DAK' }  // Clear
+        { batchNo: 'B-AMX01', expDate: '2026-08-30', quantity: 1200, source: 'Program', price: 650 }, // < 6 months (Red)
+        { batchNo: 'B-AMX02', expDate: '2027-10-15', quantity: 2000, source: 'DAK', price: 720 }  // Clear, custom price!
       ]
     },
     'med-03': {
       total: 4500,
       batches: [
-        { batchNo: 'B-AML01', expDate: '2027-01-20', quantity: 2500, source: 'DAU' }, // 7 - 12 months (Yellow)
-        { batchNo: 'B-AML02', expDate: '2028-08-01', quantity: 2000, source: 'JKN' }
+        { batchNo: 'B-AML01', expDate: '2027-01-20', quantity: 2500, source: 'DAU', price: 1200 }, // 7 - 12 months (Yellow)
+        { batchNo: 'B-AML02', expDate: '2028-08-01', quantity: 2000, source: 'JKN', price: 1380 }  // Custom price!
       ]
     },
     'med-04': {
@@ -195,8 +195,8 @@ export const INITIAL_RECEIPTS: Receipt[] = [
     documentType: 'BAP',
     documentNo: 'BAP/IFK/0526-22',
     items: [
-      { medicineId: 'med-01', quantity: 2000, batchNo: 'B-PCT03', expDate: '2028-06-20', source: 'DAU', condition: 'Baik' },
-      { medicineId: 'med-03', quantity: 2000, batchNo: 'B-AML02', expDate: '2028-08-01', source: 'JKN', condition: 'Baik' }
+      { medicineId: 'med-01', quantity: 2000, batchNo: 'B-PCT03', expDate: '2028-06-20', source: 'DAU', condition: 'Baik', price: 450 },
+      { medicineId: 'med-03', quantity: 2000, batchNo: 'B-AML02', expDate: '2028-08-01', source: 'JKN', condition: 'Baik', price: 1380 }
     ],
     verifiedByGudang: true,
     verifiedByAPJ: true,
@@ -211,8 +211,8 @@ export const INITIAL_RECEIPTS: Receipt[] = [
     documentType: 'Faktur',
     documentNo: 'FKT-99221-MKB',
     items: [
-      { medicineId: 'med-05', quantity: 100, batchNo: 'B-AXS02', expDate: '2027-05-18', source: 'JKN', condition: 'Baik' },
-      { medicineId: 'med-10', quantity: 80, batchNo: 'B-VNT02', expDate: '2027-09-22', source: 'JKN', condition: 'Baik' }
+      { medicineId: 'med-05', quantity: 100, batchNo: 'B-AXS02', expDate: '2027-05-18', source: 'JKN', condition: 'Baik', price: 18500 },
+      { medicineId: 'med-10', quantity: 80, batchNo: 'B-VNT02', expDate: '2027-09-22', source: 'JKN', condition: 'Baik', price: 95000 }
     ],
     verifiedByGudang: true,
     verifiedByAPJ: true,

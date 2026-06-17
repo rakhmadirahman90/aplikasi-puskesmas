@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Medicine, Ampra, UnitInfo, StockStore, AmpraItem } from '../types';
-import { ClipboardList, Plus, FileText, CheckCircle, Clock, AlertTriangle, ShieldCheck, UserCheck, ArrowRight, Printer } from 'lucide-react';
+import { ClipboardList, Plus, FileText, CheckCircle, Clock, AlertTriangle, ShieldCheck, UserCheck, ArrowRight, Printer, Trash2 } from 'lucide-react';
 
 interface AmpraGudangViewProps {
   medicines: Medicine[];
@@ -17,6 +17,7 @@ interface AmpraGudangViewProps {
   userName: string;
   onCreateAmpra: (ampra: Ampra) => void;
   onUpdateAmpraStatus: (ampraId: string, updates: Partial<Ampra>) => void;
+  onDeleteAmpra?: (ampraId: string) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
 }
@@ -31,6 +32,7 @@ export default function AmpraGudangView({
   userName,
   onCreateAmpra,
   onUpdateAmpraStatus,
+  onDeleteAmpra,
   systemDate,
   onNotify,
 }: AmpraGudangViewProps) {
@@ -620,13 +622,27 @@ export default function AmpraGudangView({
                           Menunggu verifikasi akhir Apoteker Penanggung Jawab
                         </span>
                       )}
-                      {amp.status === 'Selesai' && (
+                       {amp.status === 'Selesai' && (
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-[10px] text-slate-500 font-medium">BAP No: <b className="font-mono text-slate-700">{amp.noBAP}</b></span>
                           <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded">
                             <CheckCircle className="w-3 h-3" /> Transaksi Selesai & Sah
                           </span>
                         </div>
+                      )}
+
+                      {/* DELETE/CANCEL CONTROL */}
+                      {onDeleteAmpra && (activeRole === 'apj' || 
+                        ((activeRole === 'unit' && amp.sourceUnitId === activeUnitId && amp.status !== 'Selesai') || 
+                         (activeRole === 'farmasi' && amp.sourceUnitId === 'ruang_farmasi' && amp.status !== 'Selesai'))) && (
+                        <button
+                          type="button"
+                          onClick={() => onDeleteAmpra(amp.id)}
+                          className="mt-2 text-[10px] text-red-650 hover:text-red-750 font-bold flex items-center gap-1 px-2.5 py-1 hover:bg-red-50 rounded-lg transition duration-155 self-end"
+                          id={`delete-amp-${amp.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Batal & Hapus Ampra
+                        </button>
                       )}
                     </div>
                   </div>

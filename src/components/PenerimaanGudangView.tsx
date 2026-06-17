@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Medicine, Receipt, ReceiptItem } from '../types';
+import { Medicine, Receipt, ReceiptItem, getDrugDefaultPrice } from '../types';
 import { Plus, Check, Trash2, ShieldCheck, ClipboardCheck, ArrowDownLeft, AlertCircle, Sparkles } from 'lucide-react';
 
 interface PenerimaanGudangViewProps {
@@ -14,6 +14,7 @@ interface PenerimaanGudangViewProps {
   userName: string;
   onAddReceipt: (receipt: Receipt) => void;
   onVerifyReceipt: (receiptId: string, apjName: string) => void;
+  onDeleteReceipt?: (receiptId: string) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
 }
@@ -25,6 +26,7 @@ export default function PenerimaanGudangView({
   userName,
   onAddReceipt,
   onVerifyReceipt,
+  onDeleteReceipt,
   systemDate,
   onNotify,
 }: PenerimaanGudangViewProps) {
@@ -51,6 +53,7 @@ export default function PenerimaanGudangView({
   const [batchNo, setBatchNo] = useState('');
   const [expDate, setExpDate] = useState('');
   const [fundSource, setFundSource] = useState<'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF'>('DAK');
+  const [priceInput, setPriceInput] = useState<number>(0);
 
   const filteredMedicines = medicines.filter(m => 
     m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) || 
@@ -71,6 +74,7 @@ export default function PenerimaanGudangView({
       expDate: expDate,
       source: fundSource,
       condition: 'Baik',
+      price: priceInput || getDrugDefaultPrice(selectedMedId)
     };
 
     setItems([...items, newItem]);
@@ -80,6 +84,7 @@ export default function PenerimaanGudangView({
     setQty(0);
     setBatchNo('');
     setExpDate('');
+    setPriceInput(0);
   };
 
   const handleRemoveItemRow = (index: number) => {
@@ -235,7 +240,7 @@ export default function PenerimaanGudangView({
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-4">
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Item Farmasi yang Masuk:</h4>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 items-end">
                 <div className="sm:col-span-1 md:col-span-2 text-left">
                   <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cari & Pilih Obat</label>
                   <div className="space-y-1">
@@ -249,7 +254,15 @@ export default function PenerimaanGudangView({
                     />
                     <select
                       value={selectedMedId}
-                      onChange={(e) => setSelectedMedId(e.target.value)}
+                      onChange={(e) => {
+                        const mId = e.target.value;
+                        setSelectedMedId(mId);
+                        if (mId) {
+                          setPriceInput(getDrugDefaultPrice(mId));
+                        } else {
+                          setPriceInput(0);
+                        }
+                      }}
                       className="w-full border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2.5 py-1.5 text-xs text-slate-700 font-medium"
                       id="medicine-item-select"
                     >
@@ -275,6 +288,19 @@ export default function PenerimaanGudangView({
                 </div>
 
                 <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Harga Masuk / Unit (Rp)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={priceInput || ''}
+                    onChange={(e) => setPriceInput(parseInt(e.target.value) || 0)}
+                    className="w-full border border-slate-200 rounded px-2.5 py-1 text-xs bg-white text-emerald-700 font-bold"
+                    placeholder="Rp 0"
+                    id="medicine-price-input"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">No. Batch</label>
                   <input
                     type="text"
@@ -287,7 +313,7 @@ export default function PenerimaanGudangView({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Masa Kadaluarsa</label>
+                  <label className="block text-[10px] font-bold text-[slate-500] mb-1 uppercase">Masa Kadaluarsa</label>
                   <input
                     type="date"
                     value={expDate}
@@ -333,6 +359,7 @@ export default function PenerimaanGudangView({
                       <tr className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-bold text-slate-500">
                         <th className="p-3">Obat</th>
                         <th className="p-3">Jumlah</th>
+                        <th className="p-3">Harga Masuk</th>
                         <th className="p-3">No. Batch</th>
                         <th className="p-3">Tanggal Exp</th>
                         <th className="p-3">Anggaran</th>
@@ -346,6 +373,7 @@ export default function PenerimaanGudangView({
                           <tr key={idx} className="hover:bg-slate-50">
                             <td className="p-3 font-semibold text-slate-800">{med ? med.name : 'Unknown'}</td>
                             <td className="p-3 font-medium">{item.quantity} {med?.unit}</td>
+                            <td className="p-3 text-emerald-700 font-bold">Rp {(item.price || 0).toLocaleString('id-ID')}</td>
                             <td className="p-3 font-mono text-slate-600">{item.batchNo}</td>
                             <td className="p-3 text-slate-600">{item.expDate}</td>
                             <td className="p-3">
@@ -444,28 +472,42 @@ export default function PenerimaanGudangView({
                           )}
                         </td>
                         <td className="p-4 text-center">
-                          {rcp.verifiedByAPJ ? (
-                            <span className="text-[10px] text-slate-400 font-medium block">
-                              Terverifikasi oleh:<br />
-                              <span className="font-bold text-slate-600">{rcp.apjName || 'APJ'}</span>
-                            </span>
-                          ) : activeRole === 'apj' ? (
-                            <button
-                              onClick={() => {
-                                const apjName = userName || 'Ami Rahmawati, S.Farm, Apt';
-                                onVerifyReceipt(rcp.id, apjName);
-                                showNotice('success', `Dokumen ${rcp.documentNo} Berhasil Diverifikasi oleh Apoteker Penanggung Jawab! Stok gudang telah terupdate secara otomatis.`);
-                              }}
-                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1 mx-auto"
-                              id={`verify-btn-${rcp.id}`}
-                            >
-                              <Check className="w-3.5 h-3.5" /> Verifikasi APJ
-                            </button>
-                          ) : (
-                            <span className="text-[10px] text-amber-600 font-semibold italic block">
-                              Butuh Login APJ
-                            </span>
-                          )}
+                          <div className="flex flex-col items-center justify-center gap-1.5">
+                            {rcp.verifiedByAPJ ? (
+                              <span className="text-[10px] text-slate-400 font-medium block">
+                                Terverifikasi oleh:<br />
+                                <span className="font-bold text-slate-600">{rcp.apjName || 'APJ'}</span>
+                              </span>
+                            ) : activeRole === 'apj' ? (
+                              <button
+                                onClick={() => {
+                                  const apjName = userName || 'Ami Rahmawati, S.Farm, Apt';
+                                  onVerifyReceipt(rcp.id, apjName);
+                                  showNotice('success', `Dokumen ${rcp.documentNo} Berhasil Diverifikasi oleh Apoteker Penanggung Jawab! Stok gudang telah terupdate secara otomatis.`);
+                                }}
+                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1 mx-auto shadow-xs"
+                                id={`verify-btn-${rcp.id}`}
+                              >
+                                <Check className="w-3.5 h-3.5" /> Verifikasi APJ
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-amber-600 font-semibold italic block">
+                                Menunggu Verifikasi APJ
+                              </span>
+                            )}
+
+                            {/* DELETE BUTTON WITH ROLE RESTRICTION */}
+                            {(activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onDeleteReceipt && (
+                              <button
+                                onClick={() => onDeleteReceipt(rcp.id)}
+                                className="text-[10px] text-red-650 hover:text-red-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-red-50 rounded-md transition duration-150"
+                                title="Hapus Penerimaan ini"
+                                id={`delete-rcp-${rcp.id}`}
+                              >
+                                <Trash2 className="w-3 h-3" /> Hapus
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                       
@@ -483,6 +525,9 @@ export default function PenerimaanGudangView({
                                     <div className="flex justify-between items-center text-[11px] text-slate-500">
                                       <span>Qty: <span className="font-bold text-slate-700">{line.quantity} pcs</span></span>
                                       <span>Batch: <span className="font-mono text-slate-600">{line.batchNo}</span></span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[11px] text-slate-500">
+                                      <span>Harga Masuk: <span className="font-bold text-emerald-700">Rp {(line.price ?? getDrugDefaultPrice(line.medicineId)).toLocaleString('id-ID')}</span></span>
                                     </div>
                                     <div className="flex justify-between items-center text-[10px] text-slate-400">
                                       <span>Exp: <span className="text-rose-600">{line.expDate}</span></span>

@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Medicine, UnitInfo, StockStore, DailyUsage, DailyUsageItem } from '../types';
-import { ClipboardList, Plus, Database, Table, CheckCircle, ArrowUpRight, Zap, AlertCircle } from 'lucide-react';
+import { ClipboardList, Plus, Database, Table, CheckCircle, ArrowUpRight, Zap, AlertCircle, Trash2 } from 'lucide-react';
 
 interface UsageUnitViewProps {
   medicines: Medicine[];
@@ -16,6 +16,7 @@ interface UsageUnitViewProps {
   activeUnitId: string;
   onSetSimulationUnit: (unitId: string) => void;
   onAddUsage: (usage: DailyUsage) => void;
+  onDeleteUsage?: (usageId: string) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
 }
@@ -29,6 +30,7 @@ export default function UsageUnitView({
   activeUnitId,
   onSetSimulationUnit,
   onAddUsage,
+  onDeleteUsage,
   systemDate,
   onNotify,
 }: UsageUnitViewProps) {
@@ -406,8 +408,20 @@ export default function UsageUnitView({
             ) : (
               activeUnitUsagesLog.map((use) => (
                 <div key={use.id} className="p-3.5 bg-slate-50 rounded-xl border border-slate-150 space-y-3">
-                  <div className="flex justify-between items-center text-[11px] border-b border-slate-200/50 pb-2">
-                    <span className="font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 border border-slate-200 rounded">{use.id}</span>
+                  <div className="flex justify-between items-center text-[11px] border-b border-slate-200/50 pb-2 font-sans">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 border border-slate-200 rounded">{use.id}</span>
+                      {onDeleteUsage && (activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
+                        <button
+                          onClick={() => onDeleteUsage(use.id)}
+                          className="p-1 text-slate-400 hover:text-red-650 hover:bg-rose-50 rounded transition"
+                          title="Batalkan / Hapus Laporan Pengeluaran"
+                          id={`delete-use-${use.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                     <span className="text-slate-500 font-semibold">{use.date}</span>
                   </div>
 

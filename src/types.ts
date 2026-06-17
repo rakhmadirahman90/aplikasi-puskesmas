@@ -19,6 +19,7 @@ export interface BatchStock {
   expDate: string; // YYYY-MM-DD
   quantity: number;
   source: 'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF' | 'Lainnya';
+  price?: number; // Harga masuk obat
 }
 
 export interface StockStore {
@@ -39,6 +40,7 @@ export interface ReceiptItem {
   expDate: string; // YYYY-MM-DD
   source: 'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF';
   condition: 'Baik' | 'Rusak';
+  price?: number; // Harga masuk obat
 }
 
 export interface Receipt {
@@ -150,3 +152,25 @@ export interface AppState {
     userName: string;
   };
 }
+
+export const DEFAULT_MEDICINE_PRICES: { [k: string]: number } = {
+  'med-01': 350,   // Paracetamol
+  'med-02': 650,   // Amoxicillin
+  'med-03': 1200,  // Amlodipine
+  'med-04': 450,   // Metformin
+  'med-05': 18500, // Amoxsan Syr
+  'med-06': 1500,  // Diazepam
+  'med-07': 3500,  // Codein
+  'med-08': 2500,  // Alprazolam
+  'med-09': 4000,  // Clobazam
+  'med-10': 95000, // Ventolin
+  'med-11': 45000, // Ceftriaxone
+  'med-12': 125000,// Fentanyl
+  'med-13': 1500,  // Racikan Flu
+  'med-14': 22000, // Sanmol Syr
+  'med-15': 38000, // Diazepam Inj
+};
+
+export const getDrugDefaultPrice = (medId: string): number => {
+  return DEFAULT_MEDICINE_PRICES[medId] || 1000;
+};

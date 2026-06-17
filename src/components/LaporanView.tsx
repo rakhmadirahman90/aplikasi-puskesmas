@@ -57,6 +57,7 @@ export default function LaporanView({
   // Filters
   const [financeSourceFilter, setFinanceSourceFilter] = useState<'ALL' | 'DAK' | 'DAU' | 'Program'>('ALL');
   const [napzaGroupFilter, setNapzaGroupFilter] = useState<'ALL' | 'narkotika' | 'psikotropika'>('ALL');
+  const [expandedDrugId, setExpandedDrugId] = useState<string | null>(null);
 
   // Unified Estimated pricing for valuation reports
   const GET_DRUG_PRICE = (medId: string) => {
@@ -92,6 +93,22 @@ export default function LaporanView({
         globalSum += qty;
       });
 
+      // Precise asset value estimation based on varying entry prices/batches
+      let valueEstimation = 0;
+      const gudStockObj = stocks['gudang']?.[med.id];
+      let gudTotalInBatches = 0;
+      if (gudStockObj && gudStockObj.batches) {
+        gudStockObj.batches.forEach(b => {
+          gudTotalInBatches += b.quantity;
+          const price = b.price || GET_DRUG_PRICE(med.id);
+          valueEstimation += b.quantity * price;
+        });
+      }
+
+      const remainingGudang = Math.max(0, (gudStockObj?.total || 0) - gudTotalInBatches);
+      const otherUnitsTotal = units.filter(u => u.id !== 'gudang').reduce((sum, u) => sum + (stocks[u.id]?.[med.id]?.total || 0), 0);
+      valueEstimation += (remainingGudang + otherUnitsTotal) * GET_DRUG_PRICE(med.id);
+
       return {
         id: med.id,
         name: med.name,
@@ -100,7 +117,7 @@ export default function LaporanView({
         group: med.group,
         locations: locationsQty,
         globalSum,
-        valueEstimation: globalSum * GET_DRUG_PRICE(med.id)
+        valueEstimation
       };
     });
   }, [medicines, units, stocks]);
@@ -151,6 +168,9 @@ export default function LaporanView({
       // 4. Stok Awal = Stok Akhir + Pengeluaran - Penerimaan
       const stokAwal = Math.max(0, stokAkhir + totalPengeluaran - totalPenerimaan);
 
+      const correspondingOpname = stokOpnameData.find(item => item.id === med.id);
+      const valueEstimation = correspondingOpname ? correspondingOpname.valueEstimation : stokAkhir * GET_DRUG_PRICE(med.id);
+
       return {
         id: med.id,
         name: med.name,
@@ -161,10 +181,10 @@ export default function LaporanView({
         penerimaan: totalPenerimaan,
         pengeluaran: totalPengeluaran,
         stokAkhir,
-        valueEstimation: stokAkhir * GET_DRUG_PRICE(med.id)
+        valueEstimation
       };
     });
-  }, [medicines, units, stocks, receipts, prescriptions, usages]);
+  }, [stokOpnameData, medicines, units, stocks, receipts, prescriptions, usages]);
 
 
   // 2. LAPORAN KEUANGAN DINAS KESEHATAN
@@ -1308,27 +1328,93 @@ export default function LaporanView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150">
-                  {stokOpnameData.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50">
-                      <td className="p-3 font-semibold text-slate-800 sticky left-0 bg-white z-10 border-r border-slate-100 max-w-[180px] truncate">
-                        <p className="truncate" title={item.name}>{item.name}</p>
-                        <span className="text-[9px] text-slate-400">{item.unit} &bull; {item.group}</span>
-                      </td>
-                      <td className="p-2 text-center font-bold text-blue-700 bg-blue-50/20">{item.locations['gudang'] || 0}</td>
-                      <td className="p-2 text-center font-bold text-emerald-700 bg-emerald-50/20">{item.locations['ruang_farmasi'] || 0}</td>
-                      <td className="p-2 text-center text-slate-700 font-medium">{item.locations['pustu'] || 0}</td>
-                      <td className="p-2 text-center text-slate-800 font-medium">{item.locations['igd'] || 0}</td>
-                      <td className="p-2 text-center text-slate-700 font-medium">{item.locations['lab'] || 0}</td>
-                      <td className="p-2 text-center text-slate-700 font-medium">{item.locations['ruang_perawatan'] || 0}</td>
-                      <td className="p-2 text-center text-slate-700 font-medium">{item.locations['poli_gizi'] || 0}</td>
-                      <td className="p-2 text-center text-slate-705 font-medium">{item.locations['poli_tb'] || 0}</td>
-                      <td className="p-2 text-center text-slate-700 font-medium">{item.locations['kamar_bersalin'] || 0}</td>
-                      <td className="p-2 text-center text-slate-700 font-medium">{item.locations['pos_ptm'] || 0}</td>
-                      <td className="p-3 text-right font-extrabold text-slate-900 bg-slate-100">
-                        {item.globalSum} <span className="text-[9px] font-normal text-slate-550">{item.unit}</span>
-                      </td>
-                    </tr>
-                  ))}
+                  {stokOpnameData.map((item) => {
+                    const bStock = stocks['gudang']?.[item.id];
+                    const hasDifferentPrices = bStock && bStock.batches && bStock.batches.some((b, _, arr) => b.price && arr.some(x => x.price && x.price !== b.price));
+                    const isExpanded = expandedDrugId === item.id;
+
+                    return (
+                      <React.Fragment key={item.id}>
+                        <tr className="hover:bg-slate-50">
+                          <td 
+                            onClick={() => {
+                              if (bStock && bStock.batches && bStock.batches.length > 0) {
+                                setExpandedDrugId(isExpanded ? null : item.id);
+                              }
+                            }}
+                            className={`p-3 font-semibold text-slate-800 sticky left-0 bg-white z-10 border-r border-slate-100 max-w-[180px] truncate cursor-pointer ${bStock && bStock.batches && bStock.batches.length > 0 ? 'hover:bg-slate-100' : ''}`}
+                          >
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="truncate" title={item.name}>{item.name}</p>
+                              {hasDifferentPrices && (
+                                <span className="text-[8px] bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded font-extrabold tracking-tight" title="Terdapat sediaan dengan harga masuk berbeda">
+                                  Rp Berbeda
+                                </span>
+                              )}
+                              {bStock && bStock.batches && bStock.batches.length > 0 && (
+                                <span className="text-[9px] text-blue-600 font-bold hover:underline">
+                                  {isExpanded ? '▲ Sembunyikan' : '▼ Rincian'}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[9px] text-slate-400">{item.unit} &bull; {item.group}</span>
+                          </td>
+                          <td className="p-2 text-center font-bold text-blue-700 bg-blue-50/20">{item.locations['gudang'] || 0}</td>
+                          <td className="p-2 text-center font-bold text-emerald-700 bg-emerald-50/20">{item.locations['ruang_farmasi'] || 0}</td>
+                          <td className="p-2 text-center text-slate-700 font-medium">{item.locations['pustu'] || 0}</td>
+                          <td className="p-2 text-center text-slate-800 font-medium">{item.locations['igd'] || 0}</td>
+                          <td className="p-2 text-center text-slate-700 font-medium">{item.locations['lab'] || 0}</td>
+                          <td className="p-2 text-center text-slate-700 font-medium">{item.locations['ruang_perawatan'] || 0}</td>
+                          <td className="p-2 text-center text-slate-700 font-medium">{item.locations['poli_gizi'] || 0}</td>
+                          <td className="p-2 text-center text-slate-705 font-medium">{item.locations['poli_tb'] || 0}</td>
+                          <td className="p-2 text-center text-slate-700 font-medium">{item.locations['kamar_bersalin'] || 0}</td>
+                          <td className="p-2 text-center text-slate-700 font-medium">{item.locations['pos_ptm'] || 0}</td>
+                          <td className="p-3 text-right font-extrabold text-slate-900 bg-slate-100">
+                            {item.globalSum} <span className="text-[9px] font-normal text-slate-550">{item.unit}</span>
+                          </td>
+                        </tr>
+                        {isExpanded && bStock && bStock.batches && bStock.batches.length > 0 && (
+                          <tr className="bg-slate-50/70 border-b border-dashed border-slate-200">
+                            <td colSpan={12} className="p-3">
+                              <div className="bg-white p-3.5 rounded-xl border border-dashed border-emerald-250 shadow-2xs max-w-4xl mx-auto space-y-3">
+                                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                                  <p className="font-bold text-slate-700 text-[11px] uppercase tracking-wide flex items-center gap-1.5">
+                                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Rincian Sisa Persediaan Gudang &amp; Harga Masuk Berbeda ({item.name}):
+                                  </p>
+                                  <span className="text-[10px] text-slate-500 font-medium">Berdasarkan data penerimaan terverifikasi</span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                  {bStock.batches.map((batch, bIdx) => {
+                                    const bPrice = batch.price || GET_DRUG_PRICE(item.id);
+                                    return (
+                                      <div key={bIdx} className="bg-slate-50 hover:bg-emerald-50/20 p-2.5 rounded-lg border border-slate-150 transition-colors flex justify-between items-center text-xs">
+                                        <div className="space-y-1 text-left">
+                                          <div>
+                                            <span className="font-mono text-slate-700 font-bold bg-slate-200 px-1.5 py-0.5 rounded text-[10px]">{batch.batchNo}</span>
+                                            <span className="ml-1.5 px-1 py-0.5 bg-blue-100 text-blue-850 rounded text-[9px] font-black">{batch.source}</span>
+                                          </div>
+                                          <p className="text-[10px] text-slate-500">Exp: <span className="text-rose-600 font-medium">{batch.expDate}</span></p>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className="font-bold text-slate-800">{batch.quantity.toLocaleString('id-ID')} <span className="text-[10px] text-slate-450 font-normal">{item.unit}</span></p>
+                                          <p className="text-[11px] text-emerald-700 font-extrabold mt-0.5">@ Rp {bPrice.toLocaleString('id-ID')}</p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="text-[10px] text-slate-400 flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-100">
+                                  <AlertCircle className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                  <span>Sistem mengimplementasikan FEFO (First-Expired, First-Out) terotomasi. Harga masuk yang tertera sesuai dengan faktur/dokumen penerimaan masing-masing batch.</span>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

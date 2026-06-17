@@ -12,6 +12,8 @@ interface ApotekPasienViewProps {
   prescriptions: Prescription[];
   stocks: StockStore;
   onAddPrescription: (prescription: Prescription) => void;
+  onDeletePrescription?: (rxId: string) => void;
+  activeRole?: string;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
 }
@@ -21,6 +23,8 @@ export default function ApotekPasienView({
   prescriptions,
   stocks,
   onAddPrescription,
+  onDeletePrescription,
+  activeRole,
   systemDate,
   onNotify,
 }: ApotekPasienViewProps) {
@@ -475,9 +479,21 @@ export default function ApotekPasienView({
               <div key={rx.id} className="p-4 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-2xl transition duration-150 space-y-3 relative group overflow-hidden">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-mono text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-150 px-2 py-0.5 rounded-md">
-                      {rx.id}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-150 px-2 py-0.5 rounded-md">
+                        {rx.id}
+                      </span>
+                      {onDeletePrescription && (activeRole === 'farmasi' || activeRole === 'apj') && (
+                        <button
+                          onClick={() => onDeletePrescription(rx.id)}
+                          className="p-1 text-slate-400 hover:text-red-650 transition rounded hover:bg-rose-50"
+                          title="Hapus / Batalkan Resep"
+                          id={`delete-rx-${rx.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                     <h4 className="font-bold text-slate-800 text-sm mt-1.5">{rx.patientName} &bull; <span className="text-slate-500 font-medium text-xs">{rx.age} Thn</span></h4>
                     <p className="text-xs text-slate-450 font-medium">Dokter: <span className="text-slate-700 font-semibold">{rx.drName}</span></p>
                   </div>
