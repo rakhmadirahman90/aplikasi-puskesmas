@@ -1,0 +1,6 @@
+{
+  "name": "Sistem Manajemen Farmasi Puskesmas",
+  "description": "Sistem verifikasi farmasi puskesmas, penerimaan barang, pengeluaran ampra unit/jejaring secara terintegrasi, pengurangan stok resep pasien realtime, notifikasi kadaluarsa, serta pembuatan berbagai laporan kefarmasian, narkotika, dan keuangan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
