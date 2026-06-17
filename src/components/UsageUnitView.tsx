@@ -46,7 +46,16 @@ export default function UsageUnitView({
 
   // Temp form state for single drug usage line
   const [selectedMedId, setSelectedMedId] = useState('');
+  const [mSearchTerm, setMSearchTerm] = useState('');
   const [qty, setQty] = useState<number>(0);
+
+  const filteredMedicines = useMemo(() => {
+    return medicines.filter(m =>
+      m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+    );
+  }, [medicines, mSearchTerm]);
 
   // Filter internal satellite units (exclude Gudang and Ruang Farmasi from typical terminal list, although Ruang Farmasi can log usages too if they want)
   const satelliteUnits = useMemo(() => {
@@ -79,6 +88,7 @@ export default function UsageUnitView({
 
     setUseLines([...useLines, { medicineId: selectedMedId, qtyUsed: qty }]);
     setSelectedMedId('');
+    setMSearchTerm('');
     setQty(0);
   };
 
@@ -210,24 +220,34 @@ export default function UsageUnitView({
               <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Pilih Sediaan Serta Jumlah yang Dikeluarkan Hari Ini:</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-                <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Sediaan Obat di Unit Anda</label>
-                  <select
-                    value={selectedMedId}
-                    onChange={(e) => setSelectedMedId(e.target.value)}
-                    className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1.5 text-xs text-slate-700 font-medium"
-                    id="usage-med-selector"
-                  >
-                    <option value="">-- Pilih Obat --</option>
-                    {medicines.map(m => {
-                      const avail = activeUnitStock[m.id]?.total || 0;
-                      return (
-                        <option key={m.id} value={m.id} disabled={avail === 0}>
-                          {m.name} [{avail > 0 ? `Tersedia: ${avail} ${m.unit}` : 'KOSONG'}]
-                        </option>
-                      );
-                    })}
-                  </select>
+                <div className="sm:col-span-2 text-left">
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cari & Pilih Sediaan Obat di Unit Anda</label>
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      placeholder="🔍 Ketik nama obat..."
+                      value={mSearchTerm}
+                      onChange={(e) => setMSearchTerm(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1 text-xs text-slate-705 placeholder-slate-400 font-medium"
+                      id="usage-med-search"
+                    />
+                    <select
+                      value={selectedMedId}
+                      onChange={(e) => setSelectedMedId(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1.5 text-xs text-slate-700 font-medium"
+                      id="usage-med-selector"
+                    >
+                      <option value="">-- {filteredMedicines.length === 0 ? "Tidak ada sediaan cocok" : `Pilih Obat (${filteredMedicines.length} ditemukan)`} --</option>
+                      {filteredMedicines.map(m => {
+                        const avail = activeUnitStock[m.id]?.total || 0;
+                        return (
+                          <option key={m.id} value={m.id} disabled={avail === 0}>
+                            {m.name} [{avail > 0 ? `Tersedia: ${avail} ${m.unit}` : 'KOSONG'}]
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
                 </div>
 
                 <div>

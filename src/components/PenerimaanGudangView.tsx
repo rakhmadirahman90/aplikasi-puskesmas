@@ -46,10 +46,17 @@ export default function PenerimaanGudangView({
 
   // Item row form state
   const [selectedMedId, setSelectedMedId] = useState('');
+  const [mSearchTerm, setMSearchTerm] = useState('');
   const [qty, setQty] = useState<number>(0);
   const [batchNo, setBatchNo] = useState('');
   const [expDate, setExpDate] = useState('');
   const [fundSource, setFundSource] = useState<'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF'>('DAK');
+
+  const filteredMedicines = medicines.filter(m => 
+    m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) || 
+    m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) || 
+    m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+  );
 
   const handleAddItemRow = () => {
     if (!selectedMedId || qty <= 0 || !batchNo || !expDate) {
@@ -69,6 +76,7 @@ export default function PenerimaanGudangView({
     setItems([...items, newItem]);
     // Reset item form
     setSelectedMedId('');
+    setMSearchTerm('');
     setQty(0);
     setBatchNo('');
     setExpDate('');
@@ -228,19 +236,29 @@ export default function PenerimaanGudangView({
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Item Farmasi yang Masuk:</h4>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
-                <div className="sm:col-span-1 md:col-span-2">
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Pilih Obat</label>
-                  <select
-                    value={selectedMedId}
-                    onChange={(e) => setSelectedMedId(e.target.value)}
-                    className="w-full border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2.5 py-1.5 text-xs text-slate-700"
-                    id="medicine-item-select"
-                  >
-                    <option value="">-- Hubungkan Sediaan --</option>
-                    {medicines.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
-                    ))}
-                  </select>
+                <div className="sm:col-span-1 md:col-span-2 text-left">
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cari & Pilih Obat</label>
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      placeholder="🔍 Ketik nama obat..."
+                      value={mSearchTerm}
+                      onChange={(e) => setMSearchTerm(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2.5 py-1 text-xs text-slate-700 placeholder-slate-400"
+                      id="medicine-search-input"
+                    />
+                    <select
+                      value={selectedMedId}
+                      onChange={(e) => setSelectedMedId(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2.5 py-1.5 text-xs text-slate-700 font-medium"
+                      id="medicine-item-select"
+                    >
+                      <option value="">-- {filteredMedicines.length === 0 ? "Tidak ada sediaan cocok" : `Pilih Sediaan (${filteredMedicines.length} ditemukan)`} --</option>
+                      {filteredMedicines.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div>

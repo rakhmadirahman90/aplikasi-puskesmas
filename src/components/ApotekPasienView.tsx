@@ -42,9 +42,18 @@ export default function ApotekPasienView({
 
   // Item row form state
   const [selectedMedId, setSelectedMedId] = useState('');
+  const [mSearchTerm, setMSearchTerm] = useState('');
   const [qty, setQty] = useState<number>(0);
   const [dosage, setDosage] = useState('');
   const [isCompound, setIsCompound] = useState(false);
+
+  const filteredMedicines = useMemo(() => {
+    return medicines.filter(m =>
+      m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+    );
+  }, [medicines, mSearchTerm]);
 
   // Search/Lookup State
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,6 +90,7 @@ export default function ApotekPasienView({
     setLines([...lines, newLine]);
     // Reset inputs
     setSelectedMedId('');
+    setMSearchTerm('');
     setQty(0);
     setDosage('');
     setIsCompound(false);
@@ -247,24 +257,34 @@ export default function ApotekPasienView({
               <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Tambahkan Sediaan Obat Pada Resep:</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 items-end">
-                <div className="md:col-span-4">
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Pilih Nama Obat</label>
-                  <select
-                    value={selectedMedId}
-                    onChange={(e) => setSelectedMedId(e.target.value)}
-                    className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1.5 text-xs text-slate-700 font-semibold"
-                    id="line-item-med"
-                  >
-                    <option value="">-- Cari Sediaan Obat --</option>
-                    {medicines.map(m => {
-                      const avail = apotekStock[m.id]?.total || 0;
-                      return (
-                        <option key={m.id} value={m.id}>
-                          {m.name} [Stok Ruangan: {avail} {m.unit}]
-                        </option>
-                      );
-                    })}
-                  </select>
+                <div className="md:col-span-4 text-left">
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cari & Pilih Nama Obat</label>
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      placeholder="🔍 Ketik nama obat..."
+                      value={mSearchTerm}
+                      onChange={(e) => setMSearchTerm(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1 text-xs text-slate-700 placeholder-slate-400 font-semibold"
+                      id="prescription-med-search"
+                    />
+                    <select
+                      value={selectedMedId}
+                      onChange={(e) => setSelectedMedId(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1.5 text-xs text-slate-700 font-semibold"
+                      id="line-item-med"
+                    >
+                      <option value="">-- {filteredMedicines.length === 0 ? "Tidak ada sediaan cocok" : `Cari Sediaan Obat (${filteredMedicines.length} ditemukan)`} --</option>
+                      {filteredMedicines.map(m => {
+                        const avail = apotekStock[m.id]?.total || 0;
+                        return (
+                          <option key={m.id} value={m.id}>
+                            {m.name} [Stok: {avail} {m.unit}]
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">

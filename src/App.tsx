@@ -14,6 +14,8 @@ import {
   INITIAL_PRESCRIPTIONS,
   INITIAL_USAGES
 } from './mockData';
+import { db, seedDatabaseIfEmpty, resetDatabaseFirestore } from './firebase';
+import { onSnapshot, collection, doc, setDoc } from 'firebase/firestore';
 
 // Subcomponents
 import DashboardView from './components/DashboardView';
@@ -83,7 +85,7 @@ export default function App() {
   const [medicines] = useState<Medicine[]>(INITIAL_MEDICINES);
   const [units] = useState<UnitInfo[]>(INITIAL_UNITS);
   
-  // Reactive state loaded from localStorage as fallback
+  // Reactive state loaded from Firestore in real-time
   const [stocks, setStocks] = useState<StockStore>(INITIAL_STOCKS);
   const [receipts, setReceipts] = useState<Receipt[]>(INITIAL_RECEIPTS);
   const [ampras, setAmpras] = useState<Ampra[]>(INITIAL_AMPRAS);
@@ -98,24 +100,9 @@ export default function App() {
   const [activeUnitId, setActiveUnitId] = useState<string>('pustu');
   const [userName, setUserName] = useState<string>('Andi Sukri, A.Md.Farm');
 
-  // Load from LocalStorage
+  // Load Sim Role from LocalStorage (for presentation preference)
   useEffect(() => {
     try {
-      const savedStocks = localStorage.getItem(LOCAL_STORAGE_KEY_STOCKS);
-      if (savedStocks) setStocks(JSON.parse(savedStocks));
-
-      const savedReceipts = localStorage.getItem(LOCAL_STORAGE_KEY_RECEIPTS);
-      if (savedReceipts) setReceipts(JSON.parse(savedReceipts));
-
-      const savedAmpras = localStorage.getItem(LOCAL_STORAGE_KEY_AMPRAS);
-      if (savedAmpras) setAmpras(JSON.parse(savedAmpras));
-
-      const savedPrescriptions = localStorage.getItem(LOCAL_STORAGE_KEY_PRESCRIPTIONS);
-      if (savedPrescriptions) setPrescriptions(JSON.parse(savedPrescriptions));
-
-      const savedUsages = localStorage.getItem(LOCAL_STORAGE_KEY_USAGES);
-      if (savedUsages) setUsages(JSON.parse(savedUsages));
-
       const savedRole = localStorage.getItem(LOCAL_STORAGE_KEY_ROLE);
       if (savedRole) {
         const parsed = JSON.parse(savedRole);
@@ -123,15 +110,93 @@ export default function App() {
         setActiveUnitId(parsed.unitId);
         setUserName(parsed.userName);
       }
-
-      const savedDate = localStorage.getItem(LOCAL_STORAGE_KEY_DATE);
-      if (savedDate) setSystemDate(JSON.parse(savedDate));
     } catch (e) {
-      console.warn("Could not reload saved system states", e);
+      console.warn("Could not reload saved simulation states", e);
     }
   }, []);
 
-  // Save to LocalStorage helper
+  // Set up Firebase Firestore Real-Time Subscriptions
+  useEffect(() => {
+    let unsubscribes: Array<() => void> = [];
+
+    const setupDatabaseSubscription = async () => {
+      // Warm up / seed empty database first
+      await seedDatabaseIfEmpty();
+
+      // 1. Real-time system config
+      const unsubConfig = onSnapshot(doc(db, 'system', 'config'), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.systemDate) setSystemDate(data.systemDate);
+        }
+      });
+      unsubscribes.push(unsubConfig);
+
+      // 2. Real-time stocks store
+      const unsubStocks = onSnapshot(collection(db, 'stocks'), (qSnap) => {
+        const updatedStocks: StockStore = {};
+        qSnap.forEach((docSnap) => {
+          updatedStocks[docSnap.id] = docSnap.data() as any;
+        });
+        setStocks(updatedStocks);
+      });
+      unsubscribes.push(unsubStocks);
+
+      // 3. Real-time receipts
+      const unsubReceipts = onSnapshot(collection(db, 'receipts'), (qSnap) => {
+        const updatedReceipts: Receipt[] = [];
+        qSnap.forEach((docSnap) => {
+          updatedReceipts.push(docSnap.data() as Receipt);
+        });
+        updatedReceipts.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
+        setReceipts(updatedReceipts);
+      });
+      unsubscribes.push(unsubReceipts);
+
+      // 4. Real-time ampras
+      const unsubAmpras = onSnapshot(collection(db, 'ampras'), (qSnap) => {
+        const updatedAmpras: Ampra[] = [];
+        qSnap.forEach((docSnap) => {
+          updatedAmpras.push(docSnap.data() as Ampra);
+        });
+        updatedAmpras.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
+        setAmpras(updatedAmpras);
+      });
+      unsubscribes.push(unsubAmpras);
+
+      // 5. Real-time prescriptions
+      const unsubPrescriptions = onSnapshot(collection(db, 'prescriptions'), (qSnap) => {
+        const updatedPrescriptions: Prescription[] = [];
+        qSnap.forEach((docSnap) => {
+          updatedPrescriptions.push(docSnap.data() as Prescription);
+        });
+        updatedPrescriptions.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
+        setPrescriptions(updatedPrescriptions);
+      });
+      unsubscribes.push(unsubPrescriptions);
+
+      // 6. Real-time usages
+      const unsubUsages = onSnapshot(collection(db, 'usages'), (qSnap) => {
+        const updatedUsages: DailyUsage[] = [];
+        qSnap.forEach((docSnap) => {
+          updatedUsages.push(docSnap.data() as DailyUsage);
+        });
+        updatedUsages.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
+        setUsages(updatedUsages);
+      });
+      unsubscribes.push(unsubUsages);
+    };
+
+    setupDatabaseSubscription().catch(e => {
+      console.error("Firebase database synchronization failure:", e);
+    });
+
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
+  }, []);
+
+  // Save to LocalStorage helper for role preference
   const saveState = (key: string, data: any) => {
     try {
       localStorage.setItem(key, JSON.stringify(data));
@@ -162,58 +227,52 @@ export default function App() {
   };
 
   // Date changes helper
-  const handleSetSystemDate = (date: string) => {
-    setSystemDate(date);
-    saveState(LOCAL_STORAGE_KEY_DATE, date);
+  const handleSetSystemDate = async (date: string) => {
+    try {
+      await setDoc(doc(db, 'system', 'config'), { systemDate: date });
+      addNotification('success', `Tanggal sistem disinkronkan ke ${date}`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memperbarui tanggal sistem.");
+    }
   };
 
   // Reset SIFP database triggers
-  const handleResetStorage = () => {
+  const handleResetStorage = async () => {
     if (window.confirm("Beneran ingin menyetel ulang database simulasi farmasi ke default?")) {
-      localStorage.removeItem(LOCAL_STORAGE_KEY_STOCKS);
-      localStorage.removeItem(LOCAL_STORAGE_KEY_RECEIPTS);
-      localStorage.removeItem(LOCAL_STORAGE_KEY_AMPRAS);
-      localStorage.removeItem(LOCAL_STORAGE_KEY_PRESCRIPTIONS);
-      localStorage.removeItem(LOCAL_STORAGE_KEY_USAGES);
-      localStorage.removeItem(LOCAL_STORAGE_KEY_ROLE);
-      localStorage.removeItem(LOCAL_STORAGE_KEY_DATE);
-
-      // Re-trigger states
-      setStocks(INITIAL_STOCKS);
-      setReceipts(INITIAL_RECEIPTS);
-      setAmpras(INITIAL_AMPRAS);
-      setPrescriptions(INITIAL_PRESCRIPTIONS);
-      setUsages(INITIAL_USAGES);
-      setSystemDate('2026-06-17');
-      setActiveRole('gudang');
-      setActiveUnitId('pustu');
-      setUserName('Andi Sukri, A.Md.Farm');
-      addNotification('success', "Database farmasi puskesmas berhasil dikalibrasi ke sediaan awal!");
+      try {
+        await resetDatabaseFirestore();
+        addNotification('success', "Database simulasi berhasil disinkronkan kembali ke sediaan awal secara real time!");
+      } catch (e) {
+        console.error(e);
+        addNotification('error', "Gagal melakukan kalibrasi database.");
+      }
     }
   };
 
   // RECEIPT EVENTS
-  const handleAddReceipt = (newReceipt: Receipt) => {
-    const updated = [newReceipt, ...receipts];
-    setReceipts(updated);
-    saveState(LOCAL_STORAGE_KEY_RECEIPTS, updated);
+  const handleAddReceipt = async (newReceipt: Receipt) => {
+    try {
+      await setDoc(doc(db, 'receipts', newReceipt.id), newReceipt);
+      addNotification('success', `Penerimaan barang ${newReceipt.id} berhasil ditambahkan secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal menambahkan penerimaan.");
+    }
   };
 
   // APJ confirms Receipt and actually stocks increase in Gudang
-  const handleVerifyReceipt = (receiptId: string, apjName: string) => {
-    // 1. Mark receipt verified
-    const updatedReceipts = receipts.map(r => {
-      if (r.id === receiptId) {
-        return { ...r, verifiedByAPJ: true, apjName };
-      }
-      return r;
-    });
+  const handleVerifyReceipt = async (receiptId: string, apjName: string) => {
+    try {
+      // 1. Mark receipt verified in Firestore
+      const receiptToVerify = receipts.find(r => r.id === receiptId);
+      if (!receiptToVerify) return;
 
-    // 2. Adjust Stocks Gudang (add items and batch quantities)
-    const receiptToVerify = receipts.find(r => r.id === receiptId);
-    if (receiptToVerify) {
+      const updatedReceipt = { ...receiptToVerify, verifiedByAPJ: true, apjName };
+      await setDoc(doc(db, 'receipts', receiptId), updatedReceipt);
+
+      // 2. Adjust Stocks Gudang (add items and batch quantities) in Firestore
       const currentStocks = JSON.parse(JSON.stringify(stocks)); // Deep copy helper
-
       if (!currentStocks['gudang']) {
         currentStocks['gudang'] = {};
       }
@@ -239,137 +298,150 @@ export default function App() {
         currentStocks['gudang'][item.medicineId] = currentItem;
       });
 
-      setStocks(currentStocks);
-      saveState(LOCAL_STORAGE_KEY_STOCKS, currentStocks);
+      // Write 'gudang' stock document to Firestore
+      await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang']);
+      addNotification('success', `Apoteker memverifikasi penerimaan ${receiptId}. Stok Gudang bertambah secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memverifikasi penerimaan.");
     }
-
-    setReceipts(updatedReceipts);
-    saveState(LOCAL_STORAGE_KEY_RECEIPTS, updatedReceipts);
   };
 
   // AMPRA EVENTS
-  const handleCreateAmpra = (newAmpra: Ampra) => {
-    const updated = [newAmpra, ...ampras];
-    setAmpras(updated);
-    saveState(LOCAL_STORAGE_KEY_AMPRAS, updated);
+  const handleCreateAmpra = async (newAmpra: Ampra) => {
+    try {
+      await setDoc(doc(db, 'ampras', newAmpra.id), newAmpra);
+      addNotification('success', `Permintaan (Ampra) ${newAmpra.id} dikirim ke Gudang secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memproses permintaan ampra.");
+    }
   };
 
   // Life Cycle Updater for Ampra (Gudang allocating or APJ final approval)
-  const handleUpdateAmpraStatus = (ampraId: string, updates: Partial<Ampra>) => {
-    const targetAmpra = ampras.find(a => a.id === ampraId);
-    if (!targetAmpra) return;
+  const handleUpdateAmpraStatus = async (ampraId: string, updates: Partial<Ampra>) => {
+    try {
+      const targetAmpra = ampras.find(a => a.id === ampraId);
+      if (!targetAmpra) return;
 
-    const updatedAmpras = ampras.map(a => {
-      if (a.id === ampraId) {
-        return { ...a, ...updates };
-      }
-      return a;
-    });
+      const updatedAmpra = { ...targetAmpra, ...updates };
+      await setDoc(doc(db, 'ampras', ampraId), updatedAmpra);
 
-    // CRITICAL CORE LOGIC: When status shifts to 'Selesai' (Authorized by APJ):
-    // 1. Deduct Gudang stocks (using FEFO/First Expired First Out method)
-    // 2. Automatically Add stocks to destination satellite unit (Ruang Farmasi, IGD, Pustu, etc.)
-    if (updates.status === 'Selesai' && targetAmpra.status !== 'Selesai') {
-      const currentStocks = JSON.parse(JSON.stringify(stocks));
+      // CRITICAL CORE LOGIC: When status shifts to 'Selesai' (Authorized by APJ):
+      // 1. Deduct Gudang stocks (using FEFO/First Expired First Out method)
+      // 2. Automatically Add stocks to destination satellite unit (Ruang Farmasi, IGD, Pustu, etc.)
+      if (updates.status === 'Selesai' && targetAmpra.status !== 'Selesai') {
+        const currentStocks = JSON.parse(JSON.stringify(stocks));
 
-      // Get accurate lines to transfer
-      const linesToTransfer = updates.items || targetAmpra.items;
+        // Get accurate lines to transfer
+        const linesToTransfer = updates.items || targetAmpra.items;
 
-      linesToTransfer.forEach(line => {
-        const medId = line.medicineId;
-        const qtyToTransfer = line.approvedQty;
+        linesToTransfer.forEach(line => {
+          const medId = line.medicineId;
+          const qtyToTransfer = line.approvedQty;
 
-        if (qtyToTransfer <= 0) return;
+          if (qtyToTransfer <= 0) return;
 
-        // A. DEDUCT GUDANG (FEFO logic)
-        const gudStockObj = currentStocks['gudang']?.[medId];
-        if (gudStockObj) {
-          // Subtract total gudang
-          gudStockObj.total = Math.max(0, gudStockObj.total - qtyToTransfer);
+          // A. DEDUCT GUDANG (FEFO logic)
+          const gudStockObj = currentStocks['gudang']?.[medId];
+          if (gudStockObj) {
+            // Subtract total gudang
+            gudStockObj.total = Math.max(0, gudStockObj.total - qtyToTransfer);
 
-          // Subtract batch records selectively using FEFO
-          if (gudStockObj.batches && gudStockObj.batches.length > 0) {
-            // Sort batches: earliest expiring first
-            gudStockObj.batches.sort((a: any, b: any) => new Date(a.expDate).getTime() - new Date(b.expDate).getTime());
+            // Subtract batch records selectively using FEFO
+            if (gudStockObj.batches && gudStockObj.batches.length > 0) {
+              // Sort batches: earliest expiring first
+              gudStockObj.batches.sort((a: any, b: any) => new Date(a.expDate).getTime() - new Date(b.expDate).getTime());
 
-            let remainingToDeduct = qtyToTransfer;
-            for (let i = 0; i < gudStockObj.batches.length; i++) {
-              const b = gudStockObj.batches[i];
-              if (b.quantity >= remainingToDeduct) {
-                b.quantity -= remainingToDeduct;
-                remainingToDeduct = 0;
-                break;
-              } else {
-                remainingToDeduct -= b.quantity;
-                b.quantity = 0;
+              let remainingToDeduct = qtyToTransfer;
+              for (let i = 0; i < gudStockObj.batches.length; i++) {
+                const b = gudStockObj.batches[i];
+                if (b.quantity >= remainingToDeduct) {
+                  b.quantity -= remainingToDeduct;
+                  remainingToDeduct = 0;
+                  break;
+                } else {
+                  remainingToDeduct -= b.quantity;
+                  b.quantity = 0;
+                }
               }
+
+              // Remove empty batches
+              gudStockObj.batches = gudStockObj.batches.filter((b: any) => b.quantity > 0);
             }
-
-            // Remove empty batches
-            gudStockObj.batches = gudStockObj.batches.filter((b: any) => b.quantity > 0);
           }
-        }
 
-        // B. ADD TO SOURCE UNIT (Stock transfer flow)
-        if (!currentStocks[targetAmpra.sourceUnitId]) {
-          currentStocks[targetAmpra.sourceUnitId] = {};
-        }
+          // B. ADD TO SOURCE UNIT (Stock transfer flow)
+          if (!currentStocks[targetAmpra.sourceUnitId]) {
+            currentStocks[targetAmpra.sourceUnitId] = {};
+          }
 
-        const unitItem = currentStocks[targetAmpra.sourceUnitId][medId] || { total: 0 };
-        unitItem.total += qtyToTransfer;
-        currentStocks[targetAmpra.sourceUnitId][medId] = unitItem;
-      });
+          const unitItem = currentStocks[targetAmpra.sourceUnitId][medId] || { total: 0 };
+          unitItem.total += qtyToTransfer;
+          currentStocks[targetAmpra.sourceUnitId][medId] = unitItem;
+        });
 
-      setStocks(currentStocks);
-      saveState(LOCAL_STORAGE_KEY_STOCKS, currentStocks);
+        // Write both 'gudang' and source unit stock changes to Firestore
+        await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang'] || {});
+        await setDoc(doc(db, 'stocks', targetAmpra.sourceUnitId), currentStocks[targetAmpra.sourceUnitId] || {});
+        addNotification('success', `Ampra ${ampraId} tuntas! Stok Gudang \& ${targetAmpra.sourceUnitId} disinkronkan real-time.`);
+      } else {
+        addNotification('success', `Permintaan (Ampra) ${ampraId} berhasil diperbarui.`);
+      }
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memperbarui status permintaan.");
     }
-
-    setAmpras(updatedAmpras);
-    saveState(LOCAL_STORAGE_KEY_AMPRAS, updatedAmpras);
   };
 
   // PRESCRIPTION CHECKOUT IN APOTEK
-  const handleAddPrescription = (newRx: Prescription) => {
-    // 1. Add record
-    const updated = [newRx, ...prescriptions];
-    setPrescriptions(updated);
-    saveState(LOCAL_STORAGE_KEY_PRESCRIPTIONS, updated);
+  const handleAddPrescription = async (newRx: Prescription) => {
+    try {
+      // 1. Add record to Firestore
+      await setDoc(doc(db, 'prescriptions', newRx.id), newRx);
 
-    // 2. Reduce Apotheke Stocks instantly
-    const currentStocks = JSON.parse(JSON.stringify(stocks));
-    newRx.items.forEach(item => {
-      if (!currentStocks['ruang_farmasi']) currentStocks['ruang_farmasi'] = {};
-      const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
-      
-      rfObj.total = Math.max(0, rfObj.total - item.qty);
-      currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
-    });
+      // 2. Reduce Apotheke Stocks instantly in Firestore
+      const currentStocks = JSON.parse(JSON.stringify(stocks));
+      newRx.items.forEach(item => {
+        if (!currentStocks['ruang_farmasi']) currentStocks['ruang_farmasi'] = {};
+        const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
+        
+        rfObj.total = Math.max(0, rfObj.total - item.qty);
+        currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
+      });
 
-    setStocks(currentStocks);
-    saveState(LOCAL_STORAGE_KEY_STOCKS, currentStocks);
+      await setDoc(doc(db, 'stocks', 'ruang_farmasi'), currentStocks['ruang_farmasi'] || {});
+      addNotification('success', `Resep untuk ${newRx.patientName} direkam secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memproses resep obat.");
+    }
   };
 
   // DAILY SATELLITE USAGE RECORD
-  const handleAddUsage = (newUsage: DailyUsage) => {
-    // 1. Add use record
-    const updated = [newUsage, ...usages];
-    setUsages(updated);
-    saveState(LOCAL_STORAGE_KEY_USAGES, updated);
+  const handleAddUsage = async (newUsage: DailyUsage) => {
+    try {
+      // 1. Add use record in Firestore
+      await setDoc(doc(db, 'usages', newUsage.id), newUsage);
 
-    // 2. Reduce corresponding satellite unit stocks instantly
-    const currentStocks = JSON.parse(JSON.stringify(stocks));
-    const targetUnit = newUsage.unitId;
+      // 2. Reduce corresponding satellite unit stocks instantly in Firestore
+      const currentStocks = JSON.parse(JSON.stringify(stocks));
+      const targetUnit = newUsage.unitId;
 
-    newUsage.items.forEach(item => {
-      if (!currentStocks[targetUnit]) currentStocks[targetUnit] = {};
-      const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
+      newUsage.items.forEach(item => {
+        if (!currentStocks[targetUnit]) currentStocks[targetUnit] = {};
+        const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
 
-      unitObj.total = Math.max(0, unitObj.total - item.qtyUsed);
-      currentStocks[targetUnit][item.medicineId] = unitObj;
-    });
+        unitObj.total = Math.max(0, unitObj.total - item.qtyUsed);
+        currentStocks[targetUnit][item.medicineId] = unitObj;
+      });
 
-    setStocks(currentStocks);
-    saveState(LOCAL_STORAGE_KEY_STOCKS, currentStocks);
+      await setDoc(doc(db, 'stocks', targetUnit), currentStocks[targetUnit] || {});
+      addNotification('success', `Laporan pemakaian unit disinkronkan secara real-time!`);
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal merekam pemakaian harian.");
+    }
   };
 
   return (

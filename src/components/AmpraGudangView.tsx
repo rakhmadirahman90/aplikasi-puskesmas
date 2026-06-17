@@ -49,7 +49,14 @@ export default function AmpraGudangView({
 
   // Temp form state for adding a request line
   const [selectedMedId, setSelectedMedId] = useState('');
+  const [mSearchTerm, setMSearchTerm] = useState('');
   const [qty, setQty] = useState<number>(0);
+
+  const filteredMedicines = medicines.filter(m =>
+    m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+    m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+    m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+  );
 
   // Gudang allocation state for a selected ampra card
   const [reviewingAmpraId, setReviewingAmpraId] = useState<string | null>(null);
@@ -66,6 +73,7 @@ export default function AmpraGudangView({
     }
     setRequestLines([...requestLines, { medicineId: selectedMedId, requestedQty: qty }]);
     setSelectedMedId('');
+    setMSearchTerm('');
     setQty(0);
   };
 
@@ -264,19 +272,29 @@ export default function AmpraGudangView({
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 space-y-4">
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tambahkan Sediaan Dalam Usulan:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                <div className="md:col-span-8">
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Pilih Nama Obat</label>
-                  <select
-                    value={selectedMedId}
-                    onChange={(e) => setSelectedMedId(e.target.value)}
-                    className="w-full border border-slate-200 bg-white outline-none rounded px-2.5 py-1.5 text-xs text-slate-700"
-                    id="ampra-med-selector"
-                  >
-                    <option value="">-- Hubungkan Sediaan --</option>
-                    {medicines.map(m => (
-                      <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
-                    ))}
-                  </select>
+                <div className="md:col-span-8 text-left">
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cari & Pilih Nama Obat</label>
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      placeholder="🔍 Ketik nama obat..."
+                      value={mSearchTerm}
+                      onChange={(e) => setMSearchTerm(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2.5 py-1 text-xs text-slate-700 placeholder-slate-400"
+                      id="ampra-med-search"
+                    />
+                    <select
+                      value={selectedMedId}
+                      onChange={(e) => setSelectedMedId(e.target.value)}
+                      className="w-full border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2.5 py-1.5 text-xs text-slate-700"
+                      id="ampra-med-selector"
+                    >
+                      <option value="">-- {filteredMedicines.length === 0 ? "Tidak ada sediaan cocok" : `Hubungkan Sediaan (${filteredMedicines.length} ditemukan)`} --</option>
+                      {filteredMedicines.map(m => (
+                        <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="md:col-span-3">
