@@ -40,6 +40,7 @@ import {
   Pill,
   RefreshCw,
   Settings,
+  Palette,
   ShieldCheck,
   Truck,
   Users,
@@ -57,10 +58,134 @@ const LOCAL_STORAGE_KEY_PRESCRIPTIONS = 'sifp_prescriptions_store';
 const LOCAL_STORAGE_KEY_USAGES = 'sifp_usages_store';
 const LOCAL_STORAGE_KEY_ROLE = 'sifp_active_role_store';
 const LOCAL_STORAGE_KEY_DATE = 'sifp_system_date_store';
+const LOCAL_STORAGE_KEY_THEME = 'sifp_selected_theme_store';
+
+interface ThemeInfo {
+  id: string;
+  name: string;
+  desc: string;
+  colorValue: string;
+}
+
+const THEMES_LIST: ThemeInfo[] = [
+  { id: 'emerald', name: 'Emerald', desc: 'Hijau Sehat Puskesmas', colorValue: '#10b981' },
+  { id: 'blue', name: 'Sapphire', desc: 'Biru Apotek Modern', colorValue: '#3b82f6' },
+  { id: 'teal', name: 'Herbal Teal', desc: 'Toska Mint Alami', colorValue: '#14b8a6' },
+  { id: 'violet', name: 'Amethyst', desc: 'Ungu Premium Spesialis', colorValue: '#8b5cf6' },
+  { id: 'slate', name: 'Carbon Steel', desc: 'Professional Modern Steel', colorValue: '#64748b' }
+];
+
+const THEME_VARIABLES_MAP: Record<string, Record<string, string>> = {
+  emerald: {
+    '--color-emerald-50': '#f0fdf4',
+    '--color-emerald-100': '#dcfce7',
+    '--color-emerald-200': '#bbf7d0',
+    '--color-emerald-300': '#86efac',
+    '--color-emerald-400': '#4ade80',
+    '--color-emerald-500': '#10b981',
+    '--color-emerald-600': '#059669',
+    '--color-emerald-700': '#047857',
+    '--color-emerald-800': '#065f46',
+    '--color-emerald-900': '#064e3b',
+    '--color-emerald-950': '#022c22',
+  },
+  blue: {
+    '--color-emerald-50': '#eff6ff',
+    '--color-emerald-100': '#dbeafe',
+    '--color-emerald-200': '#bfdbfe',
+    '--color-emerald-300': '#93c5fd',
+    '--color-emerald-400': '#60a5fa',
+    '--color-emerald-500': '#3b82f6',
+    '--color-emerald-600': '#2563eb',
+    '--color-emerald-700': '#1d4ed8',
+    '--color-emerald-800': '#1e40af',
+    '--color-emerald-900': '#1e3a8a',
+    '--color-emerald-950': '#172554',
+  },
+  teal: {
+    '--color-emerald-50': '#f0fdfa',
+    '--color-emerald-100': '#ccfbf1',
+    '--color-emerald-200': '#99f6e4',
+    '--color-emerald-300': '#5eead4',
+    '--color-emerald-400': '#2dd4bf',
+    '--color-emerald-500': '#14b8a6',
+    '--color-emerald-600': '#0d9488',
+    '--color-emerald-700': '#0f766e',
+    '--color-emerald-800': '#115e59',
+    '--color-emerald-900': '#134e4a',
+    '--color-emerald-950': '#042f2e',
+  },
+  violet: {
+    '--color-emerald-50': '#f5f3ff',
+    '--color-emerald-100': '#ede9fe',
+    '--color-emerald-200': '#ddd6fe',
+    '--color-emerald-300': '#c4b5fd',
+    '--color-emerald-400': '#a78bfa',
+    '--color-emerald-500': '#8b5cf6',
+    '--color-emerald-600': '#7c3aed',
+    '--color-emerald-700': '#6d28d9',
+    '--color-emerald-800': '#5b21b6',
+    '--color-emerald-900': '#4c1d95',
+    '--color-emerald-950': '#2e1065',
+  },
+  slate: {
+    '--color-emerald-50': '#f8fafc',
+    '--color-emerald-100': '#f1f5f9',
+    '--color-emerald-200': '#e2e8f0',
+    '--color-emerald-300': '#cbd5e1',
+    '--color-emerald-400': '#94a3b8',
+    '--color-emerald-500': '#64748b',
+    '--color-emerald-600': '#475569',
+    '--color-emerald-700': '#334155',
+    '--color-emerald-800': '#1e293b',
+    '--color-emerald-900': '#0f172a',
+    '--color-emerald-950': '#090d16',
+  }
+};
+
+const INDONESIAN_DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const INDONESIAN_MONTHS = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
 
 export default function App() {
   // Navigation
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+
+  // Theme selection
+  const [theme, setTheme] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY_THEME);
+      return saved || 'emerald';
+    } catch (_) {
+      return 'emerald';
+    }
+  });
+
+  // Clock dynamic time
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  // Effect to apply theme variable configuration
+  useEffect(() => {
+    try {
+      const activeThemeVars = THEME_VARIABLES_MAP[theme] || THEME_VARIABLES_MAP.emerald;
+      Object.entries(activeThemeVars).forEach(([key, val]) => {
+        document.documentElement.style.setProperty(key, val);
+      });
+      localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
+    } catch (e) {
+      console.error("Gagal menerapkan tema pada root element", e);
+    }
+  }, [theme]);
+
+  // Effect to interval clock
+  useEffect(() => {
+    const clockTimer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(clockTimer);
+  }, []);
 
   // Custom Toast Notifications Center
   const [notifications, setNotifications] = useState<Array<{
@@ -706,89 +831,178 @@ export default function App() {
     <div className="h-screen flex flex-col font-sans bg-slate-50 text-slate-800 overflow-hidden" id="main-app">
       
       {/* SIFP UPPER ACTION CONTROLLER NAVBAR */}
-      <header className="bg-gradient-to-r from-emerald-800 via-emerald-900 to-slate-900 text-white shadow-md border-b border-emerald-950 z-30 shrink-0" id="header-sifp">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+      <header className="bg-gradient-to-r from-emerald-800 via-emerald-900 to-slate-900 text-white shadow-sm border-b border-emerald-950/40 z-30 shrink-0" id="header-sifp">
+        <div className="max-w-7xl mx-auto px-3 py-1.5 md:px-4 md:py-2.5 flex flex-col gap-1.5" id="header-sifp-inner">
           
-          {/* Logo Brand SIFP */}
-          <div className="flex items-center gap-2.5">
-            <div className="bg-white p-1.5 rounded-xl shadow-inner text-emerald-800">
-              <HeartPulse className="w-6 h-6 animate-pulse" />
+          {/* Main Top Bar: Logo & Micro-widgets */}
+          <div className="flex items-center justify-between gap-2.5 w-full" id="header-top-row">
+            
+            {/* Logo Brand SIFP */}
+            <div className="flex items-center gap-2">
+              <div className="bg-white/95 p-1 rounded-lg text-emerald-800 shadow-sm shrink-0">
+                <HeartPulse className="w-4 h-4 md:w-5 md:h-5 animate-pulse" />
+              </div>
+              <div className="text-left">
+                <h1 className="font-display font-extrabold text-xs md:text-sm tracking-wide flex items-center gap-1.5 leading-none">
+                  SIM-Farmasi
+                  <span className="text-[8px] bg-emerald-600/95 text-white px-1 py-0.2 rounded font-mono font-bold tracking-normal uppercase shrink-0">
+                    Puskesmas
+                  </span>
+                </h1>
+                <p className="text-[9px] text-emerald-250 leading-none mt-0.5 font-sans whitespace-nowrap">Parepare &bull; Verifikasi Terintegrasi</p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-display font-extrabold text-base tracking-wide flex items-center gap-1.5 leading-none">
-                SIM-Farmasi
-                <span className="text-[10px] bg-emerald-600 px-1.5 py-0.5 rounded font-mono font-bold tracking-normal uppercase">
-                  Puskesmas
-                </span>
-              </h1>
-              <p className="text-[10px] text-emerald-200 mt-0.5">Kota Parepare &bull; Verifikasi Terintegrasi</p>
+
+            {/* Right widgets: Real-time clock & theme selectors (compact design) */}
+            <div className="flex items-center gap-1.5 sm:gap-2" id="header-right-widgets">
+              
+              {/* Real-time Day/Time Header Widget inside glassmorphic badge */}
+              <div className="bg-black/20 backdrop-blur-xs px-2 py-1 rounded-lg border border-white/5 flex items-center gap-1 text-white/95 shadow-2xs" id="header-clock-widget">
+                <Calendar className="w-3 h-3 text-emerald-400 shrink-0 hidden xs:block" />
+                <div className="text-left leading-tight">
+                  <span className="block text-[7px] uppercase font-mono font-extrabold text-emerald-350 tracking-wider hidden sm:block">Waktu SIFP Real-Time</span>
+                  <span className="text-[9.5px] font-mono font-bold whitespace-nowrap text-slate-100">
+                    {(() => {
+                      try {
+                        const dateParts = systemDate.split('-');
+                        if (dateParts.length === 3) {
+                          const year = parseInt(dateParts[0]);
+                          const month = parseInt(dateParts[1]) - 1;
+                          const day = parseInt(dateParts[2]);
+                          const combinedDate = new Date(year, month, day, currentTime.getHours(), currentTime.getMinutes(), currentTime.getSeconds());
+                          
+                          const dayName = INDONESIAN_DAYS[combinedDate.getDay()] || 'Hari';
+                          const monthName = INDONESIAN_MONTHS[combinedDate.getMonth()] || 'Bulan';
+                          
+                          const pad = (num: number) => String(num).padStart(2, '0');
+                          const timeStr = `${pad(combinedDate.getHours())}:${pad(combinedDate.getMinutes())}:${pad(combinedDate.getSeconds())}`;
+                          
+                          return (
+                            <span className="inline-flex">
+                              <span className="sm:hidden">{dayName} &bull; {timeStr}</span>
+                              <span className="hidden sm:inline">{dayName}, {day} {monthName} {year} &bull; {timeStr} WIB</span>
+                            </span>
+                          );
+                        }
+                      } catch (e) {
+                        console.error(e);
+                      }
+                      return systemDate;
+                    })()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Compact Professional Theme Selector in Header */}
+              <div className="bg-black/20 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/5 flex items-center gap-1.5 text-white/95 shadow-2xs h-[24px] md:h-[28px]" id="header-theme-selector">
+                <Palette className="w-3 h-3 text-emerald-400 shrink-0" />
+                <div className="text-left hidden lg:block leading-none">
+                  <span className="block text-[7px] uppercase font-mono font-bold text-emerald-350 tracking-wider">Tema</span>
+                  <span className="text-[9px] font-sans font-bold text-slate-100 leading-none">
+                    {THEMES_LIST.find(t => t.id === theme)?.name}
+                  </span>
+                </div>
+                <div className="flex gap-1 items-center">
+                  {THEMES_LIST.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setTheme(t.id);
+                        addNotification('success', `Tema disesuaikan ke: ${t.name}`);
+                      }}
+                      title={`${t.name} • ${t.desc}`}
+                      type="button"
+                      className={`w-3 h-3 rounded-full border border-white/20 flex items-center justify-center transition-all cursor-pointer ${
+                        theme === t.id 
+                          ? 'scale-110 ring-1 ring-white shadow-xs' 
+                          : 'hover:scale-105 hover:border-white/50'
+                      }`}
+                      style={{ backgroundColor: t.colorValue }}
+                      id={`theme-header-btn-${t.id}`}
+                    >
+                      {theme === t.id && (
+                        <span className="w-0.5 h-0.5 rounded-full bg-white" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
             </div>
+
           </div>
 
-          {/* Active Sim Roles quick picker */}
-          <div className="flex flex-wrap items-center gap-2" id="sim-role-selectors">
-            <span className="text-[10px] text-slate-350 font-bold uppercase tracking-wide mr-1 flex items-center gap-1">
-              <Users className="w-3.5 h-3.5" /> Ganti Sim-Role:
-            </span>
+          {/* Sub-bar: Ganti Sim Role Selector (Scrollable, ultra-thin, borderless spacing) */}
+          <div className="flex items-center justify-between border-t border-white/10 pt-1.5 mt-0.5" id="header-bottom-row">
             
-            <button
-              onClick={() => handleSwitchRole('gudang')}
-              className={`px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
-                activeRole === 'gudang' 
-                  ? 'bg-amber-500 text-slate-950 shadow-md font-display' 
-                  : 'bg-emerald-800/40 text-emerald-150 hover:bg-emerald-800/80 hover:text-white'
-              }`}
-              id="role-gudang-btn"
-            >
-              Gudang
-            </button>
-            <button
-              onClick={() => handleSwitchRole('farmasi')}
-              className={`px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
-                activeRole === 'farmasi' 
-                  ? 'bg-emerald-500 text-white shadow-md font-display' 
-                  : 'bg-emerald-800/40 text-emerald-150 hover:bg-emerald-800/80 hover:text-white'
-              }`}
-              id="role-farmasi-btn"
-            >
-              Ruang Farmasi
-            </button>
-            <button
-              onClick={() => handleSetSystemDate(systemDate)} // dummy click to trigger reload
-              className="hidden"
-            />
-            <button
-              onClick={() => handleSwitchRole('unit', activeUnitId)}
-              className={`px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
-                activeRole === 'unit' 
-                  ? 'bg-indigo-600 text-white shadow-md font-display' 
-                  : 'bg-emerald-800/40 text-emerald-150 hover:bg-emerald-800/80 hover:text-white'
-              }`}
-              id="role-unit-btn"
-            >
-              Pustu/Internal
-            </button>
-            <button
-              onClick={() => handleSwitchRole('apj')}
-              className={`px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
-                activeRole === 'apj' 
-                  ? 'bg-blue-600 text-white shadow-md font-display' 
-                  : 'bg-emerald-800/40 text-emerald-150 hover:bg-emerald-800/80 hover:text-white'
-              }`}
-              id="role-apj-btn"
-            >
-              APJ (Apoteker)
-            </button>
+            <div className="flex items-center gap-1.5 overflow-hidden w-full flex-1" id="role-scroll-container">
+              {/* Optional labels based on responsive widths */}
+              <div className="hidden sm:flex items-center gap-1 text-[10px] text-emerald-200 font-bold uppercase tracking-wider mr-1 shrink-0">
+                <Users className="w-3 h-3" /> Ganti Sim-Role:
+              </div>
+              <div className="sm:hidden flex items-center text-emerald-200 shrink-0 mr-1.5" title="Ganti Sim-Role">
+                <Users className="w-3.5 h-3.5" />
+              </div>
+              
+              {/* Horizontal slider lane on ultra-compact mobile views */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-1 select-none pr-3" id="role-scroll-lane">
+                <button
+                  onClick={() => handleSwitchRole('gudang')}
+                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
+                    activeRole === 'gudang' 
+                      ? 'bg-amber-500 text-slate-950 shadow-xs font-display' 
+                      : 'bg-emerald-800/25 text-emerald-100 hover:bg-emerald-800/60 hover:text-white'
+                  }`}
+                  id="role-gudang-btn"
+                >
+                  Gudang
+                </button>
+                <button
+                  onClick={() => handleSwitchRole('farmasi')}
+                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
+                    activeRole === 'farmasi' 
+                      ? 'bg-emerald-500 text-white shadow-xs font-display' 
+                      : 'bg-emerald-800/25 text-emerald-100 hover:bg-emerald-800/60 hover:text-white'
+                  }`}
+                  id="role-farmasi-btn"
+                >
+                  Ruang Farmasi
+                </button>
+                <button
+                  onClick={() => handleSwitchRole('unit', activeUnitId)}
+                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
+                    activeRole === 'unit' 
+                      ? 'bg-indigo-600 text-white shadow-xs font-display' 
+                      : 'bg-emerald-800/25 text-emerald-105 hover:bg-emerald-800/60 hover:text-white'
+                  }`}
+                  id="role-unit-btn"
+                >
+                  Pustu/Internal
+                </button>
+                <button
+                  onClick={() => handleSwitchRole('apj')}
+                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
+                    activeRole === 'apj' 
+                      ? 'bg-blue-600 text-white shadow-xs font-display' 
+                      : 'bg-emerald-800/25 text-emerald-100 hover:bg-emerald-800/60 hover:text-white'
+                  }`}
+                  id="role-apj-btn"
+                >
+                  APJ (Apoteker)
+                </button>
+              </div>
+            </div>
 
-            {/* Calibration hard reset button */}
+            {/* Sim Reset action */}
             <button
               onClick={handleResetStorage}
               title="Setel ulang data ke bawaan pabrik"
-              className="ml-3 p-1.5 duration-150 rounded bg-slate-800 text-slate-300 hover:text-red-400 border border-slate-750"
+              className="p-1 duration-150 rounded bg-slate-800/30 text-slate-300 hover:text-red-400 border border-white/5 hover:bg-slate-800/80 shrink-0"
               id="reset-simulation-system"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-3 h-3" />
             </button>
+
           </div>
 
         </div>
