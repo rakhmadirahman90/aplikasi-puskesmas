@@ -20,6 +20,7 @@ interface UsageUnitViewProps {
   onUpdateUsage?: (usageId: string, updatedUsage: DailyUsage) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
+  onNavigateChange?: (view: string) => void;
 }
 
 export default function UsageUnitView({
@@ -35,6 +36,7 @@ export default function UsageUnitView({
   onUpdateUsage,
   systemDate,
   onNotify,
+  onNavigateChange,
 }: UsageUnitViewProps) {
   // Notification helper
   const showNotice = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
@@ -204,6 +206,23 @@ export default function UsageUnitView({
 
   return (
     <div className="space-y-6" id="unit-usage-container">
+      {/* Ecosystem Visual Integration Navigator */}
+      <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="bg-emerald-500 rounded p-1 text-white">
+            <Database className="w-3.5 h-3.5" />
+          </div>
+          <span className="font-semibold text-emerald-800">Alur Ekosistem SIFP:</span>
+          <button
+            onClick={() => onNavigateChange?.('ampra')}
+            className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
+          >
+            &larr; Pantau Distribusi Unit
+          </button>
+          <span className="text-emerald-600 font-medium whitespace-nowrap">&rarr; <span className="font-bold underline decoration-emerald-300">Terminal Unit</span></span>
+        </div>
+      </div>
+
       {/* Title & Portal selector simulating unit custom links */}
       <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4" id="unit-portal-header">
         <div className="flex flex-wrap items-center justify-between gap-4">

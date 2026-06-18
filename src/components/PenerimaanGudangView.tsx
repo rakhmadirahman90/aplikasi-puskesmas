@@ -18,6 +18,7 @@ interface PenerimaanGudangViewProps {
   onUpdateReceipt?: (receiptId: string, updatedReceipt: Receipt) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
+  onNavigateChange?: (view: string) => void;
 }
 
 export default function PenerimaanGudangView({
@@ -31,6 +32,7 @@ export default function PenerimaanGudangView({
   onUpdateReceipt,
   systemDate,
   onNotify,
+  onNavigateChange,
 }: PenerimaanGudangViewProps) {
   // Helpers for notifications
   const showNotice = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
@@ -220,6 +222,27 @@ export default function PenerimaanGudangView({
 
   return (
     <div className="space-y-6" id="receipts-container">
+      {/* Ecosystem Visual Integration Navigator */}
+      <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="bg-emerald-500 rounded p-1 text-white">
+            <ClipboardCheck className="w-3.5 h-3.5" />
+          </div>
+          <span className="font-semibold text-emerald-800">Alur Ekosistem SIFP:</span>
+          <span className="text-emerald-600 font-medium whitespace-nowrap">Dashboard &rarr; <span className="font-bold underline decoration-emerald-300">Penerimaan Gudang</span> &rarr;</span>
+          <button
+            onClick={() => onNavigateChange?.('ampra')}
+            className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
+          >
+            Distribusi / Ampra Unit
+            <ArrowDownLeft className="w-3 h-3 rotate-[135deg]" />
+          </button>
+        </div>
+        <div className="text-[10px] text-emerald-600/70 animate-pulse font-mono flex items-center gap-1">
+          <Database className="w-3 h-3" /> Data Tersinkronisasi Global
+        </div>
+      </div>
+
       {/* Header and Toggle Button */}
       <div className="flex flex-wrap justify-between items-center gap-4" id="receipts-header-bar">
         <div>

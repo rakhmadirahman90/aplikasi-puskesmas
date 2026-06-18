@@ -1,5 +1,4 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, setDoc, query, collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { createClient } from '@supabase/supabase-js';
 import {
   INITIAL_STOCKS,
   INITIAL_RECEIPTS,
@@ -7,134 +6,159 @@ import {
   INITIAL_PRESCRIPTIONS,
   INITIAL_USAGES
 } from './mockData';
-import { StockStore, Receipt, Ampra, Prescription, DailyUsage } from './types';
 
-// Web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCeSU11fbjNcojjlfgKudsjq4vIv8C3oSw",
-  authDomain: "polynomial-node-c2gpt.firebaseapp.com",
-  projectId: "polynomial-node-c2gpt",
-  storageBucket: "polynomial-node-c2gpt.firebasestorage.app",
-  messagingSenderId: "397253837002",
-  appId: "1:397253837002:web:7ebe7dbe248c8c72f0b433"
-};
+// Supabase setup
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey) 
+  : null;
 
-// Initialize Firestore targeting the specific database ID
-export const db = getFirestore(app, "ai-studio-1015436e-0d92-4378-ac2b-41ac1b43e96a");
+// Mock Firebase-like references
+export type CollRef = { type: 'collection'; name: string };
+export type DocRef = { type: 'document'; collection: string; id: string };
 
-/**
- * Helper to delete all documents in a collection
- */
+export const db = {};
+
+export function collection(db: any, name: string): CollRef {
+  return { type: 'collection', name };
+}
+
+export function doc(db: any, collectionName: string, id: string): DocRef {
+  return { type: 'document', collection: collectionName, id };
+}
+
+// Convert Firestore-like methods to Supabase REST and Realtime
+export async function getDoc(ref: DocRef) {
+  if (!supabase) return { exists: () => false, data: () => null, id: ref.id };
+  const { data, error } = await supabase
+    .from('documents')
+    .select('data')
+    .eq('collection_name', ref.collection)
+    .eq('doc_id', ref.id)
+    .single();
+  
+  if (error || !data) return { exists: () => false, data: () => null, id: ref.id };
+  return { exists: () => true, data: () => data.data, id: ref.id };
+}
+
+export async function getDocs(ref: CollRef) {
+  if (!supabase) return { empty: true, docs: [] };
+  const { data, error } = await supabase
+    .from('documents')
+    .select('doc_id, data')
+    .eq('collection_name', ref.name);
+    
+  if (error || !data) return { empty: true, docs: [] };
+  return {
+    empty: data.length === 0,
+    docs: data.map(row => ({
+      id: row.doc_id,
+      data: () => row.data,
+      exists: () => true
+    }))
+  };
+}
+
+export async function setDoc(ref: DocRef, data: any) {
+  if (!supabase) {
+    console.warn("Supabase not configured. Data is not saved permanently.");
+    return;
+  }
+  await supabase
+    .from('documents')
+    .upsert({ collection_name: ref.collection, doc_id: ref.id, data }, { onConflict: 'collection_name,doc_id' });
+}
+
+export async function deleteDoc(ref: DocRef) {
+  if (!supabase) return;
+  await supabase
+    .from('documents')
+    .delete()
+    .eq('collection_name', ref.collection)
+    .eq('doc_id', ref.id);
+}
+
+// Real-time via Supabase Postgres Changes
+export function onSnapshot(ref: CollRef | DocRef, callback: (snap: any) => void) {
+  if (!supabase) {
+    console.warn("Supabase not configured. Real-time changes disabled.");
+    return () => {};
+  }
+  
+  if (ref.type === 'document') {
+    // Initial fetch
+    getDoc(ref).then(callback);
+    // Listen for doc channel
+    const channel = supabase.channel(`doc_${ref.collection}_${ref.id}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'documents', 
+        filter: `collection_name=eq.${ref.collection}` // Note: Multiple filters aren't directly supported in Postgres Changes standard tier well, but we'll fetch locally.
+      }, async (payload) => {
+        // Just trigger standard getDoc to ensure right format
+        const docSnap = await getDoc(ref);
+        callback(docSnap);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  } else {
+    // Initial fetch
+    getDocs(ref).then(callback);
+    const channel = supabase.channel(`coll_${ref.name}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'documents', 
+        filter: `collection_name=eq.${ref.name}`
+      }, async (payload) => {
+        const qSnap = await getDocs(ref);
+        callback(qSnap);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }
+}
+
 async function clearCollection(collectionName: string) {
-  const colRef = collection(db, collectionName);
-  const qSnap = await getDocs(colRef);
-  for (const docSnap of qSnap.docs) {
-    await deleteDoc(doc(db, collectionName, docSnap.id));
-  }
+  if (!supabase) return;
+  await supabase.from('documents').delete().eq('collection_name', collectionName);
 }
 
-/**
- * Erase all mock tables and completely reset to INITIAL_ variables in Firestore
- */
 export async function resetDatabaseFirestore() {
-  try {
-    console.log('Clearing old collections in Firestore...');
-    // Clear receipts, ampras, prescriptions, usages, stocks, and system
-    await clearCollection('receipts');
-    await clearCollection('ampras');
-    await clearCollection('prescriptions');
-    await clearCollection('usages');
-    await clearCollection('stocks');
-    await clearCollection('system');
+  if (!supabase) return;
+  await clearCollection('receipts');
+  await clearCollection('ampras');
+  await clearCollection('prescriptions');
+  await clearCollection('usages');
+  await clearCollection('stocks');
+  await clearCollection('system');
 
-    console.log('Re-seeding collections in Firestore...');
-    
-    // 1. Re-seed config
-    await setDoc(doc(db, 'system', 'config'), { systemDate: '2026-06-17' });
-
-    // 2. Re-seed stocks
-    for (const [unitId, stockData] of Object.entries(INITIAL_STOCKS)) {
-      await setDoc(doc(db, 'stocks', unitId), stockData);
-    }
-
-    // 3. Re-seed receipts
-    for (const item of INITIAL_RECEIPTS) {
-      await setDoc(doc(db, 'receipts', item.id), item);
-    }
-
-    // 4. Re-seed ampras
-    for (const item of INITIAL_AMPRAS) {
-      await setDoc(doc(db, 'ampras', item.id), item);
-    }
-
-    // 5. Re-seed prescriptions
-    for (const item of INITIAL_PRESCRIPTIONS) {
-      await setDoc(doc(db, 'prescriptions', item.id), item);
-    }
-
-    // 6. Re-seed usages
-    for (const item of INITIAL_USAGES) {
-      await setDoc(doc(db, 'usages', item.id), item);
-    }
-
-    console.log('Firestore database completely reset to default!');
-  } catch (err) {
-    console.error('Failed to reset Firestore:', err);
-    throw err;
+  await setDoc(doc(db, 'system', 'config'), { systemDate: '2026-06-17' });
+  for (const [unitId, stockData] of Object.entries(INITIAL_STOCKS)) {
+    await setDoc(doc(db, 'stocks', unitId), stockData);
+  }
+  for (const item of INITIAL_RECEIPTS) {
+    await setDoc(doc(db, 'receipts', item.id), item);
+  }
+  for (const item of INITIAL_AMPRAS) {
+    await setDoc(doc(db, 'ampras', item.id), item);
+  }
+  for (const item of INITIAL_PRESCRIPTIONS) {
+    await setDoc(doc(db, 'prescriptions', item.id), item);
+  }
+  for (const item of INITIAL_USAGES) {
+    await setDoc(doc(db, 'usages', item.id), item);
   }
 }
 
-/**
- * Seeding helper to initialize the Firestore database with realistic mock datasets
- * if they don't already exist.
- */
 export async function seedDatabaseIfEmpty() {
-  try {
-    // Check if configuration already exists in Firestore
-    const systemConfigRef = doc(db, 'system', 'config');
-    const systemConfigSnap = await getDoc(systemConfigRef);
-    
-    if (systemConfigSnap.exists()) {
-      console.log('Firebase Firestore already seeded.');
-      return;
-    }
+  if (!supabase) return;
+  const systemConfigRef = doc(db, 'system', 'config');
+  const systemConfigSnap = await getDoc(systemConfigRef);
+  if (systemConfigSnap.exists()) return;
 
-    console.log('Seeding Firebase Firestore with initial mock datasets...');
-
-    // 1. Seed system date config
-    await setDoc(systemConfigRef, { systemDate: '2026-06-17' });
-
-    // 2. Seed stocks store (one doc per unit)
-    for (const [unitId, stockData] of Object.entries(INITIAL_STOCKS)) {
-      const stockDocRef = doc(db, 'stocks', unitId);
-      await setDoc(stockDocRef, stockData);
-    }
-
-    // 3. Seed receipts
-    for (const item of INITIAL_RECEIPTS) {
-      await setDoc(doc(db, 'receipts', item.id), item);
-    }
-
-    // 4. Seed ampras
-    for (const item of INITIAL_AMPRAS) {
-      await setDoc(doc(db, 'ampras', item.id), item);
-    }
-
-    // 5. Seed prescriptions
-    for (const item of INITIAL_PRESCRIPTIONS) {
-      await setDoc(doc(db, 'prescriptions', item.id), item);
-    }
-
-    // 6. Seed usages
-    for (const item of INITIAL_USAGES) {
-      await setDoc(doc(db, 'usages', item.id), item);
-    }
-
-    console.log('Firestore seeding completed successfully.');
-  } catch (error) {
-    console.error('Failed to seed Firestore:', error);
-  }
+  await resetDatabaseFirestore();
 }

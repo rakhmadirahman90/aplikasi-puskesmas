@@ -4,12 +4,13 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Medicine, StockStore, Ampra, Prescription, DailyUsage } from '../types';
-import { AlertTriangle, Package, FileText, ClipboardList, TrendingUp, Calendar, Zap, Bell, CheckCircle } from 'lucide-react';
+import { Medicine, StockStore, Ampra, Prescription, DailyUsage, Receipt } from '../types';
+import { AlertTriangle, Package, FileText, ClipboardList, TrendingUp, Calendar, Zap, Bell, CheckCircle, ArrowRightLeft, Truck, Database, Activity, ArrowDownLeft } from 'lucide-react';
 
 interface DashboardViewProps {
   medicines: Medicine[];
   stocks: StockStore;
+  receipts: Receipt[];
   ampras: Ampra[];
   prescriptions: Prescription[];
   usages: DailyUsage[];
@@ -21,6 +22,7 @@ interface DashboardViewProps {
 export default function DashboardView({
   medicines,
   stocks,
+  receipts,
   ampras,
   prescriptions,
   usages,
@@ -174,7 +176,164 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* Grid of Key Metrics */}
+      {/* SIFP Interconnected Ecosystem Flow Map */}
+      <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white rounded-2xl p-5 shadow-md border border-slate-850 space-y-4" id="sifp-ecosystem-pipeline">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/10 pb-3">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <h3 className="font-display font-bold text-sm tracking-wide text-white uppercase">Visual Alur Ekosistem SIFP Terintegrasi</h3>
+            </div>
+            <p className="text-[11px] text-slate-300">Peta interaktif aliran obat: Penerimaan &rarr; Penyimpanan &rarr; Distribusi &rarr; Pelayanan &rarr; Audit</p>
+          </div>
+          <span className="text-[9px] bg-emerald-500/10 text-emerald-350 border border-emerald-500/25 px-2 py-0.5 rounded font-mono uppercase font-bold self-start">
+            Status: Sinkron & Aktif
+          </span>
+        </div>
+
+        {/* Horizontal Scrollable/Grid Pipeline */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 relative" id="ecosystem-nodes-grid">
+          
+          {/* Node 1: Penerimaan */}
+          <div 
+            onClick={() => onNavigateChange('receipts')}
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            title="Klik untuk membuka Penerimaan Gudang"
+            id="node-receipts"
+          >
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">1. TERIMA</span>
+              <div className="p-1.5 bg-sky-500/20 text-sky-400 rounded-lg group-hover:scale-110 transition-transform">
+                <Truck className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <p className="font-bold text-slate-100 text-xs truncate">Penerimaan PBF/IFK</p>
+              <p className="text-[10px] text-slate-400 mt-1">Daftar Nota Masuk</p>
+            </div>
+            <div className="bg-sky-500/10 text-sky-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
+              {receipts.length} Dokumen
+            </div>
+            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+          </div>
+
+          {/* Node 2: Penyimpanan */}
+          <div 
+            onClick={() => onNavigateChange('dashboard')}
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            title="Sistem stok gudang utama SIFP"
+            id="node-storage"
+          >
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">2. SIMPAN</span>
+              <div className="p-1.5 bg-blue-500/20 text-blue-450 rounded-lg group-hover:scale-110 transition-transform">
+                <Database className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <p className="font-bold text-slate-100 text-xs truncate">Gudang Utama</p>
+              <p className="text-[10px] text-slate-400 mt-1">Sisa Persediaan FEFO</p>
+            </div>
+            <div className="bg-blue-500/10 text-blue-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit whitespace-nowrap">
+              {Object.keys(stocks['gudang'] || {}).length} Obat Aktif
+            </div>
+            <span className="absolute right-2 bottom-2 text-white/10 text-[10px] font-bold group-hover:text-white/30 transition-colors">&bull;</span>
+          </div>
+
+          {/* Node 3: Distribusi Ampra */}
+          <div 
+            onClick={() => onNavigateChange('ampra')}
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs animate-pulse-slow" 
+            title="Klik untuk melihat Permintaan & Ganti SIFP Ampra"
+            id="node-ampra"
+          >
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">3. DISTRIBUSI</span>
+              <div className="p-1.5 bg-amber-500/20 text-amber-400 rounded-lg group-hover:scale-110 transition-transform">
+                <ArrowRightLeft className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <p className="font-bold text-slate-100 text-xs truncate">Ampra & Mutasi</p>
+              <p className="text-[10px] text-slate-400 mt-1">Aliran internal & Satelit</p>
+            </div>
+            <div className="bg-amber-500/10 text-amber-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
+              {ampras.length} Permintaan
+            </div>
+            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+          </div>
+
+          {/* Node 4: Pelayanan Resep */}
+          <div 
+            onClick={() => onNavigateChange('apotek')}
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            title="Klik untuk melayani Resep Dokter"
+            id="node-prescriptions"
+          >
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">4. LAYANI</span>
+              <div className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform">
+                <Zap className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <p className="font-bold text-slate-100 text-xs truncate">Apotek Resep</p>
+              <p className="text-[10px] text-slate-400 mt-1">Pelayanan resep pasien</p>
+            </div>
+            <div className="bg-emerald-500/10 text-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
+              {prescriptions.length} Resep Rekom
+            </div>
+            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+          </div>
+
+          {/* Node 5: Terminal Unit */}
+          <div 
+            onClick={() => onNavigateChange('satellites')}
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            title="Klik untuk melihat Terminal Pustu & IGD"
+            id="node-satellites"
+          >
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">5. PAKAI</span>
+              <div className="p-1.5 bg-violet-500/20 text-violet-400 rounded-lg group-hover:scale-110 transition-transform">
+                <Activity className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <p className="font-bold text-slate-100 text-xs truncate">Terminal Unit</p>
+              <p className="text-[10px] text-slate-400 mt-1">Harian sub-unit & pustu</p>
+            </div>
+            <div className="bg-violet-500/10 text-violet-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
+              {usages.length} Log Terdata
+            </div>
+            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+          </div>
+
+          {/* Node 6: Audit & LPLPO */}
+          <div 
+            onClick={() => onNavigateChange('reports')}
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            title="Ulas Audit Terbuka & Rekap LPLPO Kesehatan"
+            id="node-audit"
+          >
+            <div className="flex justify-between items-start">
+              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">6. AUDIT & LPLPO</span>
+              <div className="p-1.5 bg-fuchsia-500/20 text-fuchsia-400 rounded-lg group-hover:scale-110 transition-transform">
+                <FileText className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <p className="font-bold text-slate-100 text-xs truncate">Laporan & Audit</p>
+              <p className="text-[10px] text-slate-400 mt-1">LPLPO, Keuangan & Opname</p>
+            </div>
+            <div className="bg-fuchsia-500/10 text-fuchsia-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit uppercase">
+              7 Modul Laporan
+            </div>
+            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+          </div>
+
+        </div>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="stats-grid">
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between" id="stat-gudang">
           <div className="space-y-1">

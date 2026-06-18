@@ -20,6 +20,7 @@ interface AmpraGudangViewProps {
   onDeleteAmpra?: (ampraId: string) => void;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
+  onNavigateChange?: (view: string) => void;
 }
 
 export default function AmpraGudangView({
@@ -35,6 +36,7 @@ export default function AmpraGudangView({
   onDeleteAmpra,
   systemDate,
   onNotify,
+  onNavigateChange,
 }: AmpraGudangViewProps) {
   // Notification helper
   const showNotice = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
@@ -173,6 +175,33 @@ export default function AmpraGudangView({
 
   return (
     <div className="space-y-6" id="ampra-panel">
+      {/* Ecosystem Visual Integration Navigator */}
+      <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="bg-emerald-500 rounded p-1 text-white">
+            <ClipboardList className="w-3.5 h-3.5" />
+          </div>
+          <span className="font-semibold text-emerald-800">Alur Ekosistem SIFP:</span>
+          <button
+            onClick={() => onNavigateChange?.('receipts')}
+            className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
+          >
+            &larr; Cek Stok Gudang
+          </button>
+          <span className="text-emerald-600 font-medium whitespace-nowrap">&rarr; <span className="font-bold underline decoration-emerald-300">Ampra Unit</span> &rarr;</span>
+          <button
+            onClick={() => onNavigateChange?.('apotek')}
+            className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
+          >
+            Apotek Pasien
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="text-[10px] text-emerald-600/70 animate-pulse font-mono shadow-xs bg-white px-2 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+          <ShieldCheck className="w-3 h-3 text-emerald-500" /> Tervalidasi APJ
+        </div>
+      </div>
+
       {/* Header and Toggle Button */}
       <div className="flex flex-wrap justify-between items-center gap-4" id="ampra-header-bar">
         <div>

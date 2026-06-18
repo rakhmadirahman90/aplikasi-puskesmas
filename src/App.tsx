@@ -14,8 +14,7 @@ import {
   INITIAL_PRESCRIPTIONS,
   INITIAL_USAGES
 } from './mockData';
-import { db, seedDatabaseIfEmpty, resetDatabaseFirestore } from './firebase';
-import { onSnapshot, collection, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db, seedDatabaseIfEmpty, resetDatabaseFirestore, onSnapshot, collection, doc, setDoc, deleteDoc } from './firebase';
 
 // Subcomponents
 import DashboardView from './components/DashboardView';
@@ -150,6 +149,8 @@ const INDONESIAN_MONTHS = [
 ];
 
 export default function App() {
+  const isSupabaseConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+
   // Navigation
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
@@ -837,6 +838,24 @@ export default function App() {
           {/* Main Top Bar: Logo & Micro-widgets */}
           <div className="flex items-center justify-between gap-2.5 w-full" id="header-top-row">
             
+            {/* Supabase Banner */}
+            {!isSupabaseConfigured && (
+              <div className="absolute top-16 left-0 right-0 z-50 mx-auto max-w-2xl bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-4 shadow-lg rounded">
+                <div className="flex gap-2">
+                  <Database className="w-5 h-5 text-amber-600 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-sm">Supabase Belum Dikonfigurasi</h3>
+                    <p className="text-xs mt-1">Anda sekarang menggunakan Supabase (sebelumnya Firebase). Anda harus menambahkan variable lingkungan berikut di menu settings (Project Settings):</p>
+                    <ul className="list-disc pl-5 text-xs font-mono mt-1 mb-2">
+                      <li>VITE_SUPABASE_URL</li>
+                      <li>VITE_SUPABASE_ANON_KEY</li>
+                    </ul>
+                    <p className="text-xs">Juga jalankan SQL yang ada di <code className="bg-amber-200 px-1 rounded">setup-supabase.sql</code> melalui SQL Editor di Supabase Dashboard Anda. Saat ini aplikasi tidak akan sinkron dengan server.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Logo Brand SIFP */}
             <div className="flex items-center gap-2">
               <div className="bg-white/95 p-1 rounded-lg text-emerald-800 shadow-sm shrink-0">
@@ -1091,6 +1110,7 @@ export default function App() {
             <DashboardView
               medicines={medicines}
               stocks={stocks}
+              receipts={receipts}
               ampras={ampras}
               prescriptions={prescriptions}
               usages={usages}
@@ -1112,6 +1132,7 @@ export default function App() {
               onUpdateReceipt={handleUpdateReceipt}
               systemDate={systemDate}
               onNotify={addNotification}
+              onNavigateChange={(view) => setActiveTab(view)}
             />
           )}
 
@@ -1129,6 +1150,7 @@ export default function App() {
               onDeleteAmpra={handleDeleteAmpra}
               systemDate={systemDate}
               onNotify={addNotification}
+              onNavigateChange={(view) => setActiveTab(view)}
             />
           )}
 
@@ -1143,6 +1165,7 @@ export default function App() {
               activeRole={activeRole}
               systemDate={systemDate}
               onNotify={addNotification}
+              onNavigateChange={(view) => setActiveTab(view)}
             />
           )}
 
@@ -1160,6 +1183,7 @@ export default function App() {
               onUpdateUsage={handleUpdateUsage}
               systemDate={systemDate}
               onNotify={addNotification}
+              onNavigateChange={(view) => setActiveTab(view)}
             />
           )}
 
@@ -1174,6 +1198,7 @@ export default function App() {
               usages={usages}
               userName={userName}
               onNotify={addNotification}
+              onNavigateChange={(view) => setActiveTab(view)}
             />
           )}
 

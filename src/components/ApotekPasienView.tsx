@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Medicine, Prescription, PrescriptionItem, StockStore } from '../types';
-import { FileText, Plus, Search, Trash2, CheckCircle, Database, AlertCircle, ShoppingBag, Eye, Calendar, Edit, X } from 'lucide-react';
+import { FileText, Plus, Search, Trash2, CheckCircle, Database, AlertCircle, ShoppingBag, Eye, Calendar, Edit, X, ArrowRight, ArrowDownLeft, Pill } from 'lucide-react';
 
 interface ApotekPasienViewProps {
   medicines: Medicine[];
@@ -17,6 +17,7 @@ interface ApotekPasienViewProps {
   activeRole?: string;
   systemDate: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
+  onNavigateChange?: (view: string) => void;
 }
 
 export default function ApotekPasienView({
@@ -29,6 +30,7 @@ export default function ApotekPasienView({
   activeRole,
   systemDate,
   onNotify,
+  onNavigateChange,
 }: ApotekPasienViewProps) {
   // Notification helper
   const showNotice = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
@@ -236,6 +238,33 @@ export default function ApotekPasienView({
 
   return (
     <div className="space-y-6" id="apotek-container">
+      {/* Ecosystem Visual Integration Navigator */}
+      <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="bg-emerald-500 rounded p-1 text-white">
+            <Pill className="w-3.5 h-3.5" />
+          </div>
+          <span className="font-semibold text-emerald-800">Alur Ekosistem SIFP:</span>
+          <button
+            onClick={() => onNavigateChange?.('ampra')}
+            className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
+          >
+            &larr; Pantau Ampra Farmasi
+          </button>
+          <span className="text-emerald-600 font-medium whitespace-nowrap">&rarr; <span className="font-bold underline decoration-emerald-300">Apotek Pasien</span> &rarr;</span>
+          <button
+            onClick={() => onNavigateChange?.('reports')}
+            className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
+          >
+            Audit Resep
+            <FileText className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="text-[10px] text-emerald-600/70 animate-pulse font-mono shadow-xs bg-white px-2 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+          <CheckCircle className="w-3 h-3 text-emerald-500" /> Stok Ruang Farmasi Terintegrasi
+        </div>
+      </div>
+
       {/* Overview stats and title */}
       <div className="flex flex-wrap justify-between items-center gap-4" id="apotek-header-bar">
         <div>
