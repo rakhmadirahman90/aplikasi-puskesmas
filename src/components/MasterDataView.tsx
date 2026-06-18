@@ -1,25 +1,54 @@
-import React, { useState } from 'react';
-import { Medicine, UnitInfo } from '../types';
-import { Pill, Building2, Plus, Edit, Trash2, Search, Save, Database } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Medicine, UnitInfo, SystemConfig } from '../types';
+import { Pill, Building2, Plus, Edit, Trash2, Search, Save, Database, LayoutTemplate } from 'lucide-react';
 
 interface MasterDataViewProps {
   medicines: Medicine[];
   units: UnitInfo[];
+  systemConfig?: SystemConfig;
   onAddMedicine: (m: Medicine) => void;
   onUpdateMedicine: (id: string, m: Partial<Medicine>) => void;
   onDeleteMedicine: (id: string) => void;
   onAddUnit: (u: UnitInfo) => void;
   onUpdateUnit: (id: string, u: Partial<UnitInfo>) => void;
   onDeleteUnit: (id: string) => void;
+  onUpdateSystemConfig?: (configUpdate: Partial<SystemConfig>) => void;
 }
 
 export default function MasterDataView({
-  medicines, units,
+  medicines, units, systemConfig,
   onAddMedicine, onUpdateMedicine, onDeleteMedicine,
-  onAddUnit, onUpdateUnit, onDeleteUnit
+  onAddUnit, onUpdateUnit, onDeleteUnit, onUpdateSystemConfig
 }: MasterDataViewProps) {
-  const [view, setView] = useState<'medicines'|'units'>('medicines');
+  const [view, setView] = useState<'medicines'|'units'|'config'>('medicines');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Custom config states
+  const [headerTitle, setHeaderTitle] = useState(systemConfig?.headerTitle || '');
+  const [headerSubtitle, setHeaderSubtitle] = useState(systemConfig?.headerSubtitle || '');
+  const [footerText, setFooterText] = useState(systemConfig?.footerText || '');
+  const [sidebarVisible, setSidebarVisible] = useState(systemConfig?.sidebarVisible !== false);
+
+  useEffect(() => {
+    if (systemConfig) {
+      setHeaderTitle(systemConfig.headerTitle || '');
+      setHeaderSubtitle(systemConfig.headerSubtitle || '');
+      setFooterText(systemConfig.footerText || '');
+      setSidebarVisible(systemConfig.sidebarVisible !== false);
+    }
+  }, [systemConfig]);
+
+  const saveConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onUpdateSystemConfig) {
+      onUpdateSystemConfig({
+        headerTitle,
+        headerSubtitle,
+        footerText,
+        sidebarVisible
+      });
+    }
+  };
   
   // Medicine Form State
   const [isMedFormOpen, setIsMedFormOpen] = useState(false);
@@ -98,23 +127,28 @@ export default function MasterDataView({
           <button onClick={() => {setView('units'); resetForms();}} className={`pb-2 px-4 font-bold text-sm ${view === 'units' ? 'border-b-2 border-teal-600 text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}>
             Data Unit
           </button>
+          <button onClick={() => {setView('config'); resetForms();}} className={`pb-2 px-4 font-bold text-sm flex items-center gap-1.5 ${view === 'config' ? 'border-b-2 border-teal-600 text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}>
+            <LayoutTemplate className="w-4 h-4" /> Konfigurasi UI
+          </button>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
-        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between gap-4 bg-slate-50/50">
-          <div className="relative max-w-sm w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-            <input type="text" placeholder="Pencarian..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm outline-none" />
+        {view !== 'config' && (
+          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between gap-4 bg-slate-50/50">
+            <div className="relative max-w-sm w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <input type="text" placeholder="Pencarian..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm outline-none" />
+            </div>
+            <button onClick={() => {
+              resetForms();
+              if(view === 'medicines') setIsMedFormOpen(true);
+              else setIsUnitFormOpen(true);
+            }} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" /> {view === 'medicines' ? 'Tambah Obat' : 'Tambah Unit'}
+            </button>
           </div>
-          <button onClick={() => {
-            resetForms();
-            if(view === 'medicines') setIsMedFormOpen(true);
-            else setIsUnitFormOpen(true);
-          }} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
-            <Plus className="w-4 h-4" /> {view === 'medicines' ? 'Tambah Obat' : 'Tambah Unit'}
-          </button>
-        </div>
+        )}
 
         {/* Medicine Form */}
         {isMedFormOpen && view === 'medicines' && (
@@ -171,7 +205,50 @@ export default function MasterDataView({
           </form>
         )}
 
-        <div className="overflow-x-auto p-4">
+        {/* Config Form */}
+        {view === 'config' && (
+          <div className="p-6">
+            <div className="mb-6 pb-4 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-800">Manajemen Konfigurasi User Interface</h3>
+              <p className="text-sm text-slate-500">Sesuaikan header, footer, dan tata letak secara real-time.</p>
+            </div>
+            <form onSubmit={saveConfig} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Judul Header (Header Title)</label>
+                  <input required value={headerTitle} onChange={e=>setHeaderTitle(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" placeholder="Misal: SIM-Farmasi" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Sub-Judul Header (Header Subtitle)</label>
+                  <input required value={headerSubtitle} onChange={e=>setHeaderSubtitle(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" placeholder="Misal: Parepare • Verifikasi Terintegrasi" />
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Teks Footer (Footer Text)</label>
+                  <textarea required value={footerText} onChange={e=>setFooterText(e.target.value)} className="w-full p-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none h-[108px]" placeholder="Misal: © 2024 SIFP Parepare..." />
+                </div>
+              </div>
+              <div className="col-span-1 md:col-span-2 space-y-1.5 pt-2">
+                <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                  <input type="checkbox" checked={sidebarVisible} onChange={e=>setSidebarVisible(e.target.checked)} className="w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" />
+                  <div>
+                    <span className="font-bold text-slate-700 block">Tampilkan Sidebar / Navbar Terintegrasi</span>
+                    <span className="text-xs text-slate-500">Jika dimatikan, sidebar akan disembunyikan untuk memberikan ruang kerja yang lebih luas.</span>
+                  </div>
+                </label>
+              </div>
+              <div className="col-span-1 md:col-span-2 flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
+                <button type="submit" className="px-6 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-bold shadow hover:bg-teal-700 transition-colors flex items-center gap-2">
+                  <Save className="w-4 h-4"/> Simpan Konfigurasi
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {view !== 'config' && (
+          <div className="overflow-x-auto p-4">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="border-b text-slate-500">
@@ -212,6 +289,7 @@ export default function MasterDataView({
           {(view === 'medicines' && filteredMedicines.length === 0) && <div className="p-10 text-center text-slate-400 font-bold">Data obat tidak ditemukan</div>}
           {(view === 'units' && filteredUnits.length === 0) && <div className="p-10 text-center text-slate-400 font-bold">Data unit tidak ditemukan</div>}
         </div>
+        )}
       </div>
     </div>
   );

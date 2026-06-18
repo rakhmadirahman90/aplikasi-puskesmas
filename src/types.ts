@@ -163,6 +163,14 @@ export interface UnitInfo {
   manager: string;
 }
 
+export interface SystemConfig {
+  headerTitle: string;
+  headerSubtitle: string;
+  footerText: string;
+  sidebarVisible: boolean;
+  systemDate?: string;
+}
+
 export interface AppState {
   medicines: Medicine[];
   stocks: StockStore;
@@ -172,6 +180,7 @@ export interface AppState {
   usages: DailyUsage[];
   disposals: Disposal[];
   systemDate: string; // Allows simulating active date for alerts
+  systemConfig: SystemConfig; // Global UI config
   roles: {
     activeRole: 'apj' | 'gudang' | 'farmasi' | 'unit';
     activeUnitId: string; // If 'unit' or 'farmasi', which unit is currently accessed

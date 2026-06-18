@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal, UnitInfo, UserAccount, AppRole, ThemeInfo, THEMES_LIST } from './types';
+import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal, UnitInfo, UserAccount, AppRole, ThemeInfo, THEMES_LIST, SystemConfig } from './types';
 import {
   INITIAL_MEDICINES,
   INITIAL_UNITS,
@@ -209,6 +209,14 @@ export default function App() {
 
   // Expiration calibrators
   const [systemDate, setSystemDate] = useState<string>('2026-06-17');
+  
+  // Dynamic UI Config
+  const [systemConfig, setSystemConfig] = useState<SystemConfig>({
+    headerTitle: "SIM-Farmasi",
+    headerSubtitle: "Parepare • Verifikasi Terintegrasi",
+    footerText: "Sistem Informasi Farmasi Terintegrasi",
+    sidebarVisible: true
+  });
 
   const [users, setUsers] = useState<UserAccount[]>(INITIAL_USERS);
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
@@ -256,6 +264,14 @@ export default function App() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.systemDate) setSystemDate(data.systemDate);
+          
+          setSystemConfig(prev => ({
+            ...prev,
+            headerTitle: data.headerTitle || prev.headerTitle,
+            headerSubtitle: data.headerSubtitle || prev.headerSubtitle,
+            footerText: data.footerText || prev.footerText,
+            sidebarVisible: data.sidebarVisible !== undefined ? data.sidebarVisible : prev.sidebarVisible
+          }));
         }
       });
       unsubscribes.push(unsubConfig);
@@ -547,6 +563,18 @@ export default function App() {
     } catch (e) {
       console.error(e);
       addNotification('error', "Gagal memverifikasi penerimaan.");
+    }
+  };
+
+  // SYSTEM CONFIG EVENTS
+  const handleUpdateSystemConfig = async (configUpdate: Partial<SystemConfig>) => {
+    try {
+      const mergedConfig = { ...systemConfig, ...configUpdate };
+      await setDoc(doc(db, 'system', 'config'), mergedConfig);
+      addNotification('success', 'Konfigurasi Sistem (UI) berhasil diperbarui secara real-time!');
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal memperbarui struktur Konfigurasi Sistem!");
     }
   };
 
@@ -939,12 +967,14 @@ export default function App() {
               </div>
               <div className="text-left">
                 <h1 className="font-display font-extrabold text-xs md:text-sm tracking-wide flex items-center gap-1.5 leading-none">
-                  SIM-Farmasi
-                  <span className="text-[8px] bg-emerald-600/95 text-white px-1 py-0.2 rounded font-mono font-bold tracking-normal uppercase shrink-0">
-                    Puskesmas
-                  </span>
+                  {systemConfig.headerTitle.split(' ')[0] || 'SIM-Farmasi'}
+                  {systemConfig.headerTitle.split(' ').length > 1 && (
+                    <span className="text-[8px] bg-emerald-600/95 text-white px-1 py-0.2 rounded font-mono font-bold tracking-normal uppercase shrink-0">
+                      {systemConfig.headerTitle.split(' ').slice(1).join(' ')}
+                    </span>
+                  )}
                 </h1>
-                <p className="text-[9px] text-emerald-250 leading-none mt-0.5 font-sans whitespace-nowrap">Parepare &bull; Verifikasi Terintegrasi</p>
+                <p className="text-[9px] text-emerald-250 leading-none mt-0.5 font-sans whitespace-nowrap">{systemConfig.headerSubtitle}</p>
               </div>
             </div>
 
@@ -1065,100 +1095,102 @@ export default function App() {
         <div className="max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-6" id="app-body-layout">
         
         {/* Navigation Sidebar */}
-        <aside className="md:col-span-3 lg:col-span-2 space-y-3" id="navigation-sidebar">
-          {/* Active Sim Identity Badge */}
-          <div className="bg-white p-3 md:p-4 rounded-xl shadow-xs border border-slate-200 flex flex-row md:flex-col justify-between items-center md:text-center gap-2" id="identity-banner">
-            <div className="text-left md:text-center space-y-0.5">
-              <span className="text-[9px] uppercase font-bold text-slate-400 tracking-widest block">Login Aktif</span>
-              <p className="font-bold text-slate-800 text-xs md:text-sm leading-tight">{userName}</p>
+        {systemConfig.sidebarVisible && (
+          <aside className="md:col-span-3 lg:col-span-2 space-y-3" id="navigation-sidebar">
+            {/* Active Sim Identity Badge */}
+            <div className="bg-white p-3 md:p-4 rounded-xl shadow-xs border border-slate-200 flex flex-row md:flex-col justify-between items-center md:text-center gap-2" id="identity-banner">
+              <div className="text-left md:text-center space-y-0.5">
+                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-widest block">Login Aktif</span>
+                <p className="font-bold text-slate-800 text-xs md:text-sm leading-tight">{userName}</p>
+              </div>
+              <span className="inline-block px-2.5 py-1 rounded font-mono text-[9px] bg-slate-100 text-slate-500 font-bold uppercase shrink-0">
+                {activeRole === 'unit' ? `UNIT (${activeUnitId})` : activeRole.toUpperCase()}
+              </span>
             </div>
-            <span className="inline-block px-2.5 py-1 rounded font-mono text-[9px] bg-slate-100 text-slate-500 font-bold uppercase shrink-0">
-              {activeRole === 'unit' ? `UNIT (${activeUnitId})` : activeRole.toUpperCase()}
-            </span>
-          </div>
 
-          <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible space-x-1 md:space-x-0 md:space-y-1 bg-white p-1.5 md:p-2 rounded-xl shadow-xs border border-slate-200 scrollbar-none whitespace-nowrap" id="sidebar-nav">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                activeTab === 'dashboard' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-              }`}
-              id="nav-dashboard"
-            >
-              <LayoutDashboard className="w-4 h-4 shrink-0" /> <span>Dashboard</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('receipts')}
-              className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                activeTab === 'receipts' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-              }`}
-              id="nav-receipts"
-            >
-              <Truck className="w-4 h-4 shrink-0" /> <span>Penerimaan Gudang</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('ampra')}
-              className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                activeTab === 'ampra' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-              }`}
-              id="nav-ampra"
-            >
-              <ArrowRightLeft className="w-4 h-4 shrink-0" /> <span>Ampra Unit</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('apotek')}
-              className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                activeTab === 'apotek' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-              }`}
-              id="nav-apotek"
-            >
-              <Pill className="w-4 h-4 shrink-0" /> <span>Apotek Resep</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('satellites')}
-              className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                activeTab === 'satellites' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-              }`}
-              id="nav-satellites"
-            >
-              <Database className="w-4 h-4 shrink-0" /> <span>Terminal Unit & Pustu</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('reports')}
-              className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
-                activeTab === 'reports' ? 'bg-emerald-600 text-white shadow' : 'text-slate-650 hover:bg-slate-50'
-              }`}
-              id="nav-reports"
-            >
-              <FileText className="w-4 h-4 shrink-0" /> <span>Laporan & Audit</span>
-            </button>
-            {activeRole === 'admin' && (
-              <>
-                <button
-                  onClick={() => setActiveTab('master')}
-                  className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
-                    activeTab === 'master' ? 'bg-teal-600 text-white shadow' : 'text-teal-700 hover:bg-teal-50'
-                  }`}
-                  id="nav-master"
-                >
-                  <Database className="w-4 h-4 shrink-0" /> <span>Master Data</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('users')}
-                  className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                    activeTab === 'users' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-600 hover:bg-indigo-50'
-                  }`}
-                  id="nav-users"
-                >
-                  <ShieldCheck className="w-4 h-4 shrink-0" /> <span>Akses & Pengguna</span>
-                </button>
-              </>
-            )}
-          </nav>
-        </aside>
+            <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible space-x-1 md:space-x-0 md:space-y-1 bg-white p-1.5 md:p-2 rounded-xl shadow-xs border border-slate-200 scrollbar-none whitespace-nowrap" id="sidebar-nav">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
+                  activeTab === 'dashboard' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
+                }`}
+                id="nav-dashboard"
+              >
+                <LayoutDashboard className="w-4 h-4 shrink-0" /> <span>Dashboard</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('receipts')}
+                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
+                  activeTab === 'receipts' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
+                }`}
+                id="nav-receipts"
+              >
+                <Truck className="w-4 h-4 shrink-0" /> <span>Penerimaan Gudang</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('ampra')}
+                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
+                  activeTab === 'ampra' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
+                }`}
+                id="nav-ampra"
+              >
+                <ArrowRightLeft className="w-4 h-4 shrink-0" /> <span>Ampra Unit</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('apotek')}
+                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
+                  activeTab === 'apotek' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
+                }`}
+                id="nav-apotek"
+              >
+                <Pill className="w-4 h-4 shrink-0" /> <span>Apotek Resep</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('satellites')}
+                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
+                  activeTab === 'satellites' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
+                }`}
+                id="nav-satellites"
+              >
+                <Database className="w-4 h-4 shrink-0" /> <span>Terminal Unit & Pustu</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
+                  activeTab === 'reports' ? 'bg-emerald-600 text-white shadow' : 'text-slate-650 hover:bg-slate-50'
+                }`}
+                id="nav-reports"
+              >
+                <FileText className="w-4 h-4 shrink-0" /> <span>Laporan & Audit</span>
+              </button>
+              {activeRole === 'admin' && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('master')}
+                    className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
+                      activeTab === 'master' ? 'bg-teal-600 text-white shadow' : 'text-teal-700 hover:bg-teal-50'
+                    }`}
+                    id="nav-master"
+                  >
+                    <Database className="w-4 h-4 shrink-0" /> <span>Master Data</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('users')}
+                    className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
+                      activeTab === 'users' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-600 hover:bg-indigo-50'
+                    }`}
+                    id="nav-users"
+                  >
+                    <ShieldCheck className="w-4 h-4 shrink-0" /> <span>Akses & Pengguna</span>
+                  </button>
+                </>
+              )}
+            </nav>
+          </aside>
+        )}
 
         {/* View content pane */}
-        <main className="md:col-span-9 lg:col-span-10 min-w-0 w-full mb-12 space-y-6" id="main-content-pane">
+        <main className={`${systemConfig.sidebarVisible ? 'md:col-span-9 lg:col-span-10' : 'col-span-12'} min-w-0 w-full mb-12 space-y-6 transition-all`} id="main-content-pane">
           
           {activeTab === 'dashboard' && (
             <DashboardView
@@ -1188,12 +1220,14 @@ export default function App() {
             <MasterDataView
               medicines={medicines}
               units={units}
+              systemConfig={systemConfig}
               onAddMedicine={handleAddMedicine}
               onUpdateMedicine={handleUpdateMedicine}
               onDeleteMedicine={handleDeleteMedicine}
               onAddUnit={handleAddUnit}
               onUpdateUnit={handleUpdateUnit}
               onDeleteUnit={handleDeleteUnit}
+              onUpdateSystemConfig={handleUpdateSystemConfig}
             />
           )}
 
@@ -1281,6 +1315,14 @@ export default function App() {
 
         </main>
       </div>
+
+      {/* App Footer Configuration */}
+      {systemConfig.footerText && (
+        <footer className="text-center py-3 text-xs text-slate-500 w-full mt-auto mb-2 px-4 shadow-sm">
+          {systemConfig.footerText}
+        </footer>
+      )}
+
       </div>
 
       {/* Premium Toast Notifications Container */}
