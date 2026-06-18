@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal, UnitInfo } from './types';
+import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal, UnitInfo, UserAccount, AppRole, ThemeInfo, THEMES_LIST } from './types';
 import {
   INITIAL_MEDICINES,
   INITIAL_UNITS,
@@ -12,7 +12,8 @@ import {
   INITIAL_RECEIPTS,
   INITIAL_AMPRAS,
   INITIAL_PRESCRIPTIONS,
-  INITIAL_USAGES
+  INITIAL_USAGES,
+  INITIAL_USERS
 } from './mockData';
 import { db, seedDatabaseIfEmpty, resetDatabaseFirestore, onSnapshot, collection, doc, setDoc, deleteDoc } from './firebase';
 
@@ -23,6 +24,9 @@ import AmpraGudangView from './components/AmpraGudangView';
 import ApotekPasienView from './components/ApotekPasienView';
 import UsageUnitView from './components/UsageUnitView';
 import LaporanView from './components/LaporanView';
+import LoginView from './components/LoginView';
+import UserManagementView from './components/UserManagementView';
+import MasterDataView from './components/MasterDataView';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -58,21 +62,6 @@ const LOCAL_STORAGE_KEY_USAGES = 'sifp_usages_store';
 const LOCAL_STORAGE_KEY_ROLE = 'sifp_active_role_store';
 const LOCAL_STORAGE_KEY_DATE = 'sifp_system_date_store';
 const LOCAL_STORAGE_KEY_THEME = 'sifp_selected_theme_store';
-
-interface ThemeInfo {
-  id: string;
-  name: string;
-  desc: string;
-  colorValue: string;
-}
-
-const THEMES_LIST: ThemeInfo[] = [
-  { id: 'emerald', name: 'Emerald', desc: 'Hijau Sehat Puskesmas', colorValue: '#10b981' },
-  { id: 'blue', name: 'Sapphire', desc: 'Biru Apotek Modern', colorValue: '#3b82f6' },
-  { id: 'teal', name: 'Herbal Teal', desc: 'Toska Mint Alami', colorValue: '#14b8a6' },
-  { id: 'violet', name: 'Amethyst', desc: 'Ungu Premium Spesialis', colorValue: '#8b5cf6' },
-  { id: 'slate', name: 'Carbon Steel', desc: 'Professional Modern Steel', colorValue: '#64748b' }
-];
 
 const THEME_VARIABLES_MAP: Record<string, Record<string, string>> = {
   emerald: {
@@ -208,8 +197,8 @@ export default function App() {
   };
 
   // Core SIFP State
-  const [medicines] = useState<Medicine[]>(INITIAL_MEDICINES);
-  const [units] = useState<UnitInfo[]>(INITIAL_UNITS);
+  const [medicines, setMedicines] = useState<Medicine[]>(INITIAL_MEDICINES);
+  const [units, setUnits] = useState<UnitInfo[]>(INITIAL_UNITS);
   
   // Reactive state loaded from Firestore in real-time
   const [stocks, setStocks] = useState<StockStore>(INITIAL_STOCKS);
@@ -221,25 +210,38 @@ export default function App() {
   // Expiration calibrators
   const [systemDate, setSystemDate] = useState<string>('2026-06-17');
 
-  // Authenticated Role Simulation
-  const [activeRole, setActiveRole] = useState<'apj' | 'gudang' | 'farmasi' | 'unit'>('gudang');
-  const [activeUnitId, setActiveUnitId] = useState<string>('pustu');
-  const [userName, setUserName] = useState<string>('Andi Sukri, A.Md.Farm');
+  const [users, setUsers] = useState<UserAccount[]>(INITIAL_USERS);
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
 
-  // Load Sim Role from LocalStorage (for presentation preference)
+  // Authenticated Role Accessors
+  const activeRole = currentUser?.role || 'unit';
+  const activeUnitId = currentUser?.unitId || 'pustu';
+  const userName = currentUser?.name || 'Guest User';
+
+  // Load User From LocalStorage
   useEffect(() => {
     try {
-      const savedRole = localStorage.getItem(LOCAL_STORAGE_KEY_ROLE);
-      if (savedRole) {
-        const parsed = JSON.parse(savedRole);
-        setActiveRole(parsed.role);
-        setActiveUnitId(parsed.unitId);
-        setUserName(parsed.userName);
+      const savedUser = localStorage.getItem('sifp_current_user');
+      if (savedUser) {
+        setCurrentUser(JSON.parse(savedUser));
       }
     } catch (e) {
-      console.warn("Could not reload saved simulation states", e);
+      console.warn("Could not reload user", e);
     }
   }, []);
+
+  const handleLogin = (user: UserAccount) => {
+    setCurrentUser(user);
+    localStorage.setItem('sifp_current_user', JSON.stringify(user));
+    addNotification('success', `Berhasil login sebagai ${user.name}`);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('sifp_current_user');
+    setActiveTab('dashboard');
+  };
 
   // Set up Firebase Firestore Real-Time Subscriptions
   useEffect(() => {
@@ -311,6 +313,36 @@ export default function App() {
         setUsages(updatedUsages);
       });
       unsubscribes.push(unsubUsages);
+
+      // 7. Real-time users
+      const unsubUsers = onSnapshot(collection(db, 'users'), (qSnap) => {
+        const updatedUsers: UserAccount[] = [];
+        qSnap.forEach((docSnap) => {
+          updatedUsers.push(docSnap.data() as UserAccount);
+        });
+        if (updatedUsers.length > 0) setUsers(updatedUsers);
+      });
+      unsubscribes.push(unsubUsers);
+
+      // 8. Real-time medicines
+      const unsubMedicines = onSnapshot(collection(db, 'medicines'), (qSnap) => {
+        const updatedMedicines: Medicine[] = [];
+        qSnap.forEach((docSnap) => {
+          updatedMedicines.push(docSnap.data() as Medicine);
+        });
+        if (updatedMedicines.length > 0) setMedicines(updatedMedicines);
+      });
+      unsubscribes.push(unsubMedicines);
+
+      // 9. Real-time units
+      const unsubUnits = onSnapshot(collection(db, 'units'), (qSnap) => {
+        const updatedUnits: UnitInfo[] = [];
+        qSnap.forEach((docSnap) => {
+          updatedUnits.push(docSnap.data() as UnitInfo);
+        });
+        if (updatedUnits.length > 0) setUnits(updatedUnits);
+      });
+      unsubscribes.push(unsubUnits);
     };
 
     setupDatabaseSubscription().catch(e => {
@@ -322,34 +354,33 @@ export default function App() {
     };
   }, []);
 
-  // Save to LocalStorage helper for role preference
-  const saveState = (key: string, data: any) => {
+  const handleAddUser = async (user: UserAccount) => {
     try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (e) {
-      console.error("Local storage save error", e);
+      await setDoc(doc(db, 'users', user.id), user);
+      addNotification('success', `User ${user.username} berhasil dibuat.`);
+    } catch {
+      addNotification('error', "Gagal menambah user.");
     }
   };
 
-  // Switch role helper
-  const handleSwitchRole = (role: 'apj' | 'gudang' | 'farmasi' | 'unit', unitId = 'pustu') => {
-    setActiveRole(role);
-    setActiveUnitId(unitId);
-    
-    let defaultUser = 'Petugas';
-    if (role === 'apj') {
-      defaultUser = 'Ami Rahmawati, S.Farm, Apt';
-    } else if (role === 'gudang') {
-      defaultUser = 'Andi Sukri, A.Md.Farm';
-    } else if (role === 'farmasi') {
-      defaultUser = 'Hj. Syarifah, S.Farm., Apt';
-    } else {
-      const u = INITIAL_UNITS.find(item => item.id === unitId);
-      defaultUser = u ? u.manager : 'Petugas Unit Kelompok';
+  const handleUpdateUser = async (id: string, updates: Partial<UserAccount>) => {
+    try {
+      const u = users.find(x => x.id === id);
+      if (!u) return;
+      await setDoc(doc(db, 'users', id), { ...u, ...updates });
+      addNotification('success', "User berhasil diupdate.");
+    } catch {
+      addNotification('error', "Gagal update user.");
     }
-    
-    setUserName(defaultUser);
-    saveState(LOCAL_STORAGE_KEY_ROLE, { role, unitId, userName: defaultUser });
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'users', id));
+      addNotification('success', "User berhasil dihapus.");
+    } catch {
+      addNotification('error', "Gagal hapus user.");
+    }
   };
 
   // Date changes helper
@@ -364,16 +395,46 @@ export default function App() {
   };
 
   // Reset SIFP database triggers
-  const handleResetStorage = async () => {
-    if (window.confirm("Beneran ingin menyetel ulang database simulasi farmasi ke default?")) {
-      try {
-        await resetDatabaseFirestore();
-        addNotification('success', "Database simulasi berhasil disinkronkan kembali ke sediaan awal secara real time!");
-      } catch (e) {
-        console.error(e);
-        addNotification('error', "Gagal melakukan kalibrasi database.");
-      }
+  const executeResetDatabase = async () => {
+    setShowResetModal(false);
+    try {
+      await resetDatabaseFirestore();
+      addNotification('success', "Database simulasi berhasil disinkronkan kembali ke sediaan awal secara real time!");
+    } catch (e) {
+      console.error(e);
+      addNotification('error', "Gagal melakukan kalibrasi database.");
     }
+  };
+
+  const handleResetStorage = () => {
+    setShowResetModal(true);
+  };
+
+  // MASTER DATA EVENTS
+  const handleAddMedicine = async (m: Medicine) => {
+    try { await setDoc(doc(db, 'medicines', m.id), m); addNotification('success', 'Obat baru berhasil ditambahkan.'); } 
+    catch { addNotification('error', 'Gagal menambahkan obat.'); }
+  };
+  const handleUpdateMedicine = async (id: string, m: Partial<Medicine>) => {
+    try { const old = medicines.find(x=>x.id===id); if(!old) return; await setDoc(doc(db, 'medicines', id), {...old, ...m}); addNotification('success', 'Obat berhasil diupdate.'); }
+    catch { addNotification('error', 'Gagal update obat.'); }
+  };
+  const handleDeleteMedicine = async (id: string) => {
+    try { await deleteDoc(doc(db, 'medicines', id)); addNotification('success', 'Obat berhasil dihapus.'); }
+    catch { addNotification('error', 'Gagal hapus obat.'); }
+  };
+
+  const handleAddUnit = async (u: UnitInfo) => {
+    try { await setDoc(doc(db, 'units', u.id), u); addNotification('success', 'Unit baru berhasil ditambahkan.'); } 
+    catch { addNotification('error', 'Gagal menambahkan unit.'); }
+  };
+  const handleUpdateUnit = async (id: string, u: Partial<UnitInfo>) => {
+    try { const old = units.find(x=>x.id===id); if(!old) return; await setDoc(doc(db, 'units', id), {...old, ...u}); addNotification('success', 'Unit berhasil diupdate.'); }
+    catch { addNotification('error', 'Gagal update unit.'); }
+  };
+  const handleDeleteUnit = async (id: string) => {
+    try { await deleteDoc(doc(db, 'units', id)); addNotification('success', 'Unit berhasil dihapus.'); }
+    catch { addNotification('error', 'Gagal hapus unit.'); }
   };
 
   // RECEIPT EVENTS
@@ -828,6 +889,21 @@ export default function App() {
     }
   };
 
+  if (!currentUser) {
+    return (
+      <>
+        {/* Supabase Banner */}
+        {!isSupabaseConfigured && (
+          <div className="absolute top-0 left-0 right-0 z-50 mx-auto bg-amber-100 border-b border-amber-500 text-amber-800 p-4 shadow-lg text-center">
+            <h3 className="font-bold text-sm">Supabase Belum Dikonfigurasi</h3>
+            <p className="text-xs mt-1">Sistem belum dikonfigurasi. Hubungkan Supabase di pengaturan.</p>
+          </div>
+        )}
+        <LoginView usersStore={users} onLogin={handleLogin} currentTheme={theme} onChangeTheme={setTheme} themes={THEMES_LIST} />
+      </>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col font-sans bg-slate-50 text-slate-800 overflow-hidden" id="main-app">
       
@@ -954,73 +1030,29 @@ export default function App() {
           {/* Sub-bar: Ganti Sim Role Selector (Scrollable, ultra-thin, borderless spacing) */}
           <div className="flex items-center justify-between border-t border-white/10 pt-1.5 mt-0.5" id="header-bottom-row">
             
-            <div className="flex items-center gap-1.5 overflow-hidden w-full flex-1" id="role-scroll-container">
-              {/* Optional labels based on responsive widths */}
-              <div className="hidden sm:flex items-center gap-1 text-[10px] text-emerald-200 font-bold uppercase tracking-wider mr-1 shrink-0">
-                <Users className="w-3 h-3" /> Ganti Sim-Role:
-              </div>
-              <div className="sm:hidden flex items-center text-emerald-200 shrink-0 mr-1.5" title="Ganti Sim-Role">
-                <Users className="w-3.5 h-3.5" />
-              </div>
-              
-              {/* Horizontal slider lane on ultra-compact mobile views */}
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-1 select-none pr-3" id="role-scroll-lane">
-                <button
-                  onClick={() => handleSwitchRole('gudang')}
-                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
-                    activeRole === 'gudang' 
-                      ? 'bg-amber-500 text-slate-950 shadow-xs font-display' 
-                      : 'bg-emerald-800/25 text-emerald-100 hover:bg-emerald-800/60 hover:text-white'
-                  }`}
-                  id="role-gudang-btn"
-                >
-                  Gudang
-                </button>
-                <button
-                  onClick={() => handleSwitchRole('farmasi')}
-                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
-                    activeRole === 'farmasi' 
-                      ? 'bg-emerald-500 text-white shadow-xs font-display' 
-                      : 'bg-emerald-800/25 text-emerald-100 hover:bg-emerald-800/60 hover:text-white'
-                  }`}
-                  id="role-farmasi-btn"
-                >
-                  Ruang Farmasi
-                </button>
-                <button
-                  onClick={() => handleSwitchRole('unit', activeUnitId)}
-                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
-                    activeRole === 'unit' 
-                      ? 'bg-indigo-600 text-white shadow-xs font-display' 
-                      : 'bg-emerald-800/25 text-emerald-105 hover:bg-emerald-800/60 hover:text-white'
-                  }`}
-                  id="role-unit-btn"
-                >
-                  Pustu/Internal
-                </button>
-                <button
-                  onClick={() => handleSwitchRole('apj')}
-                  className={`px-2 py-0.5 text-[10px] sm:text-xs rounded font-bold transition-all whitespace-nowrap ${
-                    activeRole === 'apj' 
-                      ? 'bg-blue-600 text-white shadow-xs font-display' 
-                      : 'bg-emerald-800/25 text-emerald-100 hover:bg-emerald-800/60 hover:text-white'
-                  }`}
-                  id="role-apj-btn"
-                >
-                  APJ (Apoteker)
-                </button>
-              </div>
+            <div className="flex items-center gap-1.5 overflow-hidden w-full flex-1 text-emerald-100 text-xs mt-1" id="role-scroll-container">
+              <Users className="w-4 h-4 text-emerald-400" />
+              <span>Login sebagai: <strong>{currentUser.name}</strong> ({activeRole.toUpperCase()})</span>
             </div>
 
             {/* Sim Reset action */}
-            <button
-              onClick={handleResetStorage}
-              title="Setel ulang data ke bawaan pabrik"
-              className="p-1 duration-150 rounded bg-slate-800/30 text-slate-300 hover:text-red-400 border border-white/5 hover:bg-slate-800/80 shrink-0"
-              id="reset-simulation-system"
-            >
-              <RefreshCw className="w-3 h-3" />
-            </button>
+            <div className="flex bg-black/20 backdrop-blur-xs rounded-lg border border-white/5 overflow-hidden">
+               <button
+                 onClick={handleLogout}
+                 title="Keluar / Logout"
+                 className="flex items-center gap-1 px-3 py-1.5 text-[10px] sm:text-xs font-bold text-slate-200 hover:text-white hover:bg-red-500/80 transition-colors"
+               >
+                  <LogOut className="w-3.5 h-3.5" /> Logout
+               </button>
+               <button
+                 onClick={handleResetStorage}
+                 title="Setel ulang data ke bawaan pabrik"
+                 className="flex items-center gap-1 px-3 py-1.5 text-[10px] sm:text-xs font-bold text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 border-l border-white/10 transition-colors"
+                 id="reset-simulation-system"
+               >
+                 <RefreshCw className="w-3.5 h-3.5" /> Reset DB
+               </button>
+            </div>
 
           </div>
 
@@ -1100,6 +1132,28 @@ export default function App() {
             >
               <FileText className="w-4 h-4 shrink-0" /> <span>Laporan & Audit</span>
             </button>
+            {activeRole === 'admin' && (
+              <>
+                <button
+                  onClick={() => setActiveTab('master')}
+                  className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
+                    activeTab === 'master' ? 'bg-teal-600 text-white shadow' : 'text-teal-700 hover:bg-teal-50'
+                  }`}
+                  id="nav-master"
+                >
+                  <Database className="w-4 h-4 shrink-0" /> <span>Master Data</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
+                    activeTab === 'users' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-600 hover:bg-indigo-50'
+                  }`}
+                  id="nav-users"
+                >
+                  <ShieldCheck className="w-4 h-4 shrink-0" /> <span>Akses & Pengguna</span>
+                </button>
+              </>
+            )}
           </nav>
         </aside>
 
@@ -1120,11 +1174,34 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'users' && activeRole === 'admin' && (
+            <UserManagementView
+              users={users}
+              units={units}
+              onAddUser={handleAddUser}
+              onUpdateUser={handleUpdateUser}
+              onDeleteUser={handleDeleteUser}
+            />
+          )}
+
+          {activeTab === 'master' && activeRole === 'admin' && (
+            <MasterDataView
+              medicines={medicines}
+              units={units}
+              onAddMedicine={handleAddMedicine}
+              onUpdateMedicine={handleUpdateMedicine}
+              onDeleteMedicine={handleDeleteMedicine}
+              onAddUnit={handleAddUnit}
+              onUpdateUnit={handleUpdateUnit}
+              onDeleteUnit={handleDeleteUnit}
+            />
+          )}
+
           {activeTab === 'receipts' && (
             <PenerimaanGudangView
               medicines={medicines}
               receipts={receipts}
-              activeRole={activeRole}
+              activeRole={activeRole as any}
               userName={userName}
               onAddReceipt={handleAddReceipt}
               onVerifyReceipt={handleVerifyReceipt}
@@ -1142,7 +1219,7 @@ export default function App() {
               units={units}
               ampras={ampras}
               stocks={stocks}
-              activeRole={activeRole}
+              activeRole={activeRole as any}
               activeUnitId={activeUnitId}
               userName={userName}
               onCreateAmpra={handleCreateAmpra}
@@ -1162,7 +1239,7 @@ export default function App() {
               onAddPrescription={handleAddPrescription}
               onDeletePrescription={handleDeletePrescription}
               onUpdatePrescription={handleUpdatePrescription}
-              activeRole={activeRole}
+              activeRole={activeRole as any}
               systemDate={systemDate}
               onNotify={addNotification}
               onNavigateChange={(view) => setActiveTab(view)}
@@ -1175,9 +1252,9 @@ export default function App() {
               units={units}
               stocks={stocks}
               usages={usages}
-              activeRole={activeRole}
+              activeRole={activeRole as any}
               activeUnitId={activeUnitId}
-              onSetSimulationUnit={(uid) => handleSwitchRole('unit', uid)}
+              onSetSimulationUnit={() => {}}
               onAddUsage={handleAddUsage}
               onDeleteUsage={handleDeleteUsage}
               onUpdateUsage={handleUpdateUsage}
@@ -1252,10 +1329,29 @@ export default function App() {
         </AnimatePresence>
       </div>
 
+      {showResetModal && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Reset Database?</h3>
+                <p className="text-sm text-slate-600 mt-1">Anda yakin ingin menyetel ulang database simulasi farmasi ke awal? Semua perubahan data akan hilang.</p>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 flex justify-end gap-3">
+              <button onClick={() => setShowResetModal(false)} className="px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200 transition">Batal</button>
+              <button onClick={executeResetDatabase} className="px-4 py-2 rounded-lg font-bold text-sm text-white bg-rose-600 hover:bg-rose-700 transition">Ya, Reset Database</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* SIFP humble compliance footer */}
-      <footer className="bg-slate-900 border-t border-slate-950 text-slate-500 py-4 text-center text-[11px] shrink-0" id="sifp-footer">
-        <p>&copy; 2026 Dinas Kesehatan Kota Parepare &bull; SIFP Terintegrasi v2.4</p>
-        <p className="mt-0.5 text-slate-650">Bebas Pajak &amp; Dukungan Penuh Berbantuan AI Studio</p>
+      <footer className="bg-slate-900 border-t border-slate-950 text-slate-500 py-3 text-center text-xs shrink-0" id="sifp-footer">
+        <p>&copy; 2026 Dinas Kesehatan Kota Parepare</p>
       </footer>
     </div>
   );

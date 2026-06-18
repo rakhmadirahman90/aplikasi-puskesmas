@@ -12,7 +12,7 @@ interface AmpraGudangViewProps {
   units: UnitInfo[];
   ampras: Ampra[];
   stocks: StockStore;
-  activeRole: 'apj' | 'gudang' | 'farmasi' | 'unit';
+  activeRole: 'apj' | 'gudang' | 'farmasi' | 'unit' | 'admin';
   activeUnitId: string;
   userName: string;
   onCreateAmpra: (ampra: Ampra) => void;
@@ -212,7 +212,7 @@ export default function AmpraGudangView({
         </div>
 
         {/* Buttons based on role */}
-        {(activeRole === 'unit' || activeRole === 'farmasi' || activeRole === 'gudang') && (
+        {(activeRole === 'admin' || activeRole === 'unit' || activeRole === 'farmasi' || activeRole === 'gudang') && (
           <button
             onClick={() => {
               setTargetUnitId(activeRole === 'unit' || activeRole === 'farmasi' ? activeUnitId : '');
@@ -229,7 +229,7 @@ export default function AmpraGudangView({
       {/* active role indicator */}
       <div className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-slate-100 text-xs text-slate-600 shadow-3xs">
         <span className="font-bold text-slate-700">Akses Mandat:</span>
-        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded font-bold uppercase">{activeRole === 'farmasi' ? 'Petugas Ruang Farmasi' : activeRole === 'gudang' ? 'Petugas Gudang' : activeRole === 'apj' ? 'Apoteker Penanggung Jawab (APJ)' : 'Petugas Unit / Pustu'}</span>
+        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded font-bold uppercase">{activeRole === 'admin' ? 'Administrator' : activeRole === 'farmasi' ? 'Petugas Ruang Farmasi' : activeRole === 'gudang' ? 'Petugas Gudang' : activeRole === 'apj' ? 'Apoteker Penanggung Jawab (APJ)' : 'Petugas Unit / Pustu'}</span>
         {activeRole === 'unit' && (
           <span>Unit Aktif: <b className="text-slate-800">{units.find(u => u.id === activeUnitId)?.name || activeUnitId}</b></span>
         )}
@@ -606,7 +606,7 @@ export default function AmpraGudangView({
                     <div className="flex flex-col items-start sm:items-end justify-center w-full sm:w-auto sm:min-w-[200px] border-t sm:border-t-0 pt-3 sm:pt-0 border-dashed border-slate-200">
                       
                       {/* Scenario 1: Gudang officer allocated physical items */}
-                      {amp.status === 'Diajukan' && activeRole === 'gudang' && (
+                      {amp.status === 'Diajukan' && (activeRole === 'gudang' || activeRole === 'admin') && (
                         <button
                           onClick={() => startReview(amp)}
                           className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl flex items-center gap-1 transition"
@@ -616,7 +616,7 @@ export default function AmpraGudangView({
                       )}
 
                       {/* Scenario 2: Unit officer confirms medicine arrived */}
-                      {amp.status === 'Disiapkan' && (activeRole === 'unit' || activeRole === 'farmasi') && (
+                      {amp.status === 'Disiapkan' && (activeRole === 'unit' || activeRole === 'farmasi' || activeRole === 'admin') && (
                         <button
                           onClick={() => confirmReceiptByUnit(amp)}
                           className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
@@ -626,7 +626,7 @@ export default function AmpraGudangView({
                       )}
 
                       {/* Scenario 3: APJ Verifies and finalizes stock transfer */}
-                      {amp.status === 'Diterima' && activeRole === 'apj' && (
+                      {amp.status === 'Diterima' && (activeRole === 'apj' || activeRole === 'admin') && (
                         <button
                           onClick={() => confirmAPJVerification(amp)}
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow"
@@ -661,7 +661,7 @@ export default function AmpraGudangView({
                       )}
 
                       {/* DELETE/CANCEL CONTROL */}
-                      {onDeleteAmpra && (activeRole === 'apj' || 
+                      {onDeleteAmpra && (activeRole === 'apj' || activeRole === 'admin' || 
                         ((activeRole === 'unit' && amp.sourceUnitId === activeUnitId && amp.status !== 'Selesai') || 
                          (activeRole === 'farmasi' && amp.sourceUnitId === 'ruang_farmasi' && amp.status !== 'Selesai'))) && (
                         <button

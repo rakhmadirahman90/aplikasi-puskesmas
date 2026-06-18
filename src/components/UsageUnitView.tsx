@@ -12,7 +12,7 @@ interface UsageUnitViewProps {
   units: UnitInfo[];
   stocks: StockStore;
   usages: DailyUsage[];
-  activeRole: 'apj' | 'gudang' | 'farmasi' | 'unit';
+  activeRole: 'apj' | 'gudang' | 'farmasi' | 'unit' | 'admin';
   activeUnitId: string;
   onSetSimulationUnit: (unitId: string) => void;
   onAddUsage: (usage: DailyUsage) => void;
@@ -502,7 +502,7 @@ export default function UsageUnitView({
                   <div className="flex justify-between items-center text-[11px] border-b border-slate-200/50 pb-2 font-sans">
                     <div className="flex items-center gap-1.5">
                       <span className="font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 border border-slate-200 rounded">{use.id}</span>
-                      {onUpdateUsage && (activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
+                      {onUpdateUsage && (activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
                         <button
                           onClick={() => initiateEditUsage(use)}
                           className="p-1 text-slate-400 hover:text-emerald-650 hover:bg-emerald-50 rounded transition"
@@ -512,7 +512,7 @@ export default function UsageUnitView({
                           <Edit className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      {onDeleteUsage && (activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
+                      {onDeleteUsage && (activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
                         <button
                           onClick={() => onDeleteUsage(use.id)}
                           className="p-1 text-slate-400 hover:text-red-650 hover:bg-rose-50 rounded transition"

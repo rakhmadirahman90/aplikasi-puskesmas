@@ -591,7 +591,7 @@ export default function ApotekPasienView({
                       <span className="font-mono text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-150 px-2 py-0.5 rounded-md">
                         {rx.id}
                       </span>
-                      {onUpdatePrescription && (activeRole === 'farmasi' || activeRole === 'apj') && (
+                      {onUpdatePrescription && (activeRole === 'admin' || activeRole === 'farmasi' || activeRole === 'apj') && (
                         <button
                           onClick={() => initiateEditRx(rx)}
                           className="p-1 text-slate-400 hover:text-emerald-650 transition rounded hover:bg-emerald-50"
@@ -602,7 +602,7 @@ export default function ApotekPasienView({
                         </button>
                       )}
                       
-                      {onDeletePrescription && (activeRole === 'farmasi' || activeRole === 'apj') && (
+                      {onDeletePrescription && (activeRole === 'admin' || activeRole === 'farmasi' || activeRole === 'apj') && (
                         <button
                           onClick={() => onDeletePrescription(rx.id)}
                           className="p-1 text-slate-400 hover:text-red-650 transition rounded hover:bg-rose-50"

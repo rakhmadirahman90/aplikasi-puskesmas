@@ -5,12 +5,12 @@
 
 import React, { useState } from 'react';
 import { Medicine, Receipt, ReceiptItem, getDrugDefaultPrice } from '../types';
-import { Plus, Check, Trash2, ShieldCheck, ClipboardCheck, ArrowDownLeft, AlertCircle, Sparkles, Edit, X } from 'lucide-react';
+import { Plus, Check, Trash2, ShieldCheck, ClipboardCheck, ArrowDownLeft, AlertCircle, Sparkles, Edit, X, Database } from 'lucide-react';
 
 interface PenerimaanGudangViewProps {
   medicines: Medicine[];
   receipts: Receipt[];
-  activeRole: 'apj' | 'gudang' | 'farmasi' | 'unit';
+  activeRole: 'apj' | 'gudang' | 'farmasi' | 'unit' | 'admin';
   userName: string;
   onAddReceipt: (receipt: Receipt) => void;
   onVerifyReceipt: (receiptId: string, apjName: string) => void;
@@ -594,7 +594,7 @@ export default function PenerimaanGudangView({
                                 Terverifikasi oleh:<br />
                                 <span className="font-bold text-slate-600">{rcp.apjName || 'APJ'}</span>
                               </span>
-                            ) : activeRole === 'apj' ? (
+                            ) : (activeRole === 'apj' || activeRole === 'admin') ? (
                               <button
                                 onClick={() => {
                                   const apjName = userName || 'Ami Rahmawati, S.Farm, Apt';
@@ -613,7 +613,7 @@ export default function PenerimaanGudangView({
                             )}
 
                             {/* EDIT BUTTON WITH ROLE RESTRICTION */}
-                            {(activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onUpdateReceipt && (
+                            {(activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onUpdateReceipt && (
                               <button
                                 onClick={() => initiateEdit(rcp)}
                                 className="text-[10px] text-teal-650 hover:text-teal-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-teal-50 rounded-md transition duration-150"
@@ -625,7 +625,7 @@ export default function PenerimaanGudangView({
                             )}
 
                             {/* DELETE BUTTON WITH ROLE RESTRICTION */}
-                            {(activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onDeleteReceipt && (
+                            {(activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onDeleteReceipt && (
                               <button
                                 onClick={() => onDeleteReceipt(rcp.id)}
                                 className="text-[10px] text-red-650 hover:text-red-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-red-50 rounded-md transition duration-150"

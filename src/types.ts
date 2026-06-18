@@ -3,6 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export interface ThemeInfo {
+  id: string;
+  name: string;
+  desc: string;
+  colorValue: string;
+}
+
+export const THEMES_LIST: ThemeInfo[] = [
+  { id: 'emerald', name: 'Emerald', desc: 'Hijau Sehat Puskesmas', colorValue: '#10b981' },
+  { id: 'blue', name: 'Sapphire', desc: 'Biru Apotek Modern', colorValue: '#3b82f6' },
+  { id: 'teal', name: 'Herbal Teal', desc: 'Toska Mint Alami', colorValue: '#14b8a6' },
+  { id: 'violet', name: 'Amethyst', desc: 'Ungu Premium Spesialis', colorValue: '#8b5cf6' },
+  { id: 'slate', name: 'Carbon Steel', desc: 'Professional Modern Steel', colorValue: '#64748b' }
+];
+
 export interface Medicine {
   id: string;
   name: string;
@@ -127,6 +142,17 @@ export interface Disposal {
   officerName: string;
   recipientName?: string; // For Retur to Dinas Kesehatan
   timestamp: string;
+}
+
+export type AppRole = 'admin' | 'apj' | 'gudang' | 'farmasi' | 'unit';
+
+export interface UserAccount {
+  id: string;
+  username: string; // login identifier
+  pin: string; // simple password/PIN
+  role: AppRole;
+  unitId?: string; // unit if role is 'unit' or 'farmasi'
+  name: string;
 }
 
 export interface UnitInfo {

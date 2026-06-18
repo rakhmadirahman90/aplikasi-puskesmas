@@ -3,7 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Medicine, UnitInfo, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal } from './types';
+import { Medicine, UnitInfo, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal, UserAccount } from './types';
+
+export const INITIAL_USERS: UserAccount[] = [
+  { id: 'usr_1', username: 'admin', pin: '123456', role: 'admin', name: 'Administrator SIFP' },
+  { id: 'usr_2', username: 'apoteker', pin: '123456', role: 'apj', name: 'Ami Rahmawati, S.Farm, Apt' },
+  { id: 'usr_3', username: 'gudang', pin: '123456', role: 'gudang', name: 'Andi Sukri, A.Md.Farm' },
+  { id: 'usr_4', username: 'farmasi', pin: '123456', role: 'farmasi', name: 'Hj. Syarifah, S.Farm., Apt', unitId: 'ruang_farmasi' },
+  { id: 'usr_5', username: 'pustu', pin: '123456', role: 'unit', name: 'Bidan Marni', unitId: 'pustu' }
+];
 
 export const INITIAL_UNITS: UnitInfo[] = [
   { id: 'gudang', name: 'Gudang Farmasi Utama', type: 'gudang', description: 'Gudang induk penerimaan sediaan farmasi dari Dinas Kesehatan Parepare & PBF', manager: 'Andi Sukri, A.Md.Farm' },
