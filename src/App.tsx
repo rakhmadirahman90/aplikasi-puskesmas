@@ -227,6 +227,17 @@ export default function App() {
   const activeUnitId = currentUser?.unitId || 'pustu';
   const userName = currentUser?.name || 'Guest User';
 
+  // Role-based navigation: users only see modules relevant to their role.
+  const ROLE_TAB_ACCESS: Record<AppRole, string[]> = {
+    admin: ['dashboard', 'receipts', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'users'],
+    apj: ['dashboard', 'receipts', 'ampra', 'apotek', 'satellites', 'reports'],
+    gudang: ['dashboard', 'receipts', 'ampra', 'satellites', 'reports'],
+    farmasi: ['dashboard', 'ampra', 'apotek', 'satellites', 'reports'],
+    unit: ['dashboard', 'ampra', 'satellites', 'reports']
+  };
+
+  const canAccessTab = (tab: string) => ROLE_TAB_ACCESS[activeRole]?.includes(tab) ?? false;
+
   // Load User From LocalStorage
   useEffect(() => {
     try {
@@ -1093,7 +1104,7 @@ export default function App() {
               >
                 <LayoutDashboard className="w-4 h-4 shrink-0" /> <span>Dashboard</span>
               </button>
-              <button
+              {canAccessTab('receipts') && (<button
                 onClick={() => setActiveTab('receipts')}
                 className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
                   activeTab === 'receipts' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
@@ -1101,8 +1112,8 @@ export default function App() {
                 id="nav-receipts"
               >
                 <Truck className="w-4 h-4 shrink-0" /> <span>Penerimaan Gudang</span>
-              </button>
-              <button
+              </button>)}
+              {canAccessTab('ampra') && (<button
                 onClick={() => setActiveTab('ampra')}
                 className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
                   activeTab === 'ampra' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
@@ -1110,8 +1121,8 @@ export default function App() {
                 id="nav-ampra"
               >
                 <ArrowRightLeft className="w-4 h-4 shrink-0" /> <span>Ampra Unit</span>
-              </button>
-              <button
+              </button>)}
+              {canAccessTab('apotek') && (<button
                 onClick={() => setActiveTab('apotek')}
                 className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
                   activeTab === 'apotek' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
@@ -1119,8 +1130,8 @@ export default function App() {
                 id="nav-apotek"
               >
                 <Pill className="w-4 h-4 shrink-0" /> <span>Apotek Resep</span>
-              </button>
-              <button
+              </button>)}
+              {canAccessTab('satellites') && (<button
                 onClick={() => setActiveTab('satellites')}
                 className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
                   activeTab === 'satellites' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
@@ -1128,8 +1139,8 @@ export default function App() {
                 id="nav-satellites"
               >
                 <Database className="w-4 h-4 shrink-0" /> <span>Terminal Unit & Pustu</span>
-              </button>
-              <button
+              </button>)}
+              {canAccessTab('reports') && (<button
                 onClick={() => setActiveTab('reports')}
                 className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
                   activeTab === 'reports' ? 'bg-emerald-600 text-white shadow' : 'text-slate-650 hover:bg-slate-50'
@@ -1137,8 +1148,8 @@ export default function App() {
                 id="nav-reports"
               >
                 <FileText className="w-4 h-4 shrink-0" /> <span>Laporan & Audit</span>
-              </button>
-              {activeRole === 'admin' && (
+              </button>)}
+              {canAccessTab('master') && (
                 <>
                   <button
                     onClick={() => setActiveTab('master')}
