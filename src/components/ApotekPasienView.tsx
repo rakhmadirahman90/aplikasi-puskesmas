@@ -251,7 +251,7 @@ export default function ApotekPasienView({
           >
             &larr; Pantau Ampra Farmasi
           </button>
-          <span className="text-emerald-600 font-medium whitespace-nowrap">&rarr; <span className="font-bold underline decoration-emerald-300">Apotek Pasien</span> &rarr;</span>
+          <span className="text-emerald-600 font-medium break-words min-w-0">&rarr; <span className="font-bold underline decoration-emerald-300">Apotek Pasien</span> &rarr;</span>
           <button
             onClick={() => onNavigateChange?.('reports')}
             className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
@@ -695,8 +695,8 @@ export default function ApotekPasienView({
 
       {/* PROFESSIONAL EDIT PRESCRIPTION MODAL */}
       {editingRx && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="edit-prescription-modal-backdrop">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in duration-200" id="edit-prescription-modal-content">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-start sm:items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto overscroll-contain" id="edit-prescription-modal-backdrop">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-y-auto overscroll-contain flex flex-col animate-in fade-in zoom-in duration-200" id="edit-prescription-modal-content">
             
             {/* Header */}
             <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50' sticky top-0 z-10">
