@@ -11,8 +11,12 @@ import {
 } from './mockData';
 
 // Supabase setup
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://tzlovjdhfapafqclxnvb.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6bG92amRoZmFwYWZxY2x4bnZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NTY0NjMsImV4cCI6MjA5NzMzMjQ2M30.R0CT4JPjHzKzEgwk2ZIEOw8JBLZqcZzgfdzvuM0r2BU';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase belum dikonfigurasi. Set VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY di environment deployment.');
+}
 
 export const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient(supabaseUrl, supabaseAnonKey) 
