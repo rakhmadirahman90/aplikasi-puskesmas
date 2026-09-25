@@ -1012,8 +1012,6 @@ export default function App() {
           <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-7 py-4 sm:py-6">
             <div className="mb-4 flex items-center justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" /><span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400">Active workspace</span></div><h2 className="mt-1 font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900 truncate">{activeNavItem?.label || 'Dashboard'}</h2></div><div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"><CircleUserRound className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-semibold text-slate-600">{roleLabel}</span></div></div>
             <main className="min-w-0 w-full pb-20 space-y-6" id="main-content-pane">
-
-        <main className={`${systemConfig.sidebarVisible ? 'md:col-span-9 lg:col-span-10' : 'col-span-12'} min-w-0 w-full mb-12 space-y-6 transition-all`} id="main-content-pane">
           
           {activeTab === 'dashboard' && (
             <DashboardView
