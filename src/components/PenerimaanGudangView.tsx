@@ -683,8 +683,8 @@ export default function PenerimaanGudangView({
 
       {/* PROFESSIONAL EDIT RECEIPT MODAL */}
       {editingReceipt && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto" id="edit-receipt-modal-backdrop">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col animate-in fade-in zoom-in duration-200" id="edit-receipt-modal-content">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-start sm:items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto overscroll-contain" id="edit-receipt-modal-backdrop">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-4xl w-full max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-y-auto overscroll-contain flex flex-col animate-in fade-in zoom-in duration-200" id="edit-receipt-modal-content">
             
             {/* Modal Header */}
             <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
