@@ -40,7 +40,15 @@ import {
   AlertCircle,
   AlertTriangle,
   Info,
-  X
+  X,
+  Menu,
+  ChevronRight,
+  CircleUserRound,
+  Command,
+  Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search
 } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY_STOCKS = 'sifp_stocks_store';
@@ -225,6 +233,24 @@ export default function App() {
   };
 
   const canAccessTab = (tab: string) => ROLE_TAB_ACCESS[activeRole]?.includes(tab) ?? false;
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const NAV_ITEMS: Array<{ id: string; label: string; short: string; icon: React.ElementType; section?: string }> = [
+    { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, section: 'Workspace' },
+    { id: 'receipts', label: 'Penerimaan Gudang', short: 'Terima', icon: Truck, section: 'Logistik' },
+    { id: 'ampra', label: 'Ampra Unit', short: 'Ampra', icon: ArrowRightLeft, section: 'Logistik' },
+    { id: 'apotek', label: 'Apotek Pasien', short: 'Apotek', icon: Pill, section: 'Pelayanan' },
+    { id: 'satellites', label: 'Terminal Unit & Pustu', short: 'Unit', icon: Database, section: 'Operasional' },
+    { id: 'reports', label: 'Laporan & Audit', short: 'Laporan', icon: FileText, section: 'Insight' },
+    { id: 'master', label: 'Master Data', short: 'Master', icon: Database, section: 'Administrasi' },
+    { id: 'users', label: 'Akses & Pengguna', short: 'User', icon: ShieldCheck, section: 'Administrasi' }
+  ];
+
+  const visibleNavItems = NAV_ITEMS.filter(item => canAccessTab(item.id));
+  const activeNavItem = visibleNavItems.find(item => item.id === activeTab) || visibleNavItems[0];
+  const roleLabel = activeRole === 'apj' ? 'APJ / Apoteker' : activeRole === 'unit' ? 'Unit • ' + activeUnitId : activeRole.charAt(0).toUpperCase() + activeRole.slice(1);
 
   // Keep navigation inside the authenticated user's role scope.
   useEffect(() => {
@@ -926,237 +952,67 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col font-sans bg-slate-50 text-slate-800 overflow-hidden" id="main-app">
-      
-      {/* SIFP UPPER ACTION CONTROLLER NAVBAR */}
-      <header className="bg-gradient-to-r from-emerald-800 via-emerald-900 to-slate-900 text-white shadow-sm border-b border-emerald-950/40 z-30 shrink-0" id="header-sifp">
-        <div className="max-w-7xl mx-auto px-3 py-1.5 md:px-4 md:py-2.5 flex flex-col gap-1.5" id="header-sifp-inner">
-          
-          {/* Main Top Bar: Logo & Micro-widgets */}
-          <div className="flex items-center justify-between gap-2.5 w-full" id="header-top-row">
-            
-            {/* Logo Brand SIFP */}
-            <div className="flex items-center gap-2">
-              <div className="bg-white/95 p-1 rounded-lg text-emerald-800 shadow-sm shrink-0">
-                <HeartPulse className="w-4 h-4 md:w-5 md:h-5 animate-pulse" />
-              </div>
-              <div className="text-left">
-                <h1 className="font-display font-extrabold text-xs md:text-sm tracking-wide flex items-center gap-1.5 leading-none">
-                  {systemConfig.headerTitle.split(' ')[0] || 'SIM-Farmasi'}
-                  {systemConfig.headerTitle.split(' ').length > 1 && (
-                    <span className="text-[8px] bg-emerald-600/95 text-white px-1 py-0.2 rounded font-mono font-bold tracking-normal uppercase shrink-0">
-                      {systemConfig.headerTitle.split(' ').slice(1).join(' ')}
-                    </span>
-                  )}
-                </h1>
-                <p className="text-[9px] text-emerald-250 leading-none mt-0.5 font-sans whitespace-nowrap">{systemConfig.headerSubtitle}</p>
-              </div>
+    <div className="h-screen flex flex-col font-sans bg-slate-950 text-slate-900 overflow-hidden relative" id="main-app">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-48 -right-40 h-[34rem] w-[34rem] rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -bottom-56 -left-40 h-[30rem] w-[30rem] rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.025] futuristic-grid" />
+      </div>
+      <header className="relative z-40 shrink-0 border-b border-white/10 bg-slate-950/85 backdrop-blur-2xl">
+        <div className="h-16 px-3 sm:px-5 lg:px-7 flex items-center gap-3">
+          <button type="button" onClick={() => setSidebarCollapsed(v => !v)} className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 hover:text-white hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 transition" aria-label={sidebarCollapsed ? 'Buka sidebar' : 'Ciutkan sidebar'}>
+            {sidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+          </button>
+          <button type="button" onClick={() => setMobileNavOpen(v => !v)} className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70" aria-label="Buka navigasi">
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="relative h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-cyan-500 p-px shadow-lg shadow-emerald-500/20">
+              <div className="h-full w-full rounded-[11px] bg-slate-950 flex items-center justify-center"><HeartPulse className="w-5 h-5 text-emerald-300" /></div>
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950 animate-pulse" />
             </div>
-
-            {/* Right widgets: Real-time clock & theme selectors (compact design) */}
-            <div className="flex items-center gap-1.5 sm:gap-2" id="header-right-widgets">
-              
-              {/* Real-time Day/Time Header Widget inside glassmorphic badge */}
-              <div className="bg-black/20 backdrop-blur-xs px-2 py-1 rounded-lg border border-white/5 flex items-center gap-1 text-white/95 shadow-2xs" id="header-clock-widget">
-                <Calendar className="w-3 h-3 text-emerald-400 shrink-0 hidden xs:block" />
-                <div className="text-left leading-tight">
-                  <span className="block text-[7px] uppercase font-mono font-extrabold text-emerald-350 tracking-wider hidden sm:block">Waktu SIFP Real-Time</span>
-                  <span className="text-[9.5px] font-mono font-bold whitespace-nowrap text-slate-100">
-                    {(() => {
-                      try {
-                        const dateParts = systemDate.split('-');
-                        if (dateParts.length === 3) {
-                          const year = parseInt(dateParts[0]);
-                          const month = parseInt(dateParts[1]) - 1;
-                          const day = parseInt(dateParts[2]);
-                          const combinedDate = new Date(year, month, day, currentTime.getHours(), currentTime.getMinutes(), currentTime.getSeconds());
-                          
-                          const dayName = INDONESIAN_DAYS[combinedDate.getDay()] || 'Hari';
-                          const monthName = INDONESIAN_MONTHS[combinedDate.getMonth()] || 'Bulan';
-                          
-                          const pad = (num: number) => String(num).padStart(2, '0');
-                          const timeStr = `${pad(combinedDate.getHours())}:${pad(combinedDate.getMinutes())}:${pad(combinedDate.getSeconds())}`;
-                          
-                          return (
-                            <span className="inline-flex">
-                              <span className="sm:hidden">{dayName} &bull; {timeStr}</span>
-                              <span className="hidden sm:inline">{dayName}, {day} {monthName} {year} &bull; {timeStr} WIB</span>
-                            </span>
-                          );
-                        }
-                      } catch (e) {
-                        console.error(e);
-                      }
-                      return systemDate;
-                    })()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Compact Professional Theme Selector in Header */}
-              <div className="bg-black/20 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/5 flex items-center gap-1.5 text-white/95 shadow-2xs h-[24px] md:h-[28px]" id="header-theme-selector">
-                <Palette className="w-3 h-3 text-emerald-400 shrink-0" />
-                <div className="text-left hidden lg:block leading-none">
-                  <span className="block text-[7px] uppercase font-mono font-bold text-emerald-350 tracking-wider">Tema</span>
-                  <span className="text-[9px] font-sans font-bold text-slate-100 leading-none">
-                    {THEMES_LIST.find(t => t.id === theme)?.name}
-                  </span>
-                </div>
-                <div className="flex gap-1 items-center">
-                  {THEMES_LIST.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        setTheme(t.id);
-                        addNotification('success', `Tema disesuaikan ke: ${t.name}`);
-                      }}
-                      title={`${t.name} • ${t.desc}`}
-                      type="button"
-                      className={`w-3 h-3 rounded-full border border-white/20 flex items-center justify-center transition-all cursor-pointer ${
-                        theme === t.id 
-                          ? 'scale-110 ring-1 ring-white shadow-xs' 
-                          : 'hover:scale-105 hover:border-white/50'
-                      }`}
-                      style={{ backgroundColor: t.colorValue }}
-                      id={`theme-header-btn-${t.id}`}
-                    >
-                      {theme === t.id && (
-                        <span className="w-0.5 h-0.5 rounded-full bg-white" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+            <div className="min-w-0">
+              <div className="flex items-center gap-2"><h1 className="font-display text-sm sm:text-base font-bold tracking-tight text-white truncate">{systemConfig.headerTitle}</h1><span className="hidden sm:inline-flex rounded-md border border-emerald-400/20 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider text-emerald-300">LIVE</span></div>
+              <p className="hidden sm:block text-[10px] text-slate-500 truncate">{systemConfig.headerSubtitle}</p>
             </div>
-
           </div>
-
-          {/* Sub-bar: Ganti Sim Role Selector (Scrollable, ultra-thin, borderless spacing) */}
-          <div className="flex items-center justify-between border-t border-white/10 pt-1.5 mt-0.5" id="header-bottom-row">
-            
-            <div className="flex items-center gap-1.5 overflow-hidden w-full flex-1 text-emerald-100 text-xs mt-1" id="role-scroll-container">
-              <Users className="w-4 h-4 text-emerald-400" />
-              <span>Login sebagai: <strong>{currentUser.name}</strong> ({activeRole.toUpperCase()})</span>
-            </div>
-
-            {/* Sim Reset action */}
-            <div className="flex bg-black/20 backdrop-blur-xs rounded-lg border border-white/5 overflow-hidden">
-               <button
-                 onClick={handleLogout}
-                 title="Keluar / Logout"
-                 className="flex items-center gap-1 px-3 py-1.5 text-[10px] sm:text-xs font-bold text-slate-200 hover:text-white hover:bg-red-500/80 transition-colors"
-               >
-                  <LogOut className="w-3.5 h-3.5" /> Logout
-               </button>
-            </div>
-
+          <div className="ml-auto flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 h-10"><Search className="w-3.5 h-3.5 text-slate-500" /><span className="text-[10px] text-slate-500">Ruang kerja aktif</span><kbd className="rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] text-slate-500">SIFP</kbd></div>
+            <div className="hidden sm:flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 h-10"><Calendar className="w-3.5 h-3.5 text-emerald-300" /><span className="text-[10px] font-mono font-semibold text-slate-300">{currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span></div>
+            <div className="hidden md:flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-2.5 h-10"><div className="h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-400/20 to-cyan-400/20 border border-emerald-300/20 flex items-center justify-center"><CircleUserRound className="w-4 h-4 text-emerald-300" /></div><div className="leading-tight max-w-32"><span className="block text-[10px] font-semibold text-white truncate">{userName}</span><span className="block text-[8px] uppercase tracking-wider text-emerald-300 truncate">{roleLabel}</span></div></div>
+            <button onClick={handleLogout} type="button" title="Keluar" className="h-10 w-10 inline-flex items-center justify-center rounded-xl border border-red-400/15 bg-red-400/[0.05] text-red-300 hover:bg-red-400/10 hover:text-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60 transition" aria-label="Keluar dari aplikasi"><LogOut className="w-4 h-4" /></button>
           </div>
-
         </div>
+        <div className="h-9 border-t border-white/[0.06] px-4 sm:px-6 lg:px-7 flex items-center gap-2 text-[10px]"><span className="text-slate-600">SIFP</span><ChevronRight className="w-3 h-3 text-slate-700" /><span className="font-semibold text-emerald-300">{activeNavItem?.label || 'Dashboard'}</span><span className="ml-auto hidden sm:inline-flex items-center gap-1.5 text-slate-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />Data real-time</span></div>
       </header>
-
-      {/* SCROLLABLE BODY AREA */}
-      <div className="flex-1 overflow-y-auto min-h-0" id="scrollable-content-area">
-        {/* BODY SUB-SYSTEM CONTAINER */}
-        <div className="max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-6" id="app-body-layout">
-        
-        {/* Navigation Sidebar */}
-        {systemConfig.sidebarVisible && (
-          <aside className="md:col-span-3 lg:col-span-2 space-y-3" id="navigation-sidebar">
-            {/* Active Sim Identity Badge */}
-            <div className="bg-white p-3 md:p-4 rounded-xl shadow-xs border border-slate-200 flex flex-row md:flex-col justify-between items-center md:text-center gap-2" id="identity-banner">
-              <div className="text-left md:text-center space-y-0.5">
-                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-widest block">Login Aktif</span>
-                <p className="font-bold text-slate-800 text-xs md:text-sm leading-tight">{userName}</p>
-              </div>
-              <span className="inline-block px-2.5 py-1 rounded font-mono text-[9px] bg-slate-100 text-slate-500 font-bold uppercase shrink-0">
-                {activeRole === 'unit' ? `UNIT (${activeUnitId})` : activeRole.toUpperCase()}
-              </span>
-            </div>
-
-            <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible space-x-1 md:space-x-0 md:space-y-1 bg-white p-1.5 md:p-2 rounded-xl shadow-xs border border-slate-200 scrollbar-none whitespace-nowrap" id="sidebar-nav">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                  activeTab === 'dashboard' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-                }`}
-                id="nav-dashboard"
-              >
-                <LayoutDashboard className="w-4 h-4 shrink-0" /> <span>Dashboard</span>
-              </button>
-              {canAccessTab('receipts') && (<button
-                onClick={() => setActiveTab('receipts')}
-                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                  activeTab === 'receipts' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-                }`}
-                id="nav-receipts"
-              >
-                <Truck className="w-4 h-4 shrink-0" /> <span>Penerimaan Gudang</span>
-              </button>)}
-              {canAccessTab('ampra') && (<button
-                onClick={() => setActiveTab('ampra')}
-                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                  activeTab === 'ampra' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-                }`}
-                id="nav-ampra"
-              >
-                <ArrowRightLeft className="w-4 h-4 shrink-0" /> <span>Ampra Unit</span>
-              </button>)}
-              {canAccessTab('apotek') && (<button
-                onClick={() => setActiveTab('apotek')}
-                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                  activeTab === 'apotek' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-                }`}
-                id="nav-apotek"
-              >
-                <Pill className="w-4 h-4 shrink-0" /> <span>Apotek Resep</span>
-              </button>)}
-              {canAccessTab('satellites') && (<button
-                onClick={() => setActiveTab('satellites')}
-                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                  activeTab === 'satellites' ? 'bg-emerald-600 text-white' : 'text-slate-650 hover:bg-slate-50'
-                }`}
-                id="nav-satellites"
-              >
-                <Database className="w-4 h-4 shrink-0" /> <span>Terminal Unit & Pustu</span>
-              </button>)}
-              {canAccessTab('reports') && (<button
-                onClick={() => setActiveTab('reports')}
-                className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
-                  activeTab === 'reports' ? 'bg-emerald-600 text-white shadow' : 'text-slate-650 hover:bg-slate-50'
-                }`}
-                id="nav-reports"
-              >
-                <FileText className="w-4 h-4 shrink-0" /> <span>Laporan & Audit</span>
-              </button>)}
-              {canAccessTab('master') && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('master')}
-                    className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all md:border-t md:border-slate-100 md:pt-2 text-left ${
-                      activeTab === 'master' ? 'bg-teal-600 text-white shadow' : 'text-teal-700 hover:bg-teal-50'
-                    }`}
-                    id="nav-master"
-                  >
-                    <Database className="w-4 h-4 shrink-0" /> <span>Master Data</span>
+      <div className="relative z-10 flex-1 min-h-0 flex overflow-hidden">
+        <aside className={`hidden md:flex shrink-0 flex-col border-r border-white/10 bg-slate-950/65 backdrop-blur-2xl transition-[width] duration-300 ${sidebarCollapsed ? 'w-[76px]' : 'w-[250px]'}`}>
+          <div className="flex-1 overflow-y-auto px-3 py-4">
+            {!sidebarCollapsed && <div className="mb-5 px-2"><div className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.22em] text-slate-600"><Command className="w-3 h-3 text-emerald-400" />Workspace</div><p className="mt-2 text-xs text-slate-400">Modul yang tersedia untuk peran Anda.</p></div>}
+            <nav className="space-y-1" aria-label="Navigasi utama">
+              {visibleNavItems.map((item, index) => {
+                const Icon = item.icon;
+                const active = activeTab === item.id;
+                const sectionChanged = index > 0 && visibleNavItems[index - 1].section !== item.section;
+                return <React.Fragment key={item.id}>
+                  {!sidebarCollapsed && sectionChanged && <div className="px-3 pt-4 pb-1 text-[8px] font-mono uppercase tracking-[0.2em] text-slate-700">{item.section}</div>}
+                  <button type="button" onClick={() => setActiveTab(item.id)} title={sidebarCollapsed ? item.label : undefined} className={`group relative w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 ${active ? 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/10 text-white border border-emerald-400/20 shadow-lg shadow-emerald-950/20' : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.045] border border-transparent'}`}>
+                    {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.8)]" />}
+                    <span className={`h-8 w-8 shrink-0 rounded-lg flex items-center justify-center ${active ? 'bg-emerald-400/10 text-emerald-300' : 'bg-white/[0.025] text-slate-600 group-hover:text-slate-300'}`}><Icon className="w-4 h-4" /></span>
+                    {!sidebarCollapsed && <><span className="truncate">{item.label}</span>{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(52,211,153,.8)]" />}</>}
                   </button>
-                  <button
-                    onClick={() => setActiveTab('users')}
-                    className={`shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 md:px-3.5 md:py-2.5 text-xs font-semibold rounded-lg transition-all text-left ${
-                      activeTab === 'users' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-600 hover:bg-indigo-50'
-                    }`}
-                    id="nav-users"
-                  >
-                    <ShieldCheck className="w-4 h-4 shrink-0" /> <span>Akses & Pengguna</span>
-                  </button>
-                </>
-              )}
+                </React.Fragment>;
+              })}
             </nav>
-          </aside>
-        )}
+          </div>
+          {!sidebarCollapsed && <div className="m-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-3"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-cyan-300" /><span className="text-[10px] font-semibold text-slate-300">System status</span><span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /></div><p className="mt-2 text-[9px] leading-relaxed text-slate-600">Sinkronisasi data dan autentikasi aktif.</p></div>}
+        </aside>
+        {mobileNavOpen && <div className="md:hidden absolute inset-0 z-50 bg-slate-950/75 backdrop-blur-sm" onClick={() => setMobileNavOpen(false)}><aside className="h-full w-[86%] max-w-sm bg-slate-950 border-r border-white/10 p-4 shadow-2xl" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between mb-5"><div><div className="text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-300">Navigation core</div><div className="text-white font-display font-bold mt-1">Menu aplikasi</div></div><button type="button" onClick={() => setMobileNavOpen(false)} className="h-9 w-9 rounded-xl border border-white/10 text-slate-400 hover:text-white flex items-center justify-center" aria-label="Tutup navigasi"><X className="w-4 h-4" /></button></div><nav className="space-y-1" aria-label="Navigasi mobile">{visibleNavItems.map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }} className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-semibold ${active ? 'bg-emerald-400/10 text-emerald-200 border border-emerald-400/20' : 'text-slate-400 hover:bg-white/[0.05]'}`}><span className="h-9 w-9 rounded-lg bg-white/[0.04] flex items-center justify-center"><Icon className="w-4 h-4" /></span>{item.label}</button>; })}</nav></aside></div>}
+        <section className="flex-1 min-w-0 overflow-y-auto bg-slate-50/95" id="scrollable-content-area">
+          <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-7 py-4 sm:py-6">
+            <div className="mb-4 flex items-center justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" /><span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400">Active workspace</span></div><h2 className="mt-1 font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900 truncate">{activeNavItem?.label || 'Dashboard'}</h2></div><div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"><CircleUserRound className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-semibold text-slate-600">{roleLabel}</span></div></div>
+            <main className="min-w-0 w-full pb-20 space-y-6" id="main-content-pane">
 
-        {/* View content pane */}
         <main className={`${systemConfig.sidebarVisible ? 'md:col-span-9 lg:col-span-10' : 'col-span-12'} min-w-0 w-full mb-12 space-y-6 transition-all`} id="main-content-pane">
           
           {activeTab === 'dashboard' && (
@@ -1338,6 +1194,16 @@ export default function App() {
         </AnimatePresence>
       </div>
 
+            </main>
+          </div>
+        </section>
+      </div>
+      <nav className="md:hidden relative z-40 shrink-0 h-16 border-t border-white/10 bg-slate-950/95 backdrop-blur-2xl px-1.5 pb-[env(safe-area-inset-bottom)]" aria-label="Navigasi cepat">
+        <div className="h-full flex items-center justify-around">
+          {visibleNavItems.slice(0, 5).map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-semibold ${active ? 'text-emerald-300' : 'text-slate-600'}`}>{active && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.8)]" />}<Icon className="w-4 h-4" /><span className="truncate max-w-16">{item.short}</span></button>; })}
+          <button type="button" onClick={() => setMobileNavOpen(true)} className="min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-semibold text-slate-600"><Menu className="w-4 h-4" /><span>Menu</span></button>
+        </div>
+      </nav>
       {/* SIFP humble compliance footer */}
       <footer className="bg-slate-900 border-t border-slate-950 text-slate-500 py-3 text-center text-xs shrink-0" id="sifp-footer">
         <p>&copy; 2026 Dinas Kesehatan Kota Parepare</p>

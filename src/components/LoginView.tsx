@@ -172,7 +172,7 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
 
               <div className="space-y-5">
                 <div className="space-y-1.5 relative">
-                  <label className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-widest block ml-1">ID Pengguna</label>
+                  <label className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-widest block ml-1">Username</label>
                   <div className="relative group">
                     <input
                       type="text"
@@ -181,7 +181,7 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
                       disabled={isLoading}
                       onChange={(e) => setUsername(e.target.value)}
                       className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-900 transition-all outline-none text-white disabled:opacity-50 placeholder:text-slate-600"
-                      placeholder="Masukkan username"
+                      placeholder="Username Anda"
                     />
                     <User className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5 group-focus-within:text-emerald-400 transition-colors" />
                   </div>
@@ -197,7 +197,7 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
                       disabled={isLoading}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-900 transition-all outline-none text-white disabled:opacity-50 placeholder:text-slate-600"
-                      placeholder="Masukkan password"
+                      placeholder="Password Anda"
                     />
                     <Lock className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5 group-focus-within:text-emerald-400 transition-colors" />
                   </div>
