@@ -1136,17 +1136,17 @@ export default function App() {
             />
           )}
 
-        </main>
+            </main>
+          </div>
+        </section>
       </div>
 
-      {/* App Footer Configuration */}
-      {systemConfig.footerText && (
-        <footer className="text-center py-3 text-xs text-slate-500 w-full mt-auto mb-2 px-4 shadow-sm">
-          {systemConfig.footerText}
-        </footer>
-      )}
-
-      </div>
+      <nav className="md:hidden relative z-40 shrink-0 h-16 border-t border-white/10 bg-slate-950/95 backdrop-blur-2xl px-1.5 pb-[env(safe-area-inset-bottom)]" aria-label="Navigasi cepat">
+        <div className="h-full flex items-center justify-around">
+          {visibleNavItems.slice(0, 5).map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-semibold ${active ? 'text-emerald-300' : 'text-slate-600'}`}>{active && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.8)]" />}<Icon className="w-4 h-4" /><span className="truncate max-w-16">{item.short}</span></button>; })}
+          <button type="button" onClick={() => setMobileNavOpen(true)} className="min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-semibold text-slate-600"><Menu className="w-4 h-4" /><span>Menu</span></button>
+        </div>
+      </nav>
 
       {/* Premium Toast Notifications Container */}
       <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 w-full max-w-sm pointer-events-none" id="toast-container">
@@ -1193,17 +1193,6 @@ export default function App() {
           })}
         </AnimatePresence>
       </div>
-
-            </main>
-          </div>
-        </section>
-      </div>
-      <nav className="md:hidden relative z-40 shrink-0 h-16 border-t border-white/10 bg-slate-950/95 backdrop-blur-2xl px-1.5 pb-[env(safe-area-inset-bottom)]" aria-label="Navigasi cepat">
-        <div className="h-full flex items-center justify-around">
-          {visibleNavItems.slice(0, 5).map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-semibold ${active ? 'text-emerald-300' : 'text-slate-600'}`}>{active && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.8)]" />}<Icon className="w-4 h-4" /><span className="truncate max-w-16">{item.short}</span></button>; })}
-          <button type="button" onClick={() => setMobileNavOpen(true)} className="min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-semibold text-slate-600"><Menu className="w-4 h-4" /><span>Menu</span></button>
-        </div>
-      </nav>
       {/* SIFP humble compliance footer */}
       <footer className="bg-slate-900 border-t border-slate-950 text-slate-500 py-3 text-center text-xs shrink-0" id="sifp-footer">
         <p>&copy; 2026 Dinas Kesehatan Kota Parepare</p>
