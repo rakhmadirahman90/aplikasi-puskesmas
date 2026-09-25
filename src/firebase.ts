@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() || import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || '';
+// Public browser configuration. Environment variables still take precedence in Vercel/local builds.
+// Supabase publishable keys are intended for browser clients; database access remains protected by RLS.
+const SUPABASE_PUBLIC_URL = 'https://tzlovjdhfapafqclxnvb.supabase.co';
+const SUPABASE_PUBLIC_KEY = 'sb_publishable_gmYb2tLg6X-lr0eVTvdwcg_3XtMzWuJ';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || SUPABASE_PUBLIC_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() || import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || SUPABASE_PUBLIC_KEY;
 
 export const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
