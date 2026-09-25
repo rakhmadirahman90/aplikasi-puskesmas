@@ -16,7 +16,6 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
 
   // Form State
   const [username, setUsername] = useState('');
-  const [pin, setPin] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<AppRole>('unit');
   const [unitId, setUnitId] = useState('');
@@ -25,7 +24,6 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
 
   const resetForm = () => {
     setUsername('');
-    setPin('');
     setName('');
     setRole('unit');
     setUnitId('');
@@ -35,7 +33,6 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
 
   const handleEdit = (u: UserAccount) => {
     setUsername(u.username);
-    setPin(u.pin);
     setName(u.name);
     setRole(u.role);
     setUnitId(u.unitId || '');
@@ -46,13 +43,13 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      onUpdateUser(editingId, { username, pin, name, role, unitId: role === 'unit' || role === 'farmasi' ? unitId : undefined });
+      onUpdateUser(editingId, { username, name, role, unitId: role === 'unit' || role === 'farmasi' ? unitId : undefined });
     } else {
       const newId = `usr_${Math.random().toString(36).substr(2, 9)}`;
       onAddUser({
         id: newId,
         username,
-        pin,
+        pin: '',
         name,
         role,
         unitId: role === 'unit' || role === 'farmasi' ? unitId : undefined
@@ -99,9 +96,8 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
               <label className="text-xs font-bold text-slate-600">Username Login</label>
               <input type="text" required value={username} onChange={e => setUsername(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500/30 text-sm" placeholder="username.unik" />
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600">PIN (Password)</label>
-              <input type="text" required value={pin} onChange={e => setPin(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500/30 text-sm font-mono tracking-widest" placeholder="123456" />
+            <div className="md:col-span-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs text-blue-700">
+              <strong>Password login dikelola oleh Supabase Auth.</strong> Halaman ini hanya mengelola profil, role, dan unit pengguna. Password tidak disimpan di tabel profil aplikasi.
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-600">Role Sistem</label>
@@ -182,9 +178,14 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
                     {u.unitId ? units.find(unit => unit.id === u.unitId)?.name || u.unitId : '-'}
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-2 text-xs font-mono bg-slate-100 px-2 py-1 rounded w-fit">
-                      <Key className="w-3 h-3 text-slate-400" />
-                      <span className="text-slate-700 font-bold">{u.username}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-xs font-mono bg-slate-100 px-2 py-1 rounded w-fit">
+                        <Key className="w-3 h-3 text-slate-400" />
+                        <span className="text-slate-700 font-bold">{u.username}</span>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase ${u.authUserId && u.migrationStatus === 'linked' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        {u.authUserId && u.migrationStatus === 'linked' ? 'Auth Terhubung' : 'Auth Belum Terhubung'}
+                      </span>
                     </div>
                   </td>
                   <td className="p-4 text-right">

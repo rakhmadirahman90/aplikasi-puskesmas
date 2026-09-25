@@ -149,10 +149,12 @@ export type AppRole = 'admin' | 'apj' | 'gudang' | 'farmasi' | 'unit';
 export interface UserAccount {
   id: string;
   username: string; // login identifier
-  pin: string; // simple password/PIN
+  pin: string; // legacy field; passwords are managed by Supabase Auth
   role: AppRole;
   unitId?: string; // unit if role is 'unit' or 'farmasi'
   name: string;
+  authUserId?: string;
+  migrationStatus?: string;
 }
 
 export interface UnitInfo {

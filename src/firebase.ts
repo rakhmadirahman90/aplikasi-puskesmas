@@ -54,7 +54,16 @@ async function load(name: string) {
   }
   if (name === 'users') {
     const { data, error } = await s.from('app_users').select('*').order('username'); if (error) throw error;
-    return (data || []).map((r: any) => ({ id:r.id, data:()=>({id:r.id,username:r.username,pin:'',role:r.role,name:r.name,unitId:r.unit_id || undefined}) }));
+    return (data || []).map((r: any) => ({ id:r.id, data:()=>({
+      id:r.id,
+      username:r.username,
+      pin:'',
+      role:r.role,
+      name:r.name,
+      unitId:r.unit_id || undefined,
+      authUserId:r.auth_user_id || undefined,
+      migrationStatus:r.migration_status || undefined
+    }) }));
   }
   if (name === 'stocks') {
     const [b,bt] = await Promise.all([s.from('stock_balances').select('*'),s.from('stock_batches').select('*').order('exp_date')]);

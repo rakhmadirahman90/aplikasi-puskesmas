@@ -5,17 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal, UnitInfo, UserAccount, AppRole, ThemeInfo, THEMES_LIST, SystemConfig } from './types';
-import {
-  INITIAL_MEDICINES,
-  INITIAL_UNITS,
-  INITIAL_STOCKS,
-  INITIAL_RECEIPTS,
-  INITIAL_AMPRAS,
-  INITIAL_PRESCRIPTIONS,
-  INITIAL_USAGES,
-  INITIAL_USERS
-} from './mockData';
-import { db, seedDatabaseIfEmpty, resetDatabaseFirestore, onSnapshot, collection, doc, setDoc, deleteDoc, supabase } from './firebase';
+import { db, seedDatabaseIfEmpty, onSnapshot, collection, doc, setDoc, deleteDoc, supabase } from './firebase';
 
 // Subcomponents
 import DashboardView from './components/DashboardView';
@@ -41,7 +31,6 @@ import {
   LayoutDashboard,
   LogOut,
   Pill,
-  RefreshCw,
   Settings,
   Palette,
   ShieldCheck,
@@ -220,7 +209,6 @@ export default function App() {
 
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const [showResetModal, setShowResetModal] = useState(false);
 
   // Authenticated Role Accessors
   const activeRole = currentUser?.role || 'unit';
@@ -237,6 +225,13 @@ export default function App() {
   };
 
   const canAccessTab = (tab: string) => ROLE_TAB_ACCESS[activeRole]?.includes(tab) ?? false;
+
+  // Keep navigation inside the authenticated user's role scope.
+  useEffect(() => {
+    if (currentUser && !canAccessTab(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [currentUser, activeTab]);
 
   // Supabase Auth session is the only source of authenticated identity.
   useEffect(() => {
@@ -429,22 +424,6 @@ export default function App() {
       console.error(e);
       addNotification('error', "Gagal memperbarui tanggal sistem.");
     }
-  };
-
-  // Reset SIFP database triggers
-  const executeResetDatabase = async () => {
-    setShowResetModal(false);
-    try {
-      await resetDatabaseFirestore();
-      addNotification('success', "Database simulasi berhasil disinkronkan kembali ke sediaan awal secara real time!");
-    } catch (e) {
-      console.error(e);
-      addNotification('error', "Gagal melakukan kalibrasi database.");
-    }
-  };
-
-  const handleResetStorage = () => {
-    setShowResetModal(true);
   };
 
   // MASTER DATA EVENTS
@@ -1070,14 +1049,6 @@ export default function App() {
                >
                   <LogOut className="w-3.5 h-3.5" /> Logout
                </button>
-               <button
-                 onClick={handleResetStorage}
-                 title="Setel ulang data ke bawaan pabrik"
-                 className="flex items-center gap-1 px-3 py-1.5 text-[10px] sm:text-xs font-bold text-slate-300 hover:text-amber-400 hover:bg-slate-800/80 border-l border-white/10 transition-colors"
-                 id="reset-simulation-system"
-               >
-                 <RefreshCw className="w-3.5 h-3.5" /> Reset DB
-               </button>
             </div>
 
           </div>
@@ -1198,7 +1169,7 @@ export default function App() {
               usages={usages}
               systemDate={systemDate}
               onSetSystemDate={handleSetSystemDate}
-              onNavigateChange={(view) => setActiveTab(view)}
+              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
             />
           )}
 
@@ -1227,7 +1198,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'receipts' && (
+          {activeTab === 'receipts' && canAccessTab('receipts') && (
             <PenerimaanGudangView
               medicines={medicines}
               receipts={receipts}
@@ -1239,11 +1210,11 @@ export default function App() {
               onUpdateReceipt={handleUpdateReceipt}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => setActiveTab(view)}
+              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
             />
           )}
 
-          {activeTab === 'ampra' && (
+          {activeTab === 'ampra' && canAccessTab('ampra') && (
             <AmpraGudangView
               medicines={medicines}
               units={units}
@@ -1257,11 +1228,11 @@ export default function App() {
               onDeleteAmpra={handleDeleteAmpra}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => setActiveTab(view)}
+              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
             />
           )}
 
-          {activeTab === 'apotek' && (
+          {activeTab === 'apotek' && canAccessTab('apotek') && (
             <ApotekPasienView
               medicines={medicines}
               prescriptions={prescriptions}
@@ -1272,11 +1243,11 @@ export default function App() {
               activeRole={activeRole as any}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => setActiveTab(view)}
+              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
             />
           )}
 
-          {activeTab === 'satellites' && (
+          {activeTab === 'satellites' && canAccessTab('satellites') && (
             <UsageUnitView
               medicines={medicines}
               units={units}
@@ -1290,11 +1261,11 @@ export default function App() {
               onUpdateUsage={handleUpdateUsage}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => setActiveTab(view)}
+              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
             />
           )}
 
-          {activeTab === 'reports' && (
+          {activeTab === 'reports' && canAccessTab('reports') && (
             <LaporanView
               medicines={medicines}
               units={units}
@@ -1305,7 +1276,7 @@ export default function App() {
               usages={usages}
               userName={userName}
               onNotify={addNotification}
-              onNavigateChange={(view) => setActiveTab(view)}
+              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
             />
           )}
 
@@ -1366,26 +1337,6 @@ export default function App() {
           })}
         </AnimatePresence>
       </div>
-
-      {showResetModal && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 text-rose-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-800">Reset Database?</h3>
-                <p className="text-sm text-slate-600 mt-1">Anda yakin ingin menyetel ulang database simulasi farmasi ke awal? Semua perubahan data akan hilang.</p>
-              </div>
-            </div>
-            <div className="p-4 bg-slate-50 flex justify-end gap-3">
-              <button onClick={() => setShowResetModal(false)} className="px-4 py-2 rounded-lg font-bold text-sm text-slate-600 hover:bg-slate-200 transition">Batal</button>
-              <button onClick={executeResetDatabase} className="px-4 py-2 rounded-lg font-bold text-sm text-white bg-rose-600 hover:bg-rose-700 transition">Ya, Reset Database</button>
-            </div>
-          </motion.div>
-        </div>
-      )}
 
       {/* SIFP humble compliance footer */}
       <footer className="bg-slate-900 border-t border-slate-950 text-slate-500 py-3 text-center text-xs shrink-0" id="sifp-footer">

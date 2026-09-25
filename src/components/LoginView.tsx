@@ -29,9 +29,10 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
         setIsLoading(false);
         return;
       }
-      const email = username.trim().toLowerCase() + '@puskesmas.local';
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
+      const identifier = username.trim().toLowerCase();
+      const email = identifier.includes('@') ? identifier : `${identifier}@puskesmas.parepare`;
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !authData.user) {
         setError('Kredensial tidak terverifikasi. Akses ditolak.');
         setIsLoading(false);
         return;
@@ -39,7 +40,7 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
       const { data, error: profileError } = await supabase
         .from('app_users')
         .select('id, username, name, role, unit_id')
-        .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id || '')
+        .eq('auth_user_id', authData.user.id)
         .maybeSingle();
       if (profileError || !data) {
         await supabase.auth.signOut();
