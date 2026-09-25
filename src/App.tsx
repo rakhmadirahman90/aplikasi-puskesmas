@@ -15,7 +15,7 @@ import {
   INITIAL_USAGES,
   INITIAL_USERS
 } from './mockData';
-import { db, seedDatabaseIfEmpty, resetDatabaseFirestore, onSnapshot, collection, doc, setDoc, deleteDoc } from './firebase';
+import { db, seedDatabaseIfEmpty, resetDatabaseFirestore, onSnapshot, collection, doc, setDoc, deleteDoc, supabase } from './firebase';
 
 // Subcomponents
 import DashboardView from './components/DashboardView';
@@ -138,7 +138,7 @@ const INDONESIAN_MONTHS = [
 ];
 
 export default function App() {
-  const isSupabaseConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+  const isSupabaseConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY));
 
   // Navigation
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -197,18 +197,18 @@ export default function App() {
   };
 
   // Core SIFP State
-  const [medicines, setMedicines] = useState<Medicine[]>(INITIAL_MEDICINES);
-  const [units, setUnits] = useState<UnitInfo[]>(INITIAL_UNITS);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [units, setUnits] = useState<UnitInfo[]>([]);
   
   // Reactive state loaded from Firestore in real-time
-  const [stocks, setStocks] = useState<StockStore>(INITIAL_STOCKS);
-  const [receipts, setReceipts] = useState<Receipt[]>(INITIAL_RECEIPTS);
-  const [ampras, setAmpras] = useState<Ampra[]>(INITIAL_AMPRAS);
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>(INITIAL_PRESCRIPTIONS);
-  const [usages, setUsages] = useState<DailyUsage[]>(INITIAL_USAGES);
+  const [stocks, setStocks] = useState<StockStore>({});
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [ampras, setAmpras] = useState<Ampra[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [usages, setUsages] = useState<DailyUsage[]>([]);
 
   // Expiration calibrators
-  const [systemDate, setSystemDate] = useState<string>('2026-06-17');
+  const [systemDate, setSystemDate] = useState<string>(new Date().toISOString().slice(0,10));
   
   // Dynamic UI Config
   const [systemConfig, setSystemConfig] = useState<SystemConfig>({
@@ -218,7 +218,7 @@ export default function App() {
     sidebarVisible: true
   });
 
-  const [users, setUsers] = useState<UserAccount[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<UserAccount[]>([]);
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [showResetModal, setShowResetModal] = useState(false);
 
@@ -238,27 +238,36 @@ export default function App() {
 
   const canAccessTab = (tab: string) => ROLE_TAB_ACCESS[activeRole]?.includes(tab) ?? false;
 
-  // Load User From LocalStorage
+  // Supabase Auth session is the only source of authenticated identity.
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem('sifp_current_user');
-      if (savedUser) {
-        setCurrentUser(JSON.parse(savedUser));
+    if (!supabase) return;
+    let mounted = true;
+    const loadSessionUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!mounted || !user) return;
+      const { data } = await supabase
+        .from('app_users')
+        .select('id, username, name, role, unit_id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (mounted && data) {
+        setCurrentUser({ id:data.id, username:data.username, pin:'', role:data.role, name:data.name, unitId:data.unit_id || undefined });
       }
-    } catch (e) {
-      console.warn("Could not reload user", e);
-    }
+    };
+    void loadSessionUser();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => { void loadSessionUser(); });
+    return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
 
   const handleLogin = (user: UserAccount) => {
     setCurrentUser(user);
-    localStorage.setItem('sifp_current_user', JSON.stringify(user));
+    setActiveTab('dashboard');
     addNotification('success', `Berhasil login sebagai ${user.name}`);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (supabase) await supabase.auth.signOut();
     setCurrentUser(null);
-    localStorage.removeItem('sifp_current_user');
     setActiveTab('dashboard');
   };
 
@@ -267,7 +276,7 @@ export default function App() {
     let unsubscribes: Array<() => void> = [];
 
     const setupDatabaseSubscription = async () => {
-      // Warm up / seed empty database first
+      // Database is authoritative in Supabase; never reseed from mockData.ts.
       await seedDatabaseIfEmpty();
 
       // 1. Real-time system config
@@ -373,7 +382,8 @@ export default function App() {
     };
 
     setupDatabaseSubscription().catch(e => {
-      console.error("Firebase database synchronization failure:", e);
+      console.error("Supabase database synchronization failure:", e);
+      addNotification('error', 'Gagal menyinkronkan database Supabase.');
     });
 
     return () => {
