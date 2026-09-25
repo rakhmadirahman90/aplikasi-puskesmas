@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Lock, Activity, ShieldCheck, ArrowRight, Shield, Hexagon, Palette } from 'lucide-react';
 import { UserAccount, ThemeInfo } from '../types';
+import { supabase } from '../firebase';
 
 interface LoginViewProps {
   usersStore: UserAccount[];
@@ -22,16 +23,41 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
     setError('');
     setIsLoading(true);
 
-    // Simulate slight network delay for better UX feel
-    setTimeout(() => {
-      const user = usersStore.find((u) => u.username === username && u.pin === pin);
-      if (user) {
-        onLogin(user);
-      } else {
+    const authenticate = async () => {
+      if (!supabase) {
+        setError('Koneksi Supabase belum dikonfigurasi.');
+        setIsLoading(false);
+        return;
+      }
+      const email = username.trim().toLowerCase() + '@puskesmas.local';
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pin });
+      if (error) {
         setError('Kredensial tidak terverifikasi. Akses ditolak.');
         setIsLoading(false);
+        return;
       }
-    }, 800);
+      const { data, error: profileError } = await supabase
+        .from('app_users')
+        .select('id, username, name, role, unit_id')
+        .eq('auth_user_id', (await supabase.auth.getUser()).data.user?.id || '')
+        .maybeSingle();
+      if (profileError || !data) {
+        await supabase.auth.signOut();
+        setError('Akun berhasil diautentikasi tetapi profil akses belum terhubung. Hubungi administrator.');
+        setIsLoading(false);
+        return;
+      }
+      onLogin({
+        id: data.id,
+        username: data.username,
+        pin: '',
+        role: data.role,
+        name: data.name,
+        unitId: data.unit_id || undefined
+      });
+      setIsLoading(false);
+    };
+    void authenticate();
   };
 
   return (
