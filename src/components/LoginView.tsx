@@ -62,7 +62,7 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
   };
 
   return (
-    <div className="min-h-screen bg-[#070b14] flex items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans">
+    <div className="min-h-[100dvh] bg-[#070b14] flex items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans">
       {/* Background ambient glowing orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-600/10 blur-[120px] pointer-events-none transition-colors duration-1000"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-emerald-500/10 blur-[130px] pointer-events-none transition-colors duration-1000"></div>
@@ -141,7 +141,7 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
 
         {/* Right Form Side - Glass Panel */}
         <div className="w-full max-w-md mx-auto">
-          <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-2xl relative overflow-hidden">
             {/* Inner subtle glow */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
             
