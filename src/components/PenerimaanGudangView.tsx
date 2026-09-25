@@ -223,22 +223,22 @@ export default function PenerimaanGudangView({
   return (
     <div className="space-y-6" id="receipts-container">
       {/* Ecosystem Visual Integration Navigator */}
-      <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
-        <div className="flex items-center gap-2">
+      <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-3 text-xs shadow-sm overflow-hidden">
+        <div className="min-w-0 flex flex-wrap items-center gap-2">
           <div className="bg-emerald-500 rounded p-1 text-white">
             <ClipboardCheck className="w-3.5 h-3.5" />
           </div>
           <span className="font-semibold text-emerald-800">Alur Ekosistem SIFP:</span>
-          <span className="text-emerald-600 font-medium whitespace-nowrap">Dashboard &rarr; <span className="font-bold underline decoration-emerald-300">Penerimaan Gudang</span> &rarr;</span>
+          <span className="min-w-0 flex-1 text-emerald-600 font-medium leading-relaxed break-words">Dashboard &rarr; <span className="font-bold underline decoration-emerald-300">Penerimaan Gudang</span> &rarr;</span>
           <button
             onClick={() => onNavigateChange?.('ampra')}
-            className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
+            className="w-full sm:w-auto max-w-full text-left text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-center sm:justify-start gap-1 font-semibold leading-snug break-words"
           >
             Distribusi / Ampra Unit
             <ArrowDownLeft className="w-3 h-3 rotate-[135deg]" />
           </button>
         </div>
-        <div className="text-[10px] text-emerald-600/70 animate-pulse font-mono flex items-center gap-1">
+        <div className="w-full sm:w-auto text-[10px] text-emerald-600/70 font-mono flex items-center gap-1 leading-relaxed">
           <Database className="w-3 h-3" /> Data Tersinkronisasi Global
         </div>
       </div>
