@@ -13,7 +13,7 @@ interface LoginViewProps {
 
 export default function LoginView({ usersStore, onLogin, currentTheme, onChangeTheme, themes }: LoginViewProps) {
   const [username, setUsername] = useState('');
-  const [pin, setPin] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
@@ -30,7 +30,7 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
         return;
       }
       const email = username.trim().toLowerCase() + '@puskesmas.local';
-      const { error } = await supabase.auth.signInWithPassword({ email, password: pin });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setError('Kredensial tidak terverifikasi. Akses ditolak.');
         setIsLoading(false);
@@ -180,23 +180,23 @@ export default function LoginView({ usersStore, onLogin, currentTheme, onChangeT
                       disabled={isLoading}
                       onChange={(e) => setUsername(e.target.value)}
                       className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-900 transition-all outline-none text-white disabled:opacity-50 placeholder:text-slate-600"
-                      placeholder="Masukkan ID Anda"
+                      placeholder="Masukkan username"
                     />
                     <User className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5 group-focus-within:text-emerald-400 transition-colors" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5 relative">
-                  <label className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-widest block ml-1">Kode Keamanan (PIN)</label>
+                  <label className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-widest block ml-1">Password</label>
                   <div className="relative group">
                     <input
                       type="password"
                       required
-                      value={pin}
+                      value={password}
                       disabled={isLoading}
-                      onChange={(e) => setPin(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-900 transition-all outline-none text-white tracking-[0.3em] font-mono disabled:opacity-50 placeholder:text-slate-600 placeholder:tracking-normal"
-                      placeholder="••••••"
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-slate-900 transition-all outline-none text-white disabled:opacity-50 placeholder:text-slate-600"
+                      placeholder="Masukkan password"
                     />
                     <Lock className="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5 group-focus-within:text-emerald-400 transition-colors" />
                   </div>
