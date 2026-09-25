@@ -96,3 +96,120 @@ body { margin: 0; overflow-x: hidden; }
 @media (min-width: 768px) {
   #main-content-pane { overflow-x: visible; }
 }
+
+/* SIFP responsive UI system: keep every interactive surface usable without zoom. */
+#main-content-pane .flex > *,
+#main-content-pane .grid > * {
+  min-width: 0;
+}
+
+#main-content-pane label,
+#main-content-pane p,
+#main-content-pane h1,
+#main-content-pane h2,
+#main-content-pane h3,
+#main-content-pane h4,
+#main-content-pane span,
+#main-content-pane td,
+#main-content-pane th {
+  overflow-wrap: anywhere;
+}
+
+#main-content-pane form {
+  min-width: 0;
+}
+
+#main-content-pane input,
+#main-content-pane select,
+#main-content-pane textarea {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#main-content-pane button {
+  box-sizing: border-box;
+}
+
+#main-content-pane .overflow-x-auto {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 100%;
+}
+
+#main-content-pane .overflow-x-auto table {
+  width: max-content;
+  min-width: 640px;
+  max-width: none;
+}
+
+#main-content-pane [role="dialog"],
+#main-content-pane .fixed.inset-0 {
+  max-width: 100vw;
+}
+
+@media (max-width: 767px) {
+  html,
+  body,
+  #root,
+  #main-app {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #main-content-pane {
+    padding-bottom: max(88px, calc(72px + env(safe-area-inset-bottom)));
+  }
+
+  #main-content-pane .fixed.inset-0 {
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    align-items: flex-start;
+  }
+
+  #main-content-pane .fixed.inset-0 > [class*="max-h-\\[90vh\\]"] {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    margin: 0 auto;
+  }
+
+  #main-content-pane .fixed.inset-0 form {
+    min-width: 0;
+  }
+
+  #main-content-pane .overflow-x-auto {
+    border-radius: 0.75rem;
+  }
+
+  #main-content-pane .overflow-x-auto table {
+    min-width: 640px;
+  }
+
+  #main-content-pane .flex-wrap {
+    row-gap: 0.625rem;
+  }
+
+  #main-content-pane button {
+    min-height: 38px;
+  }
+
+  #main-content-pane input,
+  #main-content-pane select,
+  #main-content-pane textarea {
+    min-height: 40px;
+  }
+
+  #main-content-pane .grid {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  #main-content-pane .fixed.inset-0 {
+    padding: 1rem;
+  }
+}
