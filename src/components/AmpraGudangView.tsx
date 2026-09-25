@@ -188,7 +188,7 @@ export default function AmpraGudangView({
           >
             &larr; Cek Stok Gudang
           </button>
-          <span className="text-emerald-600 font-medium whitespace-nowrap">&rarr; <span className="font-bold underline decoration-emerald-300">Ampra Unit</span> &rarr;</span>
+          <span className="text-emerald-600 font-medium break-words min-w-0">&rarr; <span className="font-bold underline decoration-emerald-300">Ampra Unit</span> &rarr;</span>
           <button
             onClick={() => onNavigateChange?.('apotek')}
             className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
