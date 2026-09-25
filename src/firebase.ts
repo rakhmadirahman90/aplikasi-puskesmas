@@ -24,8 +24,18 @@ const client = () => {
   return supabase;
 };
 
+function unwrapData(value: any) {
+  // The Supabase compatibility loader stores document data as a lazy getter.
+  // Firestore-style snapshots must expose the resolved object from data().
+  return typeof value === 'function' ? value() : value;
+}
+
 function snapshot(rows: any[]) {
-  const docs = rows.map((r: any) => ({ id: r.id, data: () => r.data, exists: () => true }));
+  const docs = rows.map((r: any) => ({
+    id: r.id,
+    data: () => unwrapData(r.data),
+    exists: () => true
+  }));
   return { empty: docs.length === 0, docs, forEach: (cb: (d: any) => void) => docs.forEach(cb) };
 }
 
@@ -103,8 +113,11 @@ function convertCompound(name:string,r:any,items:any[]) {
 }
 
 export async function getDoc(ref:DocRef) {
-  const rows=await load(ref.collection); const row=rows.find((x:any)=>x.id===ref.id);
-  return row?{exists:()=>true,data:()=>row.data(),id:ref.id}:{exists:()=>false,data:()=>null,id:ref.id};
+  const rows=await load(ref.collection);
+  const row=rows.find((x:any)=>x.id===ref.id);
+  return row
+    ? { exists:()=>true, data:()=>unwrapData(row.data), id:ref.id }
+    : { exists:()=>false, data:()=>null, id:ref.id };
 }
 export async function getDocs(ref:CollRef) { return snapshot(await load(ref.name)); }
 
