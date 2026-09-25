@@ -547,7 +547,91 @@ export default function PenerimaanGudangView({
             <p className="font-medium">Belum ada riwayat penerimaan obat.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto" id="receipts-log-table-container">
+          <>
+            <div className="md:hidden divide-y divide-slate-100" id="receipts-mobile-list">
+              {receipts.map((rcp) => {
+                const totalItems = rcp.items.reduce((sum, i) => sum + i.quantity, 0);
+                return (
+                  <article key={rcp.id} className="p-3.5 bg-white">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-mono font-bold text-[12px] text-slate-800">{rcp.id}</span>
+                          <span className="text-[10px] text-slate-400">•</span>
+                          <span className="text-[11px] font-medium text-slate-500">{rcp.date}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] text-slate-500 break-words">
+                          {rcp.documentType} • <span className="font-mono text-slate-700">{rcp.documentNo}</span>
+                        </p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-bold border ${rcp.verifiedByAPJ ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+                        {rcp.verifiedByAPJ ? 'Terverifikasi' : 'Menunggu'}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 border border-slate-100 p-2.5">
+                      <div className="min-w-0">
+                        <p className="text-[9px] uppercase tracking-wide font-bold text-slate-400">Sumber / PBF</p>
+                        <p className="mt-0.5 text-[11px] font-semibold text-slate-700 break-words">{rcp.sourceType}</p>
+                      </div>
+                      <div className="min-w-0 text-right">
+                        <p className="text-[9px] uppercase tracking-wide font-bold text-slate-400">Total</p>
+                        <p className="mt-0.5 text-[11px] font-bold text-slate-700">{totalItems} pcs</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5">
+                      <p className="text-[9px] uppercase tracking-wide font-bold text-slate-400 mb-1.5">Item Rincian</p>
+                      <div className="space-y-1.5">
+                        {rcp.items.map((line, lIdx) => {
+                          const medNode = medicines.find(m => m.id === line.medicineId);
+                          return (
+                            <div key={lIdx} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2">
+                              <p className="font-semibold text-[11px] text-slate-800 break-words">{medNode ? medNode.name : 'Unknown'}</p>
+                              <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] text-slate-500">
+                                <span>Qty: <b className="text-slate-700">{line.quantity} pcs</b></span>
+                                <span className="text-right">Batch: <b className="font-mono text-slate-600">{line.batchNo}</b></span>
+                                <span>Harga: <b className="text-emerald-700">Rp {(line.price ?? getDrugDefaultPrice(line.medicineId)).toLocaleString('id-ID')}</b></span>
+                                <span className="text-right">Exp: <b className="text-rose-600">{line.expDate}</b></span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-slate-400">
+                      <span>Petugas: <b className="text-slate-600">{rcp.gudangOfficer}</b></span>
+                      {rcp.verifiedByAPJ && <span>APJ: <b className="text-slate-600">{rcp.apjName}</b></span>}
+                    </div>
+
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                      {!rcp.verifiedByAPJ && (activeRole === 'apj' || activeRole === 'admin') && (
+                        <button onClick={() => {
+                          const apjName = userName || 'Ami Rahmawati, S.Farm, Apt';
+                          onVerifyReceipt(rcp.id, apjName);
+                          showNotice('success', `Dokumen ${rcp.documentNo} Berhasil Diverifikasi oleh Apoteker Penanggung Jawab! Stok gudang telah terupdate secara otomatis.`);
+                        }} className="min-h-8 flex-1 sm:flex-none px-2.5 py-1.5 bg-blue-600 text-white font-bold text-[10px] rounded-lg flex items-center justify-center gap-1">
+                          <Check className="w-3 h-3" /> Verifikasi APJ
+                        </button>
+                      )}
+                      {(activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onUpdateReceipt && (
+                        <button onClick={() => initiateEdit(rcp)} className="min-h-8 px-2.5 py-1.5 text-[10px] font-bold text-teal-700 bg-teal-50 rounded-lg flex items-center gap-1" id={`edit-mobile-rcp-${rcp.id}`}>
+                          <Edit className="w-3 h-3" /> Edit
+                        </button>
+                      )}
+                      {(activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onDeleteReceipt && (
+                        <button onClick={() => onDeleteReceipt(rcp.id)} className="min-h-8 px-2.5 py-1.5 text-[10px] font-bold text-red-700 bg-red-50 rounded-lg flex items-center gap-1" id={`delete-mobile-rcp-${rcp.id}`}>
+                          <Trash2 className="w-3 h-3" /> Hapus
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto" id="receipts-log-table-container">
             <table className="w-full text-left border-collapse min-w-[850px]">
               <thead>
                 <tr className="bg-slate-55 border-b border-slate-100 text-slate-500 font-bold text-[10px] uppercase">
@@ -677,7 +761,10 @@ export default function PenerimaanGudangView({
                 })}
               </tbody>
             </table>
-          </div>
+
+            </div>
+          </>
+
         )}
       </div>
 
