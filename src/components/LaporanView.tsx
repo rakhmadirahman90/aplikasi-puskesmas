@@ -311,6 +311,10 @@ export default function LaporanView({
     const totalSheets = prescriptions.length;
     const rawatJalanCount = prescriptions.filter(p => p.type === 'Rawat Jalan').length;
     const rawatInapCount = prescriptions.filter(p => p.type === 'Rawat Inap').length;
+    const counselingCount = prescriptions.filter(p => p.counseling).length;
+    const drugInformationCount = prescriptions.filter(p => p.drugInformation).length;
+    const jknCount = prescriptions.filter(p => (p.paymentType || 'JKN') === 'JKN').length;
+    const umumCount = prescriptions.filter(p => p.paymentType === 'Umum').length;
 
     // Count drug types and items
     let totalItemsDispensed = 0;
@@ -330,6 +334,10 @@ export default function LaporanView({
       totalSheets,
       rawatJalanCount,
       rawatInapCount,
+      counselingCount,
+      drugInformationCount,
+      jknCount,
+      umumCount,
       totalItemsDispensed,
       averageItemsPerRx,
       prescriptionHistory: prescriptions
@@ -344,8 +352,11 @@ export default function LaporanView({
     let totalLineItems = 0;
     let compoundCount = 0; // racikan
     let nonCompoundCount = 0; // non-racikan
+    let jknPrescriptionCount = 0;
+    let umumPrescriptionCount = 0;
 
     prescriptions.forEach(p => {
+      if ((p.paymentType || 'JKN') === 'JKN') jknPrescriptionCount++; else umumPrescriptionCount++;
       p.items.forEach(item => {
         totalLineItems++;
         const med = medicines.find(m => m.id === item.medicineId);
@@ -378,7 +389,9 @@ export default function LaporanView({
       patenPercentage,
       compoundCount,
       nonCompoundCount,
-      totalLineItems
+      totalLineItems,
+      jknPrescriptionCount,
+      umumPrescriptionCount
     };
   }, [prescriptions, medicines]);
 
@@ -1818,12 +1831,12 @@ export default function LaporanView({
                 </span>
                 <p className="text-[10px] text-slate-400 mt-1">Gawat Darurat & VK Bersalin</p>
               </div>
-              <div className="bg-slate-55 p-4 rounded-xl border border-slate-150 text-center">
-                <span className="text-xs text-slate-500 block font-semibold">Rata-rata Macam Sediaan</span>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 text-center">
+                <span className="text-xs text-slate-500 block font-semibold">Konseling / Informasi Obat</span>
                 <span className="text-3xl font-bold text-amber-600 font-display mt-1 block">
-                  {kefarmasianMetrics.averageItemsPerRx}
+                  {kefarmasianMetrics.counselingCount} / {kefarmasianMetrics.drugInformationCount}
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1">Obat per lembar resep</p>
+                <p className="text-[10px] text-slate-400 mt-1">Aktivitas pekerjaan kefarmasian</p>
               </div>
             </div>
 
@@ -1857,6 +1870,8 @@ export default function LaporanView({
                       <th className="p-3">Nama Pasien</th>
                       <th className="p-3">Jenis Rawat</th>
                       <th className="p-3">Dokter Penulis</th>
+                      <th className="p-3">Pembiayaan</th>
+                      <th className="p-3">Konseling / PIO</th>
                       <th className="p-3 text-right">Variasi Item</th>
                       <th className="p-3 text-right">Volume Diserahkan</th>
                     </tr>
@@ -1877,6 +1892,8 @@ export default function LaporanView({
                             </span>
                           </td>
                           <td className="p-3 text-slate-600">{rx.drName}</td>
+                          <td className="p-3"><span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold">{rx.paymentType || 'JKN'}</span></td>
+                          <td className="p-3 text-[10px] text-slate-600">{rx.counseling ? 'Konseling' : '-'} / {rx.drugInformation ? 'PIO' : '-'}</td>
                           <td className="p-3 text-right text-slate-880">{rx.items.length} macam</td>
                           <td className="p-3 text-right font-bold text-indigo-700">{qtySum} pcs</td>
                         </tr>
@@ -1915,6 +1932,16 @@ export default function LaporanView({
               {/* Left Side stats list */}
               <div className="space-y-4">
                 <h4 className="font-bold text-slate-800 text-sm">Rincian Volume Pengeluaran Resep</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-slate-200 bg-white p-3">
+                    <span className="text-[10px] font-bold uppercase text-slate-400">Resep JKN/BPJS</span>
+                    <p className="mt-1 text-xl font-bold text-emerald-700">{generikPatenMetrics.jknPrescriptionCount}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-3">
+                    <span className="text-[10px] font-bold uppercase text-slate-400">Resep Umum</span>
+                    <p className="mt-1 text-xl font-bold text-slate-800">{generikPatenMetrics.umumPrescriptionCount}</p>
+                  </div>
+                </div>
                 
                 <div className="space-y-3">
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 flex justify-between items-center">
@@ -1943,7 +1970,7 @@ export default function LaporanView({
                 </div>
 
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-150 text-xs text-slate-600 leading-relaxed">
-                  Puskesmas memprioritaskan penyerahan **Obat Generik** sebesar minimal 80% untuk mematuhi target sasaran Kemenkes RI.
+                  Ringkasan ini mengikuti kebutuhan dokumen referensi: jumlah penggunaan obat generik dan paten dihitung dari seluruh item resep yang tersimpan pada periode data aplikasi.
                 </div>
               </div>
 
