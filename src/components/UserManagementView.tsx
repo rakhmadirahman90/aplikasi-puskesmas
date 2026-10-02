@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserAccount, AppRole, UnitInfo } from '../types';
-import { ShieldCheck, UserPlus, Key, Trash2, Edit, Save, X, Search, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, UserPlus, Key, Trash2, Edit, Save, X, Search, CheckCircle2, RotateCcw, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '../firebase';
 
 interface UserManagementViewProps {
   users: UserAccount[];
@@ -13,6 +14,12 @@ interface UserManagementViewProps {
 export default function UserManagementView({ users, units, onAddUser, onUpdateUser, onDeleteUser }: UserManagementViewProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [resetUser, setResetUser] = useState<UserAccount | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form State
   const [username, setUsername] = useState('');
@@ -56,6 +63,48 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
       });
     }
     resetForm();
+  };
+
+  const closePasswordReset = () => {
+    if (resettingPassword) return;
+    setResetUser(null);
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+    setResetMessage(null);
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetUser?.authUserId) {
+      setResetMessage({ type: 'error', text: 'User ini belum terhubung ke Supabase Auth.' });
+      return;
+    }
+    if (newPassword.length < 8) {
+      setResetMessage({ type: 'error', text: 'Password baru minimal 8 karakter.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setResetMessage({ type: 'error', text: 'Konfirmasi password tidak sama.' });
+      return;
+    }
+
+    setResettingPassword(true);
+    setResetMessage(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: { authUserId: resetUser.authUserId, password: newPassword }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setResetMessage({ type: 'success', text: `Password ${resetUser.username} berhasil direset.` });
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      setResetMessage({ type: 'error', text: error instanceof Error ? error.message : 'Gagal mereset password.' });
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   const filteredUsers = users.filter(u => u.username.toLowerCase().includes(searchTerm.toLowerCase()) || u.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -190,6 +239,19 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setResetUser(u);
+                          setNewPassword('');
+                          setConfirmPassword('');
+                          setResetMessage(null);
+                        }}
+                        disabled={!u.authUserId || u.migrationStatus !== 'linked'}
+                        className={`p-1.5 rounded ${u.authUserId && u.migrationStatus === 'linked' ? 'text-amber-600 hover:bg-amber-50' : 'text-slate-300 cursor-not-allowed'}`}
+                        title={u.authUserId && u.migrationStatus === 'linked' ? 'Reset Password' : 'Auth belum terhubung'}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
                       <button onClick={() => handleEdit(u)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Edit">
                         <Edit className="w-4 h-4" />
                       </button>
@@ -219,6 +281,52 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
           </table>
         </div>
       </div>
+
+      {resetUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-start justify-between border-b border-slate-100 p-5">
+              <div>
+                <h3 id="reset-password-title" className="text-lg font-bold text-slate-800">Reset Password User</h3>
+                <p className="mt-1 text-xs text-slate-500">Ubah password login untuk <strong>{resetUser.name}</strong> ({resetUser.username}).</p>
+              </div>
+              <button type="button" onClick={closePasswordReset} disabled={resettingPassword} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleResetPassword} className="space-y-4 p-5">
+              <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+                Password minimal 8 karakter. Password baru diproses langsung oleh Supabase Auth dan tidak disimpan pada profil aplikasi.
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600">Password Baru</label>
+                <div className="relative">
+                  <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full rounded-lg border p-2.5 pr-10 text-sm focus:ring-2 focus:ring-indigo-500/30" placeholder="Minimal 8 karakter" />
+                  <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-slate-700" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600">Konfirmasi Password Baru</label>
+                <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full rounded-lg border p-2.5 text-sm focus:ring-2 focus:ring-indigo-500/30" placeholder="Ulangi password baru" />
+              </div>
+              {resetMessage && (
+                <div className={`rounded-lg border px-3 py-2.5 text-sm ${resetMessage.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                  {resetMessage.text}
+                </div>
+              )}
+              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                <button type="button" onClick={closePasswordReset} disabled={resettingPassword} className="rounded-lg border px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Tutup</button>
+                <button type="submit" disabled={resettingPassword || !newPassword || !confirmPassword} className="flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
+                  <RotateCcw className={`h-4 w-4 ${resettingPassword ? 'animate-spin' : ''}`} />
+                  {resettingPassword ? 'Mereset...' : 'Reset Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
