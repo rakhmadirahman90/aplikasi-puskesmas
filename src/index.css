@@ -5,212 +5,167 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
-  --color-brand-50: #f0fdf4;
-  --color-brand-100: #dcfce7;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
+  --color-brand-50: #f0fdf4; --color-brand-100: #dcfce7; --color-brand-500: #10b981;
+  --color-brand-600: #059669; --color-brand-700: #047857; --color-brand-800: #065f46;
 }
 
-/* Custom visual refinements to provide superb layout quality */
+:root {
+  --sifp-surface: #ffffff;
+  --sifp-canvas: #f4f8f6;
+  --sifp-line: #dce7e2;
+  --sifp-text: #10231b;
+  --sifp-muted: #64748b;
+  --sifp-radius: 18px;
+  --sifp-shadow: 0 8px 28px rgba(15, 23, 42, .06);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+html { overflow-x: hidden; }
 body {
-  font-family: var(--font-sans);
-  background-color: #f8fafc;
-  color: #0f172a;
+  margin: 0; overflow-x: hidden; font-family: var(--font-sans); color: var(--sifp-text);
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-emerald-500) 7%, transparent), transparent 28rem),
+    linear-gradient(180deg, #f8fbfa 0%, var(--sifp-canvas) 100%);
   -webkit-font-smoothing: antialiased;
 }
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
 
-.font-display {
-  font-family: var(--font-display);
-}
-
-.font-mono {
-  font-family: var(--font-mono);
-}
-
-/* Hide scrollbar for Chrome, Safari and Opera */
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-/* Hide scrollbar for IE, Edge and Firefox */
-.scrollbar-none {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-
-/* SIFP futuristic UI system */
-html, body, #root { min-height: 100%; }
 button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-emerald-500) 75%, white); outline-offset: 2px; }
-.futuristic-grid {
-  background-image: linear-gradient(rgba(148,163,184,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.10) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(ellipse at center, black 10%, transparent 78%);
+button { touch-action: manipulation; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-emerald-500) 28%, transparent);
+  outline-offset: 2px;
 }
-#main-content-pane > * { animation: sifp-enter .32s ease-out both; }
-@keyframes sifp-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 767px) { body { overscroll-behavior-y: none; } input, select, textarea { font-size: 16px !important; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+input, select, textarea { accent-color: var(--color-emerald-600); }
+::selection { background: color-mix(in srgb, var(--color-emerald-500) 20%, white); }
 
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c5d3cc; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a69d; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Responsive SIFP hardening: prevent child components from forcing mobile horizontal overflow. */
-html { overflow-x: hidden; }
-body { margin: 0; overflow-x: hidden; }
-#root { width: 100%; max-width: 100vw; overflow-x: hidden; }
+.futuristic-grid {
+  background-image: linear-gradient(rgba(16,185,129,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,.055) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at center, black 8%, transparent 76%);
+}
+
 #main-app { width: 100%; min-width: 0; }
 #scrollable-content-area { min-width: 0; max-width: 100%; overflow-x: hidden; }
 #main-content-pane { min-width: 0; max-width: 100%; overflow-x: clip; }
-#main-content-pane > * { min-width: 0; max-width: 100%; }
+#main-content-pane > * { min-width: 0; max-width: 100%; animation: sifp-enter .24s ease-out both; }
+#main-content-pane .flex > *, #main-content-pane .grid > * { min-width: 0; }
 #main-content-pane img, #main-content-pane svg { max-width: 100%; }
-#main-content-pane input, #main-content-pane select, #main-content-pane textarea, #main-content-pane button { max-width: 100%; }
-#main-content-pane .overflow-x-auto { max-width: 100%; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-#main-content-pane .overflow-x-auto > table { min-width: 640px; }
-#main-content-pane table { border-collapse: separate; border-spacing: 0; }
-@media (max-width: 767px) {
-  #main-app header { flex-shrink: 0; }
-  #main-app #scrollable-content-area > div { padding-left: 12px; padding-right: 12px; padding-top: 16px; }
-  #main-content-pane { padding-bottom: 88px; }
-  #main-content-pane > * { animation: none; }
-  #main-content-pane h1, #main-content-pane h2, #main-content-pane h3 { max-width: 100%; overflow-wrap: anywhere; }
-  #main-content-pane .grid { min-width: 0; }
-  #main-content-pane .flex { min-width: 0; }
-  #main-content-pane [class*="rounded-xl"], #main-content-pane [class*="rounded-2xl"] { max-width: 100%; }
-}
-@media (min-width: 768px) {
-  #main-content-pane { overflow-x: visible; }
-}
-
-/* SIFP responsive UI system: keep every interactive surface usable without zoom. */
-#main-content-pane .flex > *,
-#main-content-pane .grid > * {
-  min-width: 0;
-}
-
-#main-content-pane label,
-#main-content-pane p,
-#main-content-pane h1,
-#main-content-pane h2,
-#main-content-pane h3,
-#main-content-pane h4,
-#main-content-pane span,
-#main-content-pane td,
-#main-content-pane th {
+#main-content-pane label, #main-content-pane p, #main-content-pane h1, #main-content-pane h2,
+#main-content-pane h3, #main-content-pane h4, #main-content-pane span, #main-content-pane td, #main-content-pane th {
   overflow-wrap: anywhere;
 }
 
-#main-content-pane form {
-  min-width: 0;
+/* Unified health-service surfaces */
+#main-content-pane [class*="bg-white"][class*="rounded-2xl"],
+#main-content-pane [class*="bg-white"][class*="rounded-xl"] {
+  border-color: var(--sifp-line) !important;
+  box-shadow: var(--sifp-shadow);
 }
+#main-content-pane [class*="rounded-2xl"] { border-radius: var(--sifp-radius); }
+#main-content-pane [class*="shadow-sm"] { box-shadow: 0 5px 18px rgba(15,23,42,.045); }
 
-#main-content-pane input,
+/* Forms: clear, clinical and touch friendly */
+#main-content-pane input:not([type="checkbox"]):not([type="radio"]),
 #main-content-pane select,
 #main-content-pane textarea {
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
+  min-width: 0; max-width: 100%; min-height: 42px; border-radius: 11px;
+  border-color: #cfdcd6; background-color: #fff; transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
 }
+#main-content-pane input:hover, #main-content-pane select:hover, #main-content-pane textarea:hover { border-color: #aebfb7; }
+#main-content-pane input:focus, #main-content-pane select:focus, #main-content-pane textarea:focus {
+  border-color: var(--color-emerald-500) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-emerald-500) 14%, transparent);
+}
+#main-content-pane label { letter-spacing: .01em; }
 
+/* Actions: consistent hierarchy */
 #main-content-pane button {
-  box-sizing: border-box;
+  box-sizing: border-box; min-height: 38px; transition: transform .14s ease, box-shadow .14s ease, background-color .14s ease, border-color .14s ease;
 }
+#main-content-pane button:active { transform: translateY(1px); }
+#main-content-pane button[class*="bg-emerald-"],
+#main-content-pane button[class*="bg-indigo-"],
+#main-content-pane button[class*="bg-blue-"] { box-shadow: 0 5px 14px rgba(5,150,105,.14); }
 
+/* Operational tables mirror the source-document reporting style without looking like a spreadsheet clone */
 #main-content-pane .overflow-x-auto {
-  overflow-x: auto;
-  overflow-y: visible;
-  max-width: 100%;
+  max-width: 100%; overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+}
+#main-content-pane table { border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+#main-content-pane .overflow-x-auto > table { width: max-content; min-width: 720px; max-width: none; }
+#main-content-pane thead th {
+  position: sticky; top: 0; z-index: 1; background: #f1f6f3 !important; color: #42554b !important;
+  border-bottom-color: #d7e2dd !important; white-space: nowrap;
+}
+#main-content-pane tbody tr { transition: background-color .12s ease; }
+#main-content-pane tbody tr:hover { background-color: #f5faf7 !important; }
+#main-content-pane td { vertical-align: middle; }
+
+/* Status semantics used by stock, verification and expiry workflows */
+.sifp-status-ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.sifp-status-warning { background: #fffbeb; color: #a16207; border-color: #fde68a; }
+.sifp-status-danger { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+.sifp-status-info { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+/* Modal hardening */
+#main-content-pane [role="dialog"], #main-content-pane .fixed.inset-0 { max-width: 100vw; }
+#main-content-pane .fixed.inset-0 { backdrop-filter: blur(5px); }
+
+/* Print-ready reports: important because the reference document is report-heavy */
+@media print {
+  body { background: #fff !important; color: #000; }
+  aside, nav, header, footer, button, .print-hidden { display: none !important; }
+  #main-app, #scrollable-content-area, #main-content-pane { overflow: visible !important; width: 100% !important; max-width: none !important; }
+  #main-content-pane { padding: 0 !important; }
+  #main-content-pane [class*="shadow"] { box-shadow: none !important; }
+  #main-content-pane [class*="rounded"] { border-radius: 0 !important; }
+  #main-content-pane .overflow-x-auto { overflow: visible !important; }
+  #main-content-pane .overflow-x-auto > table { width: 100% !important; min-width: 0 !important; font-size: 9pt; }
+  #main-content-pane thead th { position: static; background: #eee !important; color: #000 !important; }
 }
 
-#main-content-pane .overflow-x-auto table {
-  width: max-content;
-  min-width: 640px;
-  max-width: none;
-}
-
-#main-content-pane [role="dialog"],
-#main-content-pane .fixed.inset-0 {
-  max-width: 100vw;
-}
+@keyframes sifp-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 767px) {
-  html,
-  body,
-  #root,
-  #main-app {
-    width: 100%;
-    min-width: 0;
-  }
-
-  #main-content-pane {
-    padding-bottom: max(88px, calc(72px + env(safe-area-inset-bottom)));
-  }
-
+  body { overscroll-behavior-y: none; }
+  input, select, textarea { font-size: 16px !important; }
+  #main-app header { flex-shrink: 0; }
+  #main-app #scrollable-content-area > div { padding: 10px 10px 0 !important; }
+  #main-content-pane { padding-bottom: max(86px, calc(70px + env(safe-area-inset-bottom))); }
+  #main-content-pane > * { animation: none; }
+  #main-content-pane .grid { width: 100%; min-width: 0; }
+  #main-content-pane .flex { min-width: 0; }
+  #main-content-pane [class*="rounded-xl"], #main-content-pane [class*="rounded-2xl"] { max-width: 100%; }
   #main-content-pane .fixed.inset-0 {
-    padding:
-      max(12px, env(safe-area-inset-top))
-      max(12px, env(safe-area-inset-right))
-      max(12px, env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
+    padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+             max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
     align-items: flex-start;
   }
-
   #main-content-pane .fixed.inset-0 > [class*="max-h-\\[90vh\\]"] {
-    width: 100%;
-    max-width: 100%;
-    max-height: calc(100dvh - 24px);
-    margin: 0 auto;
+    width: 100%; max-width: 100%; max-height: calc(100dvh - 20px); margin: 0 auto;
   }
-
-  #main-content-pane .fixed.inset-0 form {
-    min-width: 0;
-  }
-
-  #main-content-pane .overflow-x-auto {
-    border-radius: 0.75rem;
-  }
-
-  #main-content-pane .overflow-x-auto table {
-    min-width: 640px;
-  }
-
-  #main-content-pane .flex-wrap {
-    row-gap: 0.625rem;
-  }
-
-  #main-content-pane button {
-    min-height: 38px;
-  }
-
-  #main-content-pane input,
-  #main-content-pane select,
-  #main-content-pane textarea {
-    min-height: 40px;
-    width: 100%;
-  }
-
-  #main-content-pane .grid {
-    width: 100%;
-  }
+  #main-content-pane .overflow-x-auto { border-radius: 12px; }
+  #main-content-pane .overflow-x-auto > table { min-width: 680px; }
+  #main-content-pane button { min-height: 42px; }
+  #main-content-pane input:not([type="checkbox"]):not([type="radio"]), #main-content-pane select, #main-content-pane textarea { min-height: 44px; width: 100%; }
+  #main-content-pane .flex-wrap { row-gap: .5rem; }
 }
 
 @media (min-width: 768px) {
-  #main-content-pane .fixed.inset-0 {
-    padding: 1rem;
-  }
+  #main-content-pane { overflow-x: visible; }
+  #main-content-pane .fixed.inset-0 { padding: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
