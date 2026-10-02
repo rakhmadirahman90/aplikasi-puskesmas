@@ -109,9 +109,9 @@ export interface Prescription {
   drName: string;
   age: number;
   type: 'Rawat Jalan' | 'Rawat Inap';
-  paymentType: 'JKN' | 'Umum';
-  counseling: boolean;
-  drugInformation: boolean;
+  paymentType?: 'JKN' | 'Umum';
+  counseling?: boolean;
+  drugInformation?: boolean;
   items: PrescriptionItem[];
   timestamp: string;
 }
