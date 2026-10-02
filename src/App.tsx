@@ -239,12 +239,12 @@ export default function App() {
 
   const NAV_ITEMS: Array<{ id: string; label: string; short: string; icon: React.ElementType; section?: string }> = [
     { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, section: 'Ringkasan' },
-    { id: 'receipts', label: 'Penerimaan Obat Gudang', short: 'Terima', icon: Truck, section: 'Gudang & Distribusi' },
-    { id: 'ampra', label: 'Ampra & Distribusi Unit', short: 'Ampra', icon: ArrowRightLeft, section: 'Gudang & Distribusi' },
-    { id: 'apotek', label: 'Pelayanan Resep Pasien', short: 'Apotek', icon: Pill, section: 'Ruang Farmasi' },
-    { id: 'satellites', label: 'Pemakaian Harian Unit & Pustu', short: 'Unit', icon: Database, section: 'Unit & Jejaring' },
-    { id: 'reports', label: 'Laporan Farmasi', short: 'Laporan', icon: FileText, section: 'Pelaporan' },
-    { id: 'master', label: 'Master Data', short: 'Master', icon: Database, section: 'Pengaturan' },
+    { id: 'receipts', label: 'Penerimaan BAP / PBF', short: 'Terima', icon: Truck, section: 'Transaksi Gudang' },
+    { id: 'ampra', label: 'Distribusi (Ampra Unit)', short: 'Ampra', icon: ArrowRightLeft, section: 'Transaksi Gudang' },
+    { id: 'apotek', label: 'Resep (Ruang Farmasi)', short: 'Resep', icon: Pill, section: 'Pelayanan & Pemakaian' },
+    { id: 'satellites', label: 'Pemakaian Harian Unit', short: 'Unit', icon: Database, section: 'Pelayanan & Pemakaian' },
+    { id: 'reports', label: 'Laporan Terpadu', short: 'Laporan', icon: FileText, section: 'Pelaporan' },
+    { id: 'master', label: 'Katalog Obat & Data Unit', short: 'Master', icon: Database, section: 'Master Data' },
     { id: 'users', label: 'Pengguna & Hak Akses', short: 'User', icon: ShieldCheck, section: 'Pengaturan' }
   ];
 
@@ -986,29 +986,29 @@ export default function App() {
         <div className="h-9 border-t border-slate-100 px-4 sm:px-6 lg:px-7 flex items-center gap-2 text-[10px] bg-slate-50/80"><span className="text-slate-500 font-semibold">SIFP</span><ChevronRight className="w-3 h-3 text-slate-300" /><span className="font-semibold text-emerald-700">{activeNavItem?.label || 'Dashboard'}</span><span className="ml-auto hidden sm:inline-flex items-center gap-1.5 text-slate-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />Data real-time</span></div>
       </header>
       <div className="relative z-10 flex-1 min-h-0 flex overflow-hidden">
-        <aside className={`hidden md:flex shrink-0 flex-col border-r border-white/10 bg-slate-950/65 backdrop-blur-2xl transition-[width] duration-300 ${sidebarCollapsed ? 'w-[76px]' : 'w-[250px]'}`}>
+        <aside className={`hidden md:flex shrink-0 flex-col border-r border-teal-700 bg-teal-800 transition-[width] duration-300 ${sidebarCollapsed ? 'w-[76px]' : 'w-[250px]'}`}>
           <div className="flex-1 overflow-y-auto px-3 py-4">
-            {!sidebarCollapsed && <div className="mb-5 px-2"><div className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.22em] text-slate-600"><Command className="w-3 h-3 text-emerald-400" />Workspace</div><p className="mt-2 text-xs text-slate-400">Modul yang tersedia untuk peran Anda.</p></div>}
+            {!sidebarCollapsed && <div className="mb-5 px-2"><div className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.22em] text-teal-200"><Command className="w-3 h-3 text-teal-300" />SIMF APP</div><p className="mt-2 text-xs text-teal-100/80">Puskesmas Terpadu</p></div>}
             <nav className="space-y-1" aria-label="Navigasi utama">
               {visibleNavItems.map((item, index) => {
                 const Icon = item.icon;
                 const active = activeTab === item.id;
                 const sectionChanged = index > 0 && visibleNavItems[index - 1].section !== item.section;
                 return <React.Fragment key={item.id}>
-                  {!sidebarCollapsed && sectionChanged && <div className="px-3 pt-4 pb-1 text-[8px] font-mono uppercase tracking-[0.2em] text-slate-700">{item.section}</div>}
-                  <button type="button" onClick={() => setActiveTab(item.id)} title={sidebarCollapsed ? item.label : undefined} className={`group relative w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 ${active ? 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/10 text-white border border-emerald-400/20 shadow-lg shadow-emerald-950/20' : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.045] border border-transparent'}`}>
+                  {!sidebarCollapsed && sectionChanged && <div className="px-3 pt-4 pb-1 text-[9px] font-bold uppercase tracking-[0.16em] text-teal-300">{item.section}</div>}
+                  <button type="button" onClick={() => setActiveTab(item.id)} title={sidebarCollapsed ? item.label : undefined} className={`group relative w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 ${active ? 'bg-teal-900 text-white border border-teal-700 shadow-sm' : 'text-teal-50 hover:text-white hover:bg-teal-700 border border-transparent'}`}>
                     {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-emerald-600" />}
-                    <span className={`h-8 w-8 shrink-0 rounded-lg flex items-center justify-center ${active ? 'bg-emerald-400/10 text-emerald-300' : 'bg-white/[0.025] text-slate-600 group-hover:text-slate-300'}`}><Icon className="w-4 h-4" /></span>
-                    {!sidebarCollapsed && <><span className="truncate">{item.label}</span>{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(52,211,153,.8)]" />}</>}
+                    <span className={`h-8 w-8 shrink-0 rounded-lg flex items-center justify-center ${active ? 'bg-teal-700 text-teal-100' : 'bg-teal-900/40 text-teal-200 group-hover:text-white'}`}><Icon className="w-4 h-4" /></span>
+                    {!sidebarCollapsed && <><span className="truncate">{item.label}</span>{active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-teal-200" />}</>}
                   </button>
                 </React.Fragment>;
               })}
             </nav>
           </div>
-          {!sidebarCollapsed && <div className="m-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-3"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-cyan-300" /><span className="text-[10px] font-semibold text-slate-300">System status</span><span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /></div><p className="mt-2 text-[9px] leading-relaxed text-slate-600">Sinkronisasi data dan autentikasi aktif.</p></div>}
+          {!sidebarCollapsed && <div className="m-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-3"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-300" /><span className="text-[10px] font-semibold text-white">Status sistem</span><span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /></div><p className="mt-2 text-[9px] leading-relaxed text-teal-200">Supabase realtime & autentikasi aktif.</p></div>}
         </aside>
         {mobileNavOpen && <div className="md:hidden absolute inset-0 z-50 bg-slate-900/45 backdrop-blur-[2px]" onClick={() => setMobileNavOpen(false)}><aside className="h-full w-[88%] max-w-sm bg-white border-r border-slate-200 p-4 shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-100"><div><div className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-700">Navigasi SIFP</div><div className="text-slate-900 font-display text-lg font-bold mt-1">Menu Aplikasi</div></div><button type="button" onClick={() => setMobileNavOpen(false)} className="h-10 w-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:text-slate-900 flex items-center justify-center" aria-label="Tutup navigasi"><X className="w-5 h-5" /></button></div><nav className="space-y-1.5" aria-label="Navigasi mobile">{visibleNavItems.map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }} className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-[13px] font-semibold border transition-colors ${active ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'text-slate-700 bg-white border-transparent hover:bg-slate-50 hover:border-slate-200'}`}><span className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center ${active ? 'bg-emerald-700 text-white shadow-sm' : 'bg-slate-100 text-slate-600'}`}><Icon className="w-5 h-5" /></span><span className="leading-tight">{item.label}</span></button>; })}</nav></aside></div>}
-        <section className="flex-1 min-w-0 overflow-y-auto bg-slate-50/95" id="scrollable-content-area">
+        <section className="flex-1 min-w-0 overflow-y-auto bg-[#f0fdf4]" id="scrollable-content-area">
           <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-7 py-4 sm:py-6">
             <div className="mb-4 flex items-center justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" /><span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400">Modul aktif</span></div><h2 className="mt-1 font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900 break-words">{activeNavItem?.label || 'Dashboard'}</h2></div><div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"><CircleUserRound className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-semibold text-slate-600">{roleLabel}</span></div></div>
             <main className="min-w-0 w-full pb-20 space-y-6" id="main-content-pane">
