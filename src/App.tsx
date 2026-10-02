@@ -410,7 +410,7 @@ export default function App() {
     return () => {
       unsubscribes.forEach(unsub => unsub());
     };
-  }, []);
+  }, [currentUser?.id]);
 
   const handleAddUser = async (user: UserAccount) => {
     try {
