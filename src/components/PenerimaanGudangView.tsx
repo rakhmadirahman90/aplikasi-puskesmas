@@ -229,7 +229,7 @@ export default function PenerimaanGudangView({
             <ClipboardCheck className="w-3.5 h-3.5" />
           </div>
           <span className="font-semibold text-emerald-800">Alur Ekosistem SIFP:</span>
-          <span className="min-w-0 flex-1 text-emerald-600 font-medium leading-relaxed break-words">Dashboard &rarr; <span className="font-bold underline decoration-emerald-300">Penerimaan Gudang</span> &rarr;</span>
+          <span className="min-w-0 flex-1 text-emerald-600 font-medium leading-relaxed break-words">Dashboard &rarr; <span className="font-bold underline decoration-emerald-300">Penerimaan Obat di Gudang Farmasi</span> &rarr;</span>
           <button
             onClick={() => onNavigateChange?.('ampra')}
             className="w-full sm:w-auto max-w-full text-left text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-center sm:justify-start gap-1 font-semibold leading-snug break-words"
@@ -538,7 +538,7 @@ export default function PenerimaanGudangView({
       {/* Receipts list */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden" id="receipts-list-card">
         <div className="p-5 border-b border-slate-100">
-          <h3 className="font-semibold text-slate-800 font-display text-sm">Riwayat Dokumen Penerimaan Gudang</h3>
+          <h3 className="font-semibold text-slate-800 font-display text-sm">Riwayat Dokumen Penerimaan Obat di Gudang Farmasi</h3>
         </div>
 
         {receipts.length === 0 ? (
@@ -777,7 +777,7 @@ export default function PenerimaanGudangView({
             <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
               <div>
                 <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                  <Edit className="w-4 h-4 text-teal-600" /> Edit / Koreksi Dokumen Penerimaan Gudang
+                  <Edit className="w-4 h-4 text-teal-600" /> Edit / Koreksi Dokumen Penerimaan Obat di Gudang Farmasi
                 </h3>
                 <p className="text-[11px] text-slate-500 font-mono mt-0.5">ID Dokumen: {editingReceipt.id}</p>
               </div>
