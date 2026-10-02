@@ -209,9 +209,9 @@ export default function App() {
   
   // Dynamic UI Config
   const [systemConfig, setSystemConfig] = useState<SystemConfig>({
-    headerTitle: "SIM-Farmasi",
-    headerSubtitle: "Parepare • Verifikasi Terintegrasi",
-    footerText: "Sistem Informasi Farmasi Terintegrasi",
+    headerTitle: "Sistem Informasi Farmasi Puskesmas",
+    headerSubtitle: "Dinas Kesehatan Kota Parepare • Persediaan & Pelayanan Terintegrasi",
+    footerText: "Sistem Informasi Farmasi Puskesmas • Dinas Kesehatan Kota Parepare",
     sidebarVisible: true
   });
 
@@ -238,14 +238,14 @@ export default function App() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const NAV_ITEMS: Array<{ id: string; label: string; short: string; icon: React.ElementType; section?: string }> = [
-    { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, section: 'Workspace' },
-    { id: 'receipts', label: 'Penerimaan Gudang', short: 'Terima', icon: Truck, section: 'Logistik' },
-    { id: 'ampra', label: 'Ampra Unit', short: 'Ampra', icon: ArrowRightLeft, section: 'Logistik' },
-    { id: 'apotek', label: 'Apotek Pasien', short: 'Apotek', icon: Pill, section: 'Pelayanan' },
-    { id: 'satellites', label: 'Terminal Unit & Pustu', short: 'Unit', icon: Database, section: 'Operasional' },
-    { id: 'reports', label: 'Laporan & Audit', short: 'Laporan', icon: FileText, section: 'Insight' },
-    { id: 'master', label: 'Master Data', short: 'Master', icon: Database, section: 'Administrasi' },
-    { id: 'users', label: 'Akses & Pengguna', short: 'User', icon: ShieldCheck, section: 'Administrasi' }
+    { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, section: 'Ringkasan' },
+    { id: 'receipts', label: 'Penerimaan Obat Gudang', short: 'Terima', icon: Truck, section: 'Gudang & Distribusi' },
+    { id: 'ampra', label: 'Ampra & Distribusi Unit', short: 'Ampra', icon: ArrowRightLeft, section: 'Gudang & Distribusi' },
+    { id: 'apotek', label: 'Pelayanan Resep Pasien', short: 'Apotek', icon: Pill, section: 'Ruang Farmasi' },
+    { id: 'satellites', label: 'Pemakaian Harian Unit & Pustu', short: 'Unit', icon: Database, section: 'Unit & Jejaring' },
+    { id: 'reports', label: 'Laporan Farmasi', short: 'Laporan', icon: FileText, section: 'Pelaporan' },
+    { id: 'master', label: 'Master Data', short: 'Master', icon: Database, section: 'Pengaturan' },
+    { id: 'users', label: 'Pengguna & Hak Akses', short: 'User', icon: ShieldCheck, section: 'Pengaturan' }
   ];
 
   const visibleNavItems = NAV_ITEMS.filter(item => canAccessTab(item.id));
@@ -1010,7 +1010,7 @@ export default function App() {
         {mobileNavOpen && <div className="md:hidden absolute inset-0 z-50 bg-slate-950/75 backdrop-blur-sm" onClick={() => setMobileNavOpen(false)}><aside className="h-full w-[86%] max-w-sm bg-slate-950 border-r border-white/10 p-4 shadow-2xl" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between mb-5"><div><div className="text-[9px] font-mono uppercase tracking-[0.2em] text-emerald-300">Navigation core</div><div className="text-white font-display font-bold mt-1">Menu aplikasi</div></div><button type="button" onClick={() => setMobileNavOpen(false)} className="h-9 w-9 rounded-xl border border-white/10 text-slate-400 hover:text-white flex items-center justify-center" aria-label="Tutup navigasi"><X className="w-4 h-4" /></button></div><nav className="space-y-1" aria-label="Navigasi mobile">{visibleNavItems.map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }} className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-semibold ${active ? 'bg-emerald-400/10 text-emerald-200 border border-emerald-400/20' : 'text-slate-400 hover:bg-white/[0.05]'}`}><span className="h-9 w-9 rounded-lg bg-white/[0.04] flex items-center justify-center"><Icon className="w-4 h-4" /></span>{item.label}</button>; })}</nav></aside></div>}
         <section className="flex-1 min-w-0 overflow-y-auto bg-slate-50/95" id="scrollable-content-area">
           <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-7 py-4 sm:py-6">
-            <div className="mb-4 flex items-center justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" /><span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400">Active workspace</span></div><h2 className="mt-1 font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900 break-words">{activeNavItem?.label || 'Dashboard'}</h2></div><div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"><CircleUserRound className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-semibold text-slate-600">{roleLabel}</span></div></div>
+            <div className="mb-4 flex items-center justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" /><span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400">Modul aktif</span></div><h2 className="mt-1 font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900 break-words">{activeNavItem?.label || 'Dashboard'}</h2></div><div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"><CircleUserRound className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-semibold text-slate-600">{roleLabel}</span></div></div>
             <main className="min-w-0 w-full pb-20 space-y-6" id="main-content-pane">
           
           {activeTab === 'dashboard' && (
@@ -1191,9 +1191,9 @@ export default function App() {
           })}
         </AnimatePresence>
       </div>
-      {/* SIFP humble compliance footer */}
+      {/* SIFP public health footer */}
       <footer className="bg-slate-900 border-t border-slate-950 text-slate-500 py-3 text-center text-xs shrink-0" id="sifp-footer">
-        <p>&copy; 2026 Dinas Kesehatan Kota Parepare</p>
+        <p>&copy; 2026 Sistem Informasi Farmasi Puskesmas • Dinas Kesehatan Kota Parepare</p>
       </footer>
     </div>
   );
