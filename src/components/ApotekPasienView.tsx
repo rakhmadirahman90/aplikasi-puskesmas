@@ -46,6 +46,9 @@ export default function ApotekPasienView({
   const [drName, setDrName] = useState('');
   const [age, setAge] = useState<number>(0);
   const [rxType, setRxType] = useState<'Rawat Jalan' | 'Rawat Inap'>('Rawat Jalan');
+  const [paymentType, setPaymentType] = useState<'JKN' | 'Umum'>('JKN');
+  const [counseling, setCounseling] = useState(false);
+  const [drugInformation, setDrugInformation] = useState(true);
   const [lines, setLines] = useState<PrescriptionItem[]>([]);
 
   // Item row form state
@@ -203,6 +206,9 @@ export default function ApotekPasienView({
       drName: drName,
       age: age,
       type: rxType,
+      paymentType,
+      counseling,
+      drugInformation,
       items: lines,
       timestamp: new Date().toISOString()
     };
@@ -214,6 +220,9 @@ export default function ApotekPasienView({
     setPatientName('');
     setDrName('');
     setAge(0);
+    setPaymentType('JKN');
+    setCounseling(false);
+    setDrugInformation(true);
     setLines([]);
     showNotice('success', `Resep pasien ${newPrescription.patientName} berhasil disimpan. Sisa stok di Ruang Farmasi langsung dipotong secara real-time.`);
   };
@@ -362,6 +371,22 @@ export default function ApotekPasienView({
                   </button>
                 </div>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Jenis Pembiayaan</label>
+                <select value={paymentType} onChange={(e) => setPaymentType(e.target.value as 'JKN' | 'Umum')} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs bg-white font-semibold">
+                  <option value="JKN">JKN / BPJS</option>
+                  <option value="Umum">Umum</option>
+                </select>
+              </div>
+              <label className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input type="checkbox" checked={counseling} onChange={(e) => setCounseling(e.target.checked)} className="w-4 h-4" /> Konseling pasien
+              </label>
+              <label className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input type="checkbox" checked={drugInformation} onChange={(e) => setDrugInformation(e.target.checked)} className="w-4 h-4" /> Informasi obat diberikan
+              </label>
             </div>
 
             {/* Recipe item Row Inputs */}
