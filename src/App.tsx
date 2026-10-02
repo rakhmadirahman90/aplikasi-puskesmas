@@ -250,6 +250,8 @@ export default function App() {
 
   const visibleNavItems = NAV_ITEMS.filter(item => canAccessTab(item.id));
   const activeNavItem = visibleNavItems.find(item => item.id === activeTab) || visibleNavItems[0];
+  const mobileQuickItems = visibleNavItems.slice(0, 5);
+  const mobileMoreActive = !mobileQuickItems.some(item => item.id === activeTab);
   const roleLabel = activeRole === 'apj' ? 'APJ / Apoteker' : activeRole === 'unit' ? 'Unit • ' + activeUnitId : activeRole.charAt(0).toUpperCase() + activeRole.slice(1);
 
   // Keep navigation inside the authenticated user's role scope.
@@ -1142,10 +1144,10 @@ export default function App() {
         </section>
       </div>
 
-      <nav className="md:hidden relative z-40 shrink-0 h-16 border-t border-slate-200 bg-white/98 backdrop-blur-xl px-1.5 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(15,23,42,.06)]" aria-label="Navigasi cepat">
+      <nav className="md:hidden relative z-40 shrink-0 h-16 border-t border-teal-800 bg-[#0f625b] px-1.5 pb-[env(safe-area-inset-bottom)] shadow-[0_-5px_20px_rgba(15,98,91,.18)]" aria-label="Navigasi cepat">
         <div className="h-full flex items-center justify-around">
-          {visibleNavItems.slice(0, 5).map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-semibold ${active ? 'text-emerald-700' : 'text-slate-500'}`}>{active && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,.8)]" />}<Icon className="w-4 h-4" /><span className="truncate max-w-16">{item.short}</span></button>; })}
-          <button type="button" onClick={() => setMobileNavOpen(true)} className="min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[9px] font-semibold text-slate-500"><Menu className="w-4 h-4" /><span>Menu</span></button>
+          {mobileQuickItems.map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }} aria-current={active ? 'page' : undefined} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-bold transition-colors ${active ? 'text-white' : 'text-teal-200'}`}>{active && <span className="absolute top-0 h-1 w-9 rounded-b-full bg-teal-200 shadow-[0_0_10px_rgba(153,246,228,.55)]" />}<Icon className={`w-[18px] h-[18px] ${active ? 'drop-shadow-sm' : ''}`} /><span className="truncate max-w-16">{item.short}</span></button>; })}
+          <button type="button" onClick={() => setMobileNavOpen(true)} aria-current={mobileMoreActive ? 'page' : undefined} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[9px] font-bold transition-colors ${mobileMoreActive ? 'text-white' : 'text-teal-200'}`}>{mobileMoreActive && <span className="absolute top-0 h-1 w-9 rounded-b-full bg-teal-200 shadow-[0_0_10px_rgba(153,246,228,.55)]" />}<Menu className="w-[18px] h-[18px]" /><span>Menu</span></button>
         </div>
       </nav>
 
