@@ -188,7 +188,7 @@ export default function AmpraGudangView({
           >
             &larr; Cek Stok Gudang
           </button>
-          <span className="text-emerald-600 font-medium break-words min-w-0">&rarr; <span className="font-bold underline decoration-emerald-300">Ampra Unit</span> &rarr;</span>
+          <span className="text-emerald-600 font-medium break-words min-w-0">&rarr; <span className="font-bold underline decoration-emerald-300">Ampra & Distribusi Unit</span> &rarr;</span>
           <button
             onClick={() => onNavigateChange?.('apotek')}
             className="text-emerald-700 hover:text-emerald-900 border border-emerald-200 hover:bg-emerald-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 font-semibold"
@@ -205,7 +205,7 @@ export default function AmpraGudangView({
       {/* Header and Toggle Button */}
       <div className="flex flex-wrap justify-between items-center gap-4" id="ampra-header-bar">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-800 font-display">Sistem Pelayanan Ampra Unit & Jejaring</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-800 font-display">Sistem Pelayanan Ampra & Distribusi Unit & Jejaring</h2>
           <p className="text-xs text-slate-500">
             Siklus usulan kebutuhan obat, alokasi gudang, tanda tangan serah terima, dan verifikasi APJ terintegrasi
           </p>
@@ -240,7 +240,7 @@ export default function AmpraGudangView({
         <div className="bg-white rounded-2xl border border-slate-100 shadow-md p-5 space-y-6" id="ampra-creator-card">
           <div className="flex border-b border-slate-100 pb-3 justify-between items-center bg-slate-50 -mx-5 -mt-5 p-5">
             <h3 className="font-semibold text-slate-800 font-display">
-              {activeRole === 'unit' ? 'LPLPO / Buku Permintaan Ampra Unit' : 'Buat Permintaan Ampra Sediaan Farmasi'}
+              {activeRole === 'unit' ? 'LPLPO / Buku Permintaan Ampra & Distribusi Unit' : 'Buat Permintaan Ampra Sediaan Farmasi'}
             </h3>
             <button onClick={() => setShowCreateModal(false)} className="text-xs text-slate-400 hover:text-slate-600 font-bold">
               Batal
