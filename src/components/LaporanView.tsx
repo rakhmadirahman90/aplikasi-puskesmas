@@ -1231,7 +1231,7 @@ export default function LaporanView({
           >
             &larr; Pantau Dashboard Analitik
           </button>
-          <span className="text-emerald-600 font-medium break-words min-w-0">&rarr; <span className="font-bold underline decoration-emerald-300">Sistem Laporan & Audit Terpadu</span></span>
+          <span className="text-emerald-600 font-medium break-words min-w-0">&rarr; <span className="font-bold underline decoration-emerald-300">Sistem Laporan Farmasi Terpadu</span></span>
         </div>
       </div>
 
