@@ -7,7 +7,7 @@ import React, { useState, useMemo } from 'react';
 import { Medicine, StockStore, Ampra, Prescription, DailyUsage, Receipt } from '../types';
 import { AlertTriangle, Package, FileText, ClipboardList, TrendingUp, Calendar, Zap, Bell, CheckCircle, ArrowRightLeft, Truck, Database, Activity, ArrowDownLeft } from 'lucide-react';
 
-interface DashboardViewProps {
+interface Ringkasan FarmasiViewProps {
   medicines: Medicine[];
   stocks: StockStore;
   receipts: Receipt[];
@@ -19,7 +19,7 @@ interface DashboardViewProps {
   onNavigateChange: (view: string) => void;
 }
 
-export default function DashboardView({
+export default function Ringkasan FarmasiView({
   medicines,
   stocks,
   receipts,
@@ -29,7 +29,7 @@ export default function DashboardView({
   systemDate,
   onSetSystemDate,
   onNavigateChange,
-}: DashboardViewProps) {
+}: Ringkasan FarmasiViewProps) {
   const [selectedChartPeriod, setSelectedChartPeriod] = useState<'all' | 'today' | 'month'>('all');
 
   // Helper to calculate months difference
