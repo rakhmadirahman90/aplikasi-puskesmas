@@ -1316,7 +1316,7 @@ export default function LaporanView({
                   <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
                     <th className="p-3 sticky left-0 bg-slate-50 z-10 w-44">Sediaan Farmasi</th>
                     <th className="p-2 text-center bg-blue-50/40 text-blue-800 font-mono">Gudang</th>
-                    <th className="p-2 text-center bg-emerald-50/40 text-emerald-850 font-mono">Apotek</th>
+                    <th className="p-2 text-center bg-emerald-50/40 text-emerald-900 font-mono">Apotek</th>
                     <th className="p-2 text-center text-slate-600 font-mono">Pustu</th>
                     <th className="p-2 text-center text-slate-600 font-mono">IGD</th>
                     <th className="p-2 text-center text-slate-600 font-mono">LAB</th>
@@ -1367,11 +1367,11 @@ export default function LaporanView({
                           <td className="p-2 text-center text-slate-700 font-medium">{item.locations['lab'] || 0}</td>
                           <td className="p-2 text-center text-slate-700 font-medium">{item.locations['ruang_perawatan'] || 0}</td>
                           <td className="p-2 text-center text-slate-700 font-medium">{item.locations['poli_gizi'] || 0}</td>
-                          <td className="p-2 text-center text-slate-705 font-medium">{item.locations['poli_tb'] || 0}</td>
+                          <td className="p-2 text-center text-slate-700 font-medium">{item.locations['poli_tb'] || 0}</td>
                           <td className="p-2 text-center text-slate-700 font-medium">{item.locations['kamar_bersalin'] || 0}</td>
                           <td className="p-2 text-center text-slate-700 font-medium">{item.locations['pos_ptm'] || 0}</td>
                           <td className="p-3 text-right font-extrabold text-slate-900 bg-slate-100">
-                            {item.globalSum} <span className="text-[9px] font-normal text-slate-550">{item.unit}</span>
+                            {item.globalSum} <span className="text-[9px] font-normal text-slate-600">{item.unit}</span>
                           </td>
                         </tr>
                         {isExpanded && bStock && bStock.batches && bStock.batches.length > 0 && (
@@ -1393,12 +1393,12 @@ export default function LaporanView({
                                         <div className="space-y-1 text-left">
                                           <div>
                                             <span className="font-mono text-slate-700 font-bold bg-slate-200 px-1.5 py-0.5 rounded text-[10px]">{batch.batchNo}</span>
-                                            <span className="ml-1.5 px-1 py-0.5 bg-blue-100 text-blue-850 rounded text-[9px] font-black">{batch.source}</span>
+                                            <span className="ml-1.5 px-1 py-0.5 bg-blue-100 text-blue-900 rounded text-[9px] font-black">{batch.source}</span>
                                           </div>
                                           <p className="text-[10px] text-slate-500">Exp: <span className="text-rose-600 font-medium">{batch.expDate}</span></p>
                                         </div>
                                         <div className="text-right">
-                                          <p className="font-bold text-slate-800">{batch.quantity.toLocaleString('id-ID')} <span className="text-[10px] text-slate-450 font-normal">{item.unit}</span></p>
+                                          <p className="font-bold text-slate-800">{batch.quantity.toLocaleString('id-ID')} <span className="text-[10px] text-slate-500 font-normal">{item.unit}</span></p>
                                           <p className="text-[11px] text-emerald-700 font-extrabold mt-0.5">@ Rp {bPrice.toLocaleString('id-ID')}</p>
                                         </div>
                                       </div>
@@ -1439,7 +1439,7 @@ export default function LaporanView({
               
               <div className="text-left sm:text-right">
                 <span className="text-xs text-slate-400">Total Nilai Sisa Persediaan Akhir:</span>
-                <p className="text-lg font-bold text-emerald-750 font-display">
+                <p className="text-lg font-bold text-emerald-700 font-display">
                   Rp {mutasiStokData.reduce((s, i) => s + i.valueEstimation, 0).toLocaleString('id-ID')}
                 </p>
               </div>
@@ -1471,10 +1471,10 @@ export default function LaporanView({
                   <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
                     <th className="p-3">Sediaan Farmasi</th>
                     <th className="p-3">Satuan</th>
-                    <th className="p-2 text-center bg-amber-50/30 text-amber-850 font-mono">Stok Awal</th>
+                    <th className="p-2 text-center bg-amber-50/30 text-amber-900 font-mono">Stok Awal</th>
                     <th className="p-2 text-center bg-blue-50/30 text-blue-800 font-mono">Penerimaan (+)</th>
                     <th className="p-2 text-center bg-rose-50/20 text-rose-800 font-mono">Pengeluaran (-)</th>
-                    <th className="p-2 text-center bg-emerald-50/30 text-emerald-850 font-mono">Stok Akhir</th>
+                    <th className="p-2 text-center bg-emerald-50/30 text-emerald-900 font-mono">Stok Akhir</th>
                     <th className="p-3 text-right">Valuasi (Rp)</th>
                     <th className="p-3 text-center">Status Audit</th>
                   </tr>
@@ -1487,7 +1487,7 @@ export default function LaporanView({
                         <span className="text-[9px] text-slate-400 capitalize">{item.type} &bull; {item.group}</span>
                       </td>
                       <td className="p-3 text-slate-600 font-medium">{item.unit}</td>
-                      <td className="p-2 text-center font-bold text-slate-705 bg-amber-50/10">{item.stokAwal}</td>
+                      <td className="p-2 text-center font-bold text-slate-700 bg-amber-50/10">{item.stokAwal}</td>
                       <td className="p-2 text-center font-bold text-blue-600 bg-blue-50/10">+{item.penerimaan}</td>
                       <td className="p-2 text-center font-bold text-rose-600 bg-rose-50/5">-{item.pengeluaran}</td>
                       <td className="p-2 text-center font-extrabold text-emerald-700 bg-emerald-50/10">{item.stokAkhir}</td>
@@ -1698,13 +1698,13 @@ export default function LaporanView({
                   </button>
                   <button
                     onClick={() => setNapzaGroupFilter('narkotika')}
-                    className={`px-3 py-1 rounded-md font-medium transition-colors ${napzaGroupFilter === 'narkotika' ? 'bg-white text-amber-850 shadow-3xs' : 'text-slate-500'}`}
+                    className={`px-3 py-1 rounded-md font-medium transition-colors ${napzaGroupFilter === 'narkotika' ? 'bg-white text-amber-900 shadow-3xs' : 'text-slate-500'}`}
                   >
                     Narkotika
                   </button>
                   <button
                     onClick={() => setNapzaGroupFilter('psikotropika')}
-                    className={`px-3 py-1 rounded-md font-medium transition-colors ${napzaGroupFilter === 'psikotropika' ? 'bg-white text-amber-850 shadow-3xs' : 'text-slate-500'}`}
+                    className={`px-3 py-1 rounded-md font-medium transition-colors ${napzaGroupFilter === 'psikotropika' ? 'bg-white text-amber-900 shadow-3xs' : 'text-slate-500'}`}
                   >
                     Psikotropika
                   </button>
@@ -1762,7 +1762,7 @@ export default function LaporanView({
                           </span>
                         </td>
                         <td className="p-3 text-center font-bold text-slate-700">{item.stokGudang}</td>
-                        <td className="p-3 text-center font-bold text-slate-705">{item.stokApotek}</td>
+                        <td className="p-3 text-center font-bold text-slate-700">{item.stokApotek}</td>
                         <td className="p-3 text-center text-slate-500">{item.totalUnitStok}</td>
                         <td className="p-3 text-center bg-rose-50/40 text-rose-700 font-extrabold">{item.totalUsage} {item.unit}</td>
                         <td className="p-3 text-right font-extrabold text-slate-900">{item.globalStock} {item.unit}</td>
@@ -1863,7 +1863,7 @@ export default function LaporanView({
                           <td className="p-3 text-slate-600">{rx.drName}</td>
                           <td className="p-3"><span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold">{rx.paymentType || 'JKN'}</span></td>
                           <td className="p-3 text-[10px] text-slate-600">{rx.counseling ? 'Konseling' : '-'} / {rx.drugInformation ? 'PIO' : '-'}</td>
-                          <td className="p-3 text-right text-slate-880">{rx.items.length} macam</td>
+                          <td className="p-3 text-right text-slate-900">{rx.items.length} macam</td>
                           <td className="p-3 text-right font-bold text-teal-700">{qtySum} pcs</td>
                         </tr>
                       );
