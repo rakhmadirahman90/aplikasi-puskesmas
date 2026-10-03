@@ -982,7 +982,7 @@ export default function App() {
               bgClass = "bg-rose-50 border-rose-200 text-rose-800";
               iconCode = <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />;
             } else if (isWarning) {
-              bgClass = "bg-amber-50 border-amber-200 text-amber-850";
+              bgClass = "bg-amber-50 border-amber-200 text-amber-900";
               iconCode = <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />;
             }
 
@@ -1001,7 +1001,7 @@ export default function App() {
                 </div>
                 <button
                   onClick={() => removeNotification(n.id)}
-                  className="text-slate-400 hover:text-slate-650 transition-colors shrink-0 p-0.5 rounded-full hover:bg-black/5"
+                  className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 p-0.5 rounded-full hover:bg-black/5"
                 >
                   <X className="w-4 h-4" />
                 </button>
