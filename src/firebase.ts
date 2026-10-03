@@ -93,9 +93,15 @@ async function load(name: string) {
   };
   if (compound[name]) {
     const c=compound[name];
-    const [h,i]=await Promise.all([s.from(c.head).select('*').order('event_timestamp',{ascending:false}),s.from(c.item).select('*')]);
-    if(h.error) throw h.error; if(i.error) throw i.error;
-    return (h.data||[]).map((r:any)=>({id:r.id,data:()=>convertCompound(name,r,i.data||[])}));
+    // Header rows are authoritative for menu visibility. A detail-row failure must never blank an entire module.
+    const h=await s.from(c.head).select('*').order('event_timestamp',{ascending:false});
+    if(h.error) throw h.error;
+    const i=await s.from(c.item).select('*');
+    if(i.error) {
+      console.error(`[SIFP] Gagal memuat detail ${c.item}; header ${c.head} tetap ditampilkan.`, i.error);
+    }
+    const itemRows=i.error ? [] : (i.data||[]);
+    return (h.data||[]).map((r:any)=>({id:r.id,data:()=>convertCompound(name,r,itemRows)}));
   }
   if (name==='system') {
     const {data,error}=await s.from('system_config').select('config').eq('id','config').maybeSingle(); if(error) throw error;
