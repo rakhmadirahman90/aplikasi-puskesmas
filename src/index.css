@@ -198,3 +198,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  #main-content-pane{color:var(--sifp-text-primary)}
  #main-content-pane :where(input,select,textarea){color:var(--sifp-text-primary)}
 }
+
+/* Explicit inverse-surface contract: dark/brand surfaces must never inherit dark copy */
+#main-content-pane .sifp-inverse-surface{color:#f8fafc!important}
+#main-content-pane .sifp-inverse-surface :where(h1,h2,h3,h4,h5,h6,.font-bold){color:#fff!important}
+#main-content-pane .sifp-inverse-surface :where(p,small){color:#d1fae5!important}
+#main-content-pane .sifp-inverse-surface svg{color:currentColor}
