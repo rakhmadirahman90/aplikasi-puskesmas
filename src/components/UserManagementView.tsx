@@ -258,10 +258,10 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
                       <button 
                         onClick={() => {
                           if (u.username === 'admin') {
-                            alert("Tidak dapat menghapus user utama admin.");
+                            return;
                             return;
                           }
-                          if(window.confirm('Yakin ingin menghapus user ini?')) onDeleteUser(u.id);
+                          onDeleteUser(u.id);
                         }} 
                         className={`p-1.5 rounded ${u.username === 'admin' ? 'text-slate-300 cursor-not-allowed' : 'text-red-600 hover:bg-red-50'}`} 
                         title="Hapus"
