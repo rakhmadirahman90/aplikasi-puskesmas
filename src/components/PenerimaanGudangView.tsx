@@ -700,7 +700,7 @@ export default function PenerimaanGudangView({
                             {(activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onUpdateReceipt && (
                               <button
                                 onClick={() => initiateEdit(rcp)}
-                                className="text-[10px] text-teal-650 hover:text-teal-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-teal-50 rounded-md transition duration-150"
+                                className="text-[10px] text-teal-600 hover:text-teal-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-teal-50 rounded-md transition duration-150"
                                 title="Edit / Koreksi Dokumen Penerimaan ini"
                                 id={`edit-rcp-${rcp.id}`}
                               >
@@ -712,7 +712,7 @@ export default function PenerimaanGudangView({
                             {(activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'gudang' && !rcp.verifiedByAPJ)) && onDeleteReceipt && (
                               <button
                                 onClick={() => onDeleteReceipt(rcp.id)}
-                                className="text-[10px] text-red-650 hover:text-red-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-red-50 rounded-md transition duration-150"
+                                className="text-[10px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 px-2 py-1 hover:bg-red-50 rounded-md transition duration-150"
                                 title="Hapus Penerimaan ini"
                                 id={`delete-rcp-${rcp.id}`}
                               >
@@ -899,8 +899,8 @@ export default function PenerimaanGudangView({
                             <tr key={idx} className="hover:bg-slate-50">
                               <td className="p-2 pl-3 font-medium text-slate-800">{originalMed ? originalMed.name : 'Unknown'}</td>
                               <td className="p-2 font-mono text-slate-600">{it.batchNo}</td>
-                              <td className="p-2 text-rose-650 font-medium">{it.expDate}</td>
-                              <td className="p-2"><span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-650">{it.source}</span></td>
+                              <td className="p-2 text-rose-600 font-medium">{it.expDate}</td>
+                              <td className="p-2"><span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600">{it.source}</span></td>
                               <td className="p-2 text-right font-bold text-slate-700">{it.quantity} pcs</td>
                               <td className="p-2 text-right font-bold text-emerald-700">Rp {(it.price ?? getDrugDefaultPrice(it.medicineId)).toLocaleString('id-ID')}</td>
                               <td className="p-2 text-center">
