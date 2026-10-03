@@ -496,105 +496,32 @@ export default function App() {
     try {
       const originalReceipt = receipts.find(r => r.id === receiptId);
       if (!originalReceipt) return;
-
-      // When modifying an already verified receipt, correct the stocks
       if (originalReceipt.verifiedByAPJ) {
-        const currentStocks = JSON.parse(JSON.stringify(stocks));
-        if (currentStocks['gudang']) {
-          // 1. Deduct old quantities
-          originalReceipt.items.forEach(item => {
-            const currentItem = currentStocks['gudang'][item.medicineId];
-            if (currentItem) {
-              currentItem.total = Math.max(0, currentItem.total - item.quantity);
-              if (currentItem.batches) {
-                const batchIdx = currentItem.batches.findIndex((b: any) => b.batchNo === item.batchNo && b.expDate === item.expDate);
-                if (batchIdx !== -1) {
-                  currentItem.batches[batchIdx].quantity = Math.max(0, currentItem.batches[batchIdx].quantity - item.quantity);
-                }
-                currentItem.batches = currentItem.batches.filter((b: any) => b.quantity > 0);
-              }
-            }
-          });
-
-          // 2. Add new quantities
-          updatedReceipt.items.forEach(item => {
-            if (!currentStocks['gudang'][item.medicineId]) {
-              currentStocks['gudang'][item.medicineId] = { total: 0, batches: [] };
-            }
-            const currentItem = currentStocks['gudang'][item.medicineId];
-            currentItem.total += item.quantity;
-            if (!currentItem.batches) {
-              currentItem.batches = [];
-            }
-            currentItem.batches.push({
-              batchNo: item.batchNo,
-              expDate: item.expDate,
-              quantity: item.quantity,
-              source: item.source,
-              price: item.price || 0
-            });
-          });
-
-          await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang']);
-        }
+        addNotification('warning', 'Penerimaan yang sudah diverifikasi APJ dikunci untuk menjaga jejak audit. Lakukan transaksi koreksi/reversal, bukan mengubah dokumen asal.');
+        return;
       }
-
       await setDoc(doc(db, 'receipts', receiptId), updatedReceipt);
-      addNotification('success', `Dokumen penerimaan ${receiptId} berhasil disinkronkan dan diperbarui secara real-time!`);
-    } catch (e) {
+      addNotification('success', `Draft penerimaan ${receiptId} berhasil diperbarui.`);
+    } catch (e: any) {
       console.error(e);
-      addNotification('error', "Gagal memperbarui dokumen penerimaan.");
+      addNotification('error', e?.message || "Gagal memperbarui dokumen penerimaan.");
     }
   };
 
-  // APJ confirms Receipt and actually stocks increase in Gudang
+  // APJ verification posts receipt and Gudang stock in one PostgreSQL transaction
+
   const handleVerifyReceipt = async (receiptId: string, apjName: string) => {
     try {
-      // 1. Mark receipt verified in Firestore
-      const receiptToVerify = receipts.find(r => r.id === receiptId);
-      if (!receiptToVerify) return;
-
-      const updatedReceipt = { ...receiptToVerify, verifiedByAPJ: true, apjName };
-      await setDoc(doc(db, 'receipts', receiptId), updatedReceipt);
-
-      // 2. Adjust Stocks Gudang (add items and batch quantities) in Firestore
-      const currentStocks = JSON.parse(JSON.stringify(stocks)); // Deep copy helper
-      if (!currentStocks['gudang']) {
-        currentStocks['gudang'] = {};
-      }
-
-      receiptToVerify.items.forEach(item => {
-        const currentItem = currentStocks['gudang'][item.medicineId] || { total: 0, batches: [] };
-        
-        // Increase total
-        currentItem.total += item.quantity;
-
-        // Manage batches list
-        if (!currentItem.batches) {
-          currentItem.batches = [];
-        }
-
-        currentItem.batches.push({
-          batchNo: item.batchNo,
-          expDate: item.expDate,
-          quantity: item.quantity,
-          source: item.source,
-          price: item.price || 0
-        });
-
-        currentStocks['gudang'][item.medicineId] = currentItem;
-      });
-
-      // Write 'gudang' stock document to Firestore
-      await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang']);
-      addNotification('success', `Apoteker memverifikasi penerimaan ${receiptId}. Stok Gudang bertambah secara real-time!`);
-    } catch (e) {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('verify_receipt_atomic', { p_receipt_id: receiptId, p_apj_name: apjName });
+      if (error) throw error;
+      addNotification('success', `Penerimaan ${receiptId} diverifikasi APJ; dokumen, saldo Gudang, dan batch diposting atomik.`);
+    } catch (e: any) {
       console.error(e);
-      addNotification('error', "Gagal memverifikasi penerimaan.");
+      addNotification('error', e?.message || "Gagal memverifikasi penerimaan.");
     }
   };
 
-  // SYSTEM CONFIG EVENTS
   const handleUpdateSystemConfig = async (configUpdate: Partial<SystemConfig>) => {
     try {
       const mergedConfig = { ...systemConfig, ...configUpdate };
@@ -730,88 +657,28 @@ export default function App() {
 
   // DELETE OPERATIONS FOR FULL CRUD
   const handleDeleteReceipt = async (receiptId: string) => {
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus dokumen penerimaan ${receiptId}? Tindakan ini akan mengoreksi stok gudang jika telah terverifikasi.`)) {
-      return;
-    }
+    if (!window.confirm(`Hapus draft penerimaan ${receiptId}? Dokumen yang sudah diverifikasi APJ tidak dapat dihapus langsung.`)) return;
     try {
-      const receiptToDelete = receipts.find(r => r.id === receiptId);
-      if (!receiptToDelete) return;
-
-      if (receiptToDelete.verifiedByAPJ) {
-        const currentStocks = JSON.parse(JSON.stringify(stocks));
-        if (currentStocks['gudang']) {
-          receiptToDelete.items.forEach(item => {
-            const currentItem = currentStocks['gudang'][item.medicineId];
-            if (currentItem) {
-              currentItem.total = Math.max(0, currentItem.total - item.quantity);
-
-              if (currentItem.batches) {
-                const batchIdx = currentItem.batches.findIndex((b: any) => b.batchNo === item.batchNo && b.expDate === item.expDate);
-                if (batchIdx !== -1) {
-                  currentItem.batches[batchIdx].quantity = Math.max(0, currentItem.batches[batchIdx].quantity - item.quantity);
-                }
-                currentItem.batches = currentItem.batches.filter((b: any) => b.quantity > 0);
-              }
-            }
-          });
-          await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang'] || {});
-        }
-      }
-
-      await deleteDoc(doc(db, 'receipts', receiptId));
-      addNotification('success', `Dokumen penerimaan ${receiptId} berhasil dihapus.`);
-    } catch (e) {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'receipt', p_id: receiptId });
+      if (error) throw error;
+      addNotification('success', `Draft penerimaan ${receiptId} berhasil dihapus.`);
+    } catch (e: any) {
       console.error(e);
-      addNotification('error', "Gagal menghapus dokumen penerimaan.");
+      addNotification('error', e?.message || "Gagal menghapus dokumen penerimaan.");
     }
   };
 
   const handleDeleteAmpra = async (ampraId: string) => {
-    if (!window.confirm(`Apakah Anda yakin ingin membatalkan/menghapus permintaan Ampra ${ampraId}? Jika sudah disetujui, stok unit akan dikembalikan.`)) {
-      return;
-    }
+    if (!window.confirm(`Hapus Ampra ${ampraId}? Ampra yang sudah selesai tidak dapat dihapus langsung karena telah memengaruhi stok.`)) return;
     try {
-      const targetAmpra = ampras.find(a => a.id === ampraId);
-      if (!targetAmpra) return;
-
-      if (targetAmpra.status === 'Selesai') {
-        const currentStocks = JSON.parse(JSON.stringify(stocks));
-        targetAmpra.items.forEach(item => {
-          const medId = item.medicineId;
-          const qty = item.approvedQty || 0;
-          if (qty <= 0) return;
-
-          if (currentStocks[targetAmpra.sourceUnitId] && currentStocks[targetAmpra.sourceUnitId][medId]) {
-            currentStocks[targetAmpra.sourceUnitId][medId].total = Math.max(0, currentStocks[targetAmpra.sourceUnitId][medId].total - qty);
-          }
-
-          if (!currentStocks['gudang']) currentStocks['gudang'] = {};
-          if (!currentStocks['gudang'][medId]) currentStocks['gudang'][medId] = { total: 0, batches: [] };
-          currentStocks['gudang'][medId].total += qty;
-
-          if (!currentStocks['gudang'][medId].batches) currentStocks['gudang'][medId].batches = [];
-          const existingBatch = currentStocks['gudang'][medId].batches.find((b: any) => b.batchNo === 'RESTORED') || currentStocks['gudang'][medId].batches[0];
-          if (existingBatch) {
-            existingBatch.quantity += qty;
-          } else {
-            currentStocks['gudang'][medId].batches.push({
-              batchNo: 'RESTORED',
-              expDate: '2028-12-31',
-              quantity: qty,
-              source: 'Program'
-            });
-          }
-        });
-
-        await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang'] || {});
-        await setDoc(doc(db, 'stocks', targetAmpra.sourceUnitId), currentStocks[targetAmpra.sourceUnitId] || {});
-      }
-
-      await deleteDoc(doc(db, 'ampras', ampraId));
-      addNotification('success', `Dokumen Ampra ${ampraId} berhasil dihapus.`);
-    } catch (e) {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'ampra', p_id: ampraId });
+      if (error) throw error;
+      addNotification('success', `Ampra ${ampraId} berhasil dihapus.`);
+    } catch (e: any) {
       console.error(e);
-      addNotification('error', "Gagal menghapus dokumen Ampra.");
+      addNotification('error', e?.message || "Gagal menghapus dokumen Ampra.");
     }
   };
 
