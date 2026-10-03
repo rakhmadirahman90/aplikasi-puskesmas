@@ -43,7 +43,7 @@ export default function AmpraGudangView({
     if (onNotify) {
       onNotify(type, message);
     } else {
-      alert(message);
+      onNotify?.('warning', message);
     }
   };
   const [showCreateModal, setShowCreateModal] = useState(false);
