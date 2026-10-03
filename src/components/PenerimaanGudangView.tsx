@@ -250,7 +250,7 @@ export default function PenerimaanGudangView({
           <p className="text-xs text-slate-500">Pencatatan obat masuk Gudang Farmasi dari IFK atau PBF Rekanan</p>
         </div>
         
-        {activeRole === 'gudang' && !showForm && (
+        {(activeRole === 'gudang' || activeRole === 'admin') && !showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition duration-155 shadow-sm"
@@ -262,10 +262,10 @@ export default function PenerimaanGudangView({
       </div>
 
       {/* Role Alert warning */}
-      {activeRole !== 'gudang' && !showForm && (
+      {activeRole !== 'gudang' && activeRole !== 'admin' && !showForm && (
         <div className="p-3 bg-blue-50 border border-blue-100 text-blue-700 text-xs rounded-xl flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>Hanya **Petugas Gudang Farmasi** yang dapat menginput penerimaan barang baru. Role Anda saat ini: **{activeRole.toUpperCase()}**.</span>
+          <span>Pencatatan penerimaan baru dilakukan oleh Petugas Gudang Farmasi atau Administrator. Role Anda saat ini: **{activeRole.toUpperCase()}**.</span>
         </div>
       )}
 
