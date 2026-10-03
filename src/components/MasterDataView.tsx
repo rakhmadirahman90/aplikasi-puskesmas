@@ -111,8 +111,8 @@ export default function MasterDataView({
     resetForms();
   };
 
-  const filteredMedicines = medicines.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.id.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredUnits = units.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredMedicines = medicines.filter(m => String(m?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || String(m?.id || '').toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredUnits = units.filter(u => String(u?.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300 pb-10">
