@@ -109,7 +109,7 @@ export default function DashboardView({
                       (selectedChartPeriod === 'month' && u.date.substring(0, 7) === systemDate.substring(0, 7));
 
       if (isMatch) {
-        u.items.forEach(item => {
+        (Array.isArray(u.items) ? u.items : []).forEach(item => {
           usageCounts[item.medicineId] = (usageCounts[item.medicineId] || 0) + item.qtyUsed;
         });
       }
@@ -122,7 +122,7 @@ export default function DashboardView({
                       (selectedChartPeriod === 'month' && p.date.substring(0, 7) === systemDate.substring(0, 7));
 
       if (isMatch) {
-        p.items.forEach(item => {
+        (Array.isArray(p.items) ? p.items : []).forEach(item => {
           usageCounts[item.medicineId] = (usageCounts[item.medicineId] || 0) + item.qty;
         });
       }
