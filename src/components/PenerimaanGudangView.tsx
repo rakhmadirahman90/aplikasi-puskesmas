@@ -39,7 +39,7 @@ export default function PenerimaanGudangView({
     if (onNotify) {
       onNotify(type, message);
     } else {
-      alert(message);
+      onNotify?.('warning', message);
     }
   };
   // Add Receipt Form State
