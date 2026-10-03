@@ -344,7 +344,7 @@ export default function App() {
             sidebarVisible: data.sidebarVisible !== undefined ? data.sidebarVisible : prev.sidebarVisible
           }));
         }
-      });
+      }, (error) => addNotification('error', `Konfigurasi sistem gagal dimuat: ${error?.message || 'koneksi ditolak'}`));
       unsubscribes.push(unsubConfig);
 
       // 2. Real-time stocks store
@@ -354,7 +354,7 @@ export default function App() {
           updatedStocks[docSnap.id] = docSnap.data() as any;
         });
         setStocks(updatedStocks);
-      });
+      }, (error) => addNotification('error', `Stok & batch gagal dimuat: ${error?.message || 'koneksi ditolak'}`));
       unsubscribes.push(unsubStocks);
 
       // 3. Real-time receipts
@@ -365,7 +365,7 @@ export default function App() {
         });
         updatedReceipts.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
         setReceipts(updatedReceipts);
-      });
+      }, (error) => addNotification('error', `Penerimaan BAP/PBF gagal dimuat: ${error?.message || 'akses database ditolak'}`));
       unsubscribes.push(unsubReceipts);
 
       // 4. Real-time ampras
@@ -376,7 +376,7 @@ export default function App() {
         });
         updatedAmpras.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
         setAmpras(updatedAmpras);
-      });
+      }, (error) => addNotification('error', `Data Ampra gagal dimuat: ${error?.message || 'akses database ditolak'}`));
       unsubscribes.push(unsubAmpras);
 
       // 5. Real-time prescriptions
@@ -387,7 +387,7 @@ export default function App() {
         });
         updatedPrescriptions.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
         setPrescriptions(updatedPrescriptions);
-      });
+      }, (error) => addNotification('error', `Data resep gagal dimuat: ${error?.message || 'akses database ditolak'}`));
       unsubscribes.push(unsubPrescriptions);
 
       // 6. Real-time usages
@@ -398,7 +398,7 @@ export default function App() {
         });
         updatedUsages.sort((a, b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
         setUsages(updatedUsages);
-      });
+      }, (error) => addNotification('error', `Pemakaian harian gagal dimuat: ${error?.message || 'akses database ditolak'}`));
       unsubscribes.push(unsubUsages);
 
       // 7. Real-time retur/kadaluarsa
@@ -407,7 +407,7 @@ export default function App() {
         qSnap.forEach((docSnap) => rows.push(docSnap.data() as Disposal));
         rows.sort((a,b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
         setDisposals(rows);
-      });
+      }, (error) => addNotification('error', `Retur/Rusak/Koreksi gagal dimuat: ${error?.message || 'akses database ditolak'}`));
       unsubscribes.push(unsubDisposals);
 
       // 7. Real-time users
@@ -428,8 +428,8 @@ export default function App() {
         qSnap.forEach((docSnap) => {
           updatedMedicines.push(docSnap.data() as Medicine);
         });
-        if (updatedMedicines.length > 0) setMedicines(updatedMedicines);
-      });
+        setMedicines(updatedMedicines);
+      }, (error) => addNotification('error', `Katalog obat gagal dimuat: ${error?.message || 'akses database ditolak'}`));
       unsubscribes.push(unsubMedicines);
 
       // 9. Real-time units
@@ -438,8 +438,8 @@ export default function App() {
         qSnap.forEach((docSnap) => {
           updatedUnits.push(docSnap.data() as UnitInfo);
         });
-        if (updatedUnits.length > 0) setUnits(updatedUnits);
-      });
+        setUnits(updatedUnits);
+      }, (error) => addNotification('error', `Data unit/jejaring gagal dimuat: ${error?.message || 'akses database ditolak'}`));
       unsubscribes.push(unsubUnits);
     };
 
