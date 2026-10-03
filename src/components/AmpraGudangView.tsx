@@ -197,7 +197,7 @@ export default function AmpraGudangView({
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
-        <div className="text-[10px] text-emerald-600/70 animate-pulse font-mono shadow-xs bg-white px-2 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+        <div className="text-[10px] text-emerald-700 animate-pulse font-mono shadow-xs bg-white px-2 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
           <ShieldCheck className="w-3 h-3 text-emerald-500" /> Tervalidasi APJ
         </div>
       </div>
