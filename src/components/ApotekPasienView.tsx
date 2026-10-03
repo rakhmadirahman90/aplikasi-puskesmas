@@ -619,7 +619,7 @@ export default function ApotekPasienView({
                       {onUpdatePrescription && (activeRole === 'admin' || activeRole === 'farmasi' || activeRole === 'apj') && (
                         <button
                           onClick={() => initiateEditRx(rx)}
-                          className="p-1 text-slate-400 hover:text-emerald-650 transition rounded hover:bg-emerald-50"
+                          className="p-1 text-slate-400 hover:text-emerald-600 transition rounded hover:bg-emerald-50"
                           title="Edit / Koreksi Isi Resep Pasien"
                           id={`edit-rx-${rx.id}`}
                         >
@@ -630,7 +630,7 @@ export default function ApotekPasienView({
                       {onDeletePrescription && (activeRole === 'admin' || activeRole === 'farmasi' || activeRole === 'apj') && (
                         <button
                           onClick={() => onDeletePrescription(rx.id)}
-                          className="p-1 text-slate-400 hover:text-red-650 transition rounded hover:bg-rose-50"
+                          className="p-1 text-slate-400 hover:text-red-600 transition rounded hover:bg-rose-50"
                           title="Hapus / Batalkan Resep"
                           id={`delete-rx-${rx.id}`}
                         >
@@ -639,7 +639,7 @@ export default function ApotekPasienView({
                       )}
                     </div>
                     <h4 className="font-bold text-slate-800 text-sm mt-1.5">{rx.patientName} &bull; <span className="text-slate-500 font-medium text-xs">{rx.age} Thn</span></h4>
-                    <p className="text-xs text-slate-450 font-medium">Dokter: <span className="text-slate-700 font-semibold">{rx.drName}</span></p>
+                    <p className="text-xs text-slate-500 font-medium">Dokter: <span className="text-slate-700 font-semibold">{rx.drName}</span></p>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-700 rounded-md">
@@ -814,7 +814,7 @@ export default function ApotekPasienView({
 
                 {/* Lines List Table */}
                 {editLines.length === 0 ? (
-                  <div className="p-4 bg-white/70 border border-dashed border-slate-200 rounded-lg text-center text-xs text-slate-450">
+                  <div className="p-4 bg-white/70 border border-dashed border-slate-200 rounded-lg text-center text-xs text-slate-500">
                     Sediaan resep kosong. Silakan tambahkan obat.
                   </div>
                 ) : (
