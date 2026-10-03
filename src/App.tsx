@@ -706,7 +706,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col font-sans bg-[#f4f7f6] text-slate-900 overflow-hidden relative" id="main-app">
+    <div className="min-h-[100dvh] h-[100dvh] flex flex-col font-sans bg-[#f4f7f6] text-slate-900 overflow-hidden relative" id="main-app">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -top-48 -right-40 h-[34rem] w-[34rem] rounded-full bg-emerald-500/10 blur-3xl" />
         <div className="absolute -bottom-56 -left-40 h-[30rem] w-[30rem] rounded-full bg-cyan-500/10 blur-3xl" />
@@ -739,7 +739,7 @@ export default function App() {
         </div>
         <div className="h-9 border-t border-slate-100 px-4 sm:px-6 lg:px-7 flex items-center gap-2 text-[10px] bg-slate-50/80"><span className="text-slate-500 font-semibold">SIFP</span><ChevronRight className="w-3 h-3 text-slate-300" /><span className="font-semibold text-emerald-700">{activeNavItem?.label || 'Dashboard'}</span><span className="ml-auto hidden sm:inline-flex items-center gap-1.5 text-slate-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />Data real-time</span></div>
       </header>
-      <div className="relative z-10 flex-1 min-h-0 flex overflow-hidden">
+      <div className="relative z-10 flex-1 min-h-0 flex overflow-hidden" id="app-workspace">
         <aside className={`hidden md:flex shrink-0 flex-col border-r border-teal-700/70 bg-[#116b63] text-white shadow-xl transition-[width] duration-300 ${sidebarCollapsed ? 'w-[76px]' : 'w-[270px]'}`}>
           <div className="flex-1 overflow-y-auto px-3 py-4">
             {!sidebarCollapsed && <div className="mb-5 border-b border-teal-400/25 px-3 pb-4"><div className="flex items-center gap-2 text-base font-black tracking-[0.08em] text-white"><HeartPulse className="h-6 w-6 text-teal-200" />SIMF APP</div><p className="mt-1 pl-8 text-xs font-medium text-teal-200">Puskesmas Terpadu</p></div>}
@@ -760,12 +760,12 @@ export default function App() {
           </div>
           {!sidebarCollapsed && <div className="border-t border-teal-400/25 bg-[#0d5d56] p-4"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-200 font-black text-teal-800">{userName.slice(0,2).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-xs font-bold text-white">{userName}</p><p className="truncate text-[10px] text-teal-200">{roleLabel} • Puskesmas</p></div></div></div>}
         </aside>
-        {mobileNavOpen && <div className="md:hidden absolute inset-0 z-50 bg-slate-950/55 backdrop-blur-[2px]" onClick={() => setMobileNavOpen(false)}><aside className="flex h-full w-[88%] max-w-sm flex-col border-r border-teal-700 bg-[#116b63] text-white shadow-2xl" onClick={e => e.stopPropagation()}>
+        {mobileNavOpen && <div className="md:hidden fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px]" onClick={() => setMobileNavOpen(false)}><aside className="flex h-full w-[88%] max-w-sm flex-col border-r border-teal-700 bg-[#116b63] text-white shadow-2xl" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-teal-400/25 px-5 py-5"><div><div className="flex items-center gap-2 text-lg font-black tracking-[0.08em]"><HeartPulse className="h-6 w-6 text-teal-200" />SIMF APP</div><div className="mt-1 pl-8 text-xs font-medium text-teal-200">Puskesmas Terpadu</div></div><button type="button" onClick={() => setMobileNavOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-teal-400/30 bg-teal-800/50 text-teal-100 hover:bg-teal-800" aria-label="Tutup navigasi"><X className="h-6 w-6" /></button></div>
           <nav className="flex-1 overflow-y-auto px-4 py-3" aria-label="Navigasi mobile">{visibleNavItems.map((item,index) => { const Icon=item.icon; const active=activeTab===item.id; const sectionChanged=index===0||visibleNavItems[index-1].section!==item.section; return <React.Fragment key={item.id}>{sectionChanged&&<div className="px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">{item.section}</div>}<button type="button" onClick={() => navigateToTab(item.id)} className={`relative mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-[14px] font-semibold transition-all ${active?'bg-[#0b554f] text-white shadow-md ring-1 ring-teal-400/20':'text-teal-50 hover:bg-teal-700/70'}`}>{active&&<span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-teal-300"/>}<span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${active?'text-teal-200':'text-teal-300'}`}><Icon className="h-5 w-5"/></span><span>{item.label}</span></button></React.Fragment>; })}</nav>
           <div className="border-t border-teal-400/25 bg-[#0d5d56] p-4"><div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-200 font-black text-teal-800">{userName.slice(0,2).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-sm font-bold text-white">{userName}</p><p className="truncate text-xs text-teal-200">{roleLabel} • Puskesmas</p></div></div></div>
         </aside></div>}
-        <section className="flex-1 min-w-0 overflow-y-auto bg-[#f0fdf4]" id="scrollable-content-area">
+        <section className="flex-1 min-w-0 min-h-0 overflow-y-auto overscroll-contain bg-[#f0fdf4]" id="scrollable-content-area">
           <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-7 py-4 sm:py-6">
             <div className="mb-4 flex items-center justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" /><span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400">Modul aktif</span></div><h2 className="mt-1 font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900 break-words">{activeNavItem?.label || 'Dashboard'}</h2></div><div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"><CircleUserRound className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-semibold text-slate-600">{roleLabel}</span></div></div>
             <main className="min-w-0 w-full pb-20 space-y-6" id="main-content-pane">
