@@ -171,3 +171,34 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  #main-content-pane [class*="bg-gradient-to-br"][class*="from-emerald-"] p,
  #main-content-pane [class*="bg-gradient-to-br"][class*="from-teal-"] p{color:#ccfbf1!important}
 }
+
+/* SIFP semantic text system — consistent across every authenticated module */
+#main-app{
+ --text-strong:#0f172a;
+ --text-primary:#1e293b;
+ --text-secondary:#475569;
+ --text-muted:#64748b;
+ --text-on-dark:#f8fafc;
+ --text-on-dark-secondary:#cbd5e1;
+}
+#main-content-pane :where(h1,h2,h3,h4,h5,h6){text-wrap:balance}
+#main-content-pane :where(input,select,textarea){color:var(--text-primary)}
+#main-content-pane :where(input,textarea)::placeholder{color:var(--text-muted);opacity:1}
+#main-content-pane :where(table th){color:var(--text-primary)}
+#main-content-pane :where(table td){color:var(--text-secondary)}
+#sifp-ecosystem-pipeline{color:var(--text-on-dark)!important}
+#sifp-ecosystem-pipeline h3{color:#fff!important}
+#sifp-ecosystem-pipeline>div:first-child p{color:var(--text-on-dark-secondary)!important}
+#sifp-ecosystem-pipeline [id^="node-"] p.font-bold{color:#f8fafc!important}
+#sifp-ecosystem-pipeline [id^="node-"] p:not(.font-bold){color:#cbd5e1!important}
+#sifp-ecosystem-pipeline [id^="node-"] .text-white\/70,
+#sifp-ecosystem-pipeline [id^="node-"] .text-white\/60{color:#cbd5e1!important}
+@media(max-width:767px){
+ #main-content-pane{color:var(--text-primary)}
+ #main-content-pane :where(.text-slate-400){color:var(--text-muted)!important}
+ #main-content-pane :where(.text-slate-500){color:var(--text-secondary)!important}
+ #main-content-pane :where(.text-slate-600){color:#334155!important}
+ #main-content-pane :where(.text-slate-700,.text-slate-800,.text-slate-900){color:var(--text-strong)!important}
+ #sifp-ecosystem-pipeline :where(.text-slate-200,.text-slate-300,.text-slate-400,.text-slate-500,.text-slate-600,.text-slate-700,.text-slate-800,.text-slate-900){color:var(--text-on-dark-secondary)!important}
+ #sifp-ecosystem-pipeline :where(h1,h2,h3,h4,.font-bold.text-slate-100){color:var(--text-on-dark)!important}
+}
