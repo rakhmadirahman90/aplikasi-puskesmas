@@ -284,9 +284,8 @@ export default function App() {
 
   const visibleNavItems = NAV_ITEMS.filter(item => canAccessTab(item.id));
   const activeNavItem = visibleNavItems.find(item => item.id === activeTab) || visibleNavItems[0];
-  // Keep the mobile bottom bar compact. Secondary modules are opened from the drawer.
-  const mobileQuickItems = visibleNavItems.slice(0, 3);
-  const mobileMoreActive = !mobileQuickItems.some(item => item.id === activeTab);
+  // Mobile navigation uses the exact same authorized menu source/order as the desktop sidebar.
+  const mobileMoreActive = activeTab !== 'dashboard';
   const roleLabel = activeRole === 'apj' ? 'APJ / Apoteker' : activeRole === 'unit' ? 'Unit • ' + activeUnitId : activeRole.charAt(0).toUpperCase() + activeRole.slice(1);
 
   // Keep navigation inside the authenticated user's role scope.
@@ -924,10 +923,14 @@ export default function App() {
         </section>
       </div>
 
-      <nav className="md:hidden relative z-40 shrink-0 h-16 border-t border-teal-800 bg-[#0f625b] px-1.5 pb-[env(safe-area-inset-bottom)] shadow-[0_-5px_20px_rgba(15,98,91,.18)]" aria-label="Navigasi cepat">
-        <div className="h-full flex items-center justify-around">
-          {mobileQuickItems.map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => navigateToTab(item.id)} aria-current={active ? 'page' : undefined} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-bold transition-colors ${active ? 'text-white' : 'text-teal-200'}`}>{active && <span className="absolute top-0 h-1 w-9 rounded-b-full bg-teal-200 shadow-[0_0_10px_rgba(153,246,228,.55)]" />}<Icon className={`w-[18px] h-[18px] ${active ? 'drop-shadow-sm' : ''}`} /><span className="truncate max-w-16">{item.short}</span></button>; })}
-          <button type="button" onClick={() => setMobileNavOpen(true)} aria-current={mobileMoreActive ? 'page' : undefined} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[9px] font-bold transition-colors ${mobileMoreActive ? 'text-white' : 'text-teal-200'}`}>{mobileMoreActive && <span className="absolute top-0 h-1 w-9 rounded-b-full bg-teal-200 shadow-[0_0_10px_rgba(153,246,228,.55)]" />}<Menu className="w-[18px] h-[18px]" /><span>Menu</span></button>
+      <nav className="md:hidden relative z-40 shrink-0 border-t border-teal-800 bg-[#0f625b] px-2 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-5px_20px_rgba(15,98,91,.18)]" aria-label="Navigasi mobile">
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => navigateToTab('dashboard')} className={`h-12 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition ${activeTab==='dashboard' ? 'bg-[#0b554f] text-white ring-1 ring-teal-300/30' : 'bg-teal-700/50 text-teal-100'}`}>
+            <LayoutDashboard className="w-5 h-5"/><span>Dashboard</span>
+          </button>
+          <button type="button" onClick={() => setMobileNavOpen(true)} className={`h-12 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition ${mobileMoreActive ? 'bg-[#0b554f] text-white ring-1 ring-teal-300/30' : 'bg-teal-700/50 text-teal-100'}`}>
+            <Menu className="w-5 h-5"/><span>{mobileMoreActive ? (activeNavItem?.short || 'Menu') : 'Semua Menu'}</span>
+          </button>
         </div>
       </nav>
 
