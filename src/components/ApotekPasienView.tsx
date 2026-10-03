@@ -504,7 +504,7 @@ export default function ApotekPasienView({
                         const med = medicines.find(m => m.id === line.medicineId);
                         return (
                           <tr key={idx} className="hover:bg-slate-55">
-                            <td className="p-3 font-semibold text-slate-850">{med ? med.name : 'Unknown'}</td>
+                            <td className="p-3 font-semibold text-slate-900">{med ? med.name : 'Unknown'}</td>
                             <td className="p-3 font-bold text-slate-800">{line.qty} {med?.unit}</td>
                             <td className="p-3 text-slate-600 italic font-mono">{line.dosage}</td>
                             <td className="p-3">
