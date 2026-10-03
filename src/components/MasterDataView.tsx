@@ -268,7 +268,7 @@ export default function MasterDataView({
                   <td className="py-3 text-slate-600 uppercase text-xs">{m.group}</td>
                   <td className="py-3 text-right">
                     <button onClick={()=>handleEditMed(m)} className="p-1.5 text-blue-600"><Edit className="w-4 h-4"/></button>
-                    <button onClick={()=>{if(window.confirm('Hapus obat ini?')) onDeleteMedicine(m.id);}} className="p-1.5 text-red-600"><Trash2 className="w-4 h-4"/></button>
+                    <button onClick={()=>onDeleteMedicine(m.id)} className="p-1.5 text-red-600"><Trash2 className="w-4 h-4"/></button>
                   </td>
                 </tr>
               )) : filteredUnits.map(u => (
@@ -279,7 +279,7 @@ export default function MasterDataView({
                   <td className="py-3 text-slate-600">{u.manager}</td>
                   <td className="py-3 text-right">
                     <button onClick={()=>handleEditUnit(u)} className="p-1.5 text-blue-600"><Edit className="w-4 h-4"/></button>
-                    <button onClick={()=>{if(window.confirm('Hapus unit ini?')) onDeleteUnit(u.id);}} className="p-1.5 text-red-600"><Trash2 className="w-4 h-4"/></button>
+                    <button onClick={()=>onDeleteUnit(u.id)} className="p-1.5 text-red-600"><Trash2 className="w-4 h-4"/></button>
                   </td>
                 </tr>
               ))}
