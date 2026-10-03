@@ -177,14 +177,14 @@ export default function DashboardView({
       </div>
 
       {/* SIFP Interconnected Ecosystem Flow Map */}
-      <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white rounded-2xl p-5 shadow-md border border-slate-850 space-y-4" id="sifp-ecosystem-pipeline">
+      <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white rounded-2xl p-5 shadow-md border border-slate-800 space-y-4" id="sifp-ecosystem-pipeline">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/10 pb-3">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <h3 className="font-display font-bold text-sm tracking-wide text-white uppercase">Visual Alur Ekosistem SIFP Terintegrasi</h3>
             </div>
-            <p className="text-[11px] text-slate-300">Peta interaktif aliran obat: Penerimaan &rarr; Penyimpanan &rarr; Distribusi &rarr; Pelayanan &rarr; Audit</p>
+            <p className="text-[11px] text-slate-200">Peta interaktif aliran obat: Penerimaan &rarr; Penyimpanan &rarr; Distribusi &rarr; Pelayanan &rarr; Audit</p>
           </div>
           <span className="text-[9px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 px-2 py-0.5 rounded font-mono uppercase font-bold self-start">
             Status: Sinkron & Aktif
@@ -197,7 +197,7 @@ export default function DashboardView({
           {/* Node 1: Penerimaan */}
           <div 
             onClick={() => onNavigateChange('receipts')}
-            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/50 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
             title="Klik untuk membuka Penerimaan Gudang"
             id="node-receipts"
           >
@@ -209,18 +209,18 @@ export default function DashboardView({
             </div>
             <div>
               <p className="font-bold text-slate-100 text-xs truncate">Penerimaan PBF/IFK</p>
-              <p className="text-[10px] text-slate-400 mt-1">Daftar Nota Masuk</p>
+              <p className="text-[10px] text-slate-300 mt-1">Daftar Nota Masuk</p>
             </div>
             <div className="bg-sky-500/10 text-sky-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
               {receipts.length} Dokumen
             </div>
-            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+            <div className="absolute right-2 bottom-2 text-white/70 text-[10px] font-bold group-hover:text-white transition-colors">&rarr;</div>
           </div>
 
           {/* Node 2: Penyimpanan */}
           <div 
             onClick={() => onNavigateChange('dashboard')}
-            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/50 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
             title="Sistem stok gudang utama SIFP"
             id="node-storage"
           >
@@ -232,18 +232,18 @@ export default function DashboardView({
             </div>
             <div>
               <p className="font-bold text-slate-100 text-xs truncate">Gudang Utama</p>
-              <p className="text-[10px] text-slate-400 mt-1">Sisa Persediaan FEFO</p>
+              <p className="text-[10px] text-slate-300 mt-1">Sisa Persediaan FEFO</p>
             </div>
             <div className="bg-blue-500/10 text-blue-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit whitespace-nowrap">
               {Object.keys(stocks['gudang'] || {}).length} Obat Aktif
             </div>
-            <span className="absolute right-2 bottom-2 text-white/10 text-[10px] font-bold group-hover:text-white/30 transition-colors">&bull;</span>
+            <span className="absolute right-2 bottom-2 text-white/60 text-[10px] font-bold group-hover:text-white/90 transition-colors">&bull;</span>
           </div>
 
           {/* Node 3: Distribusi Ampra */}
           <div 
             onClick={() => onNavigateChange('ampra')}
-            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs animate-pulse-slow" 
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/50 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs animate-pulse-slow" 
             title="Klik untuk melihat Permintaan & Ganti SIFP Ampra"
             id="node-ampra"
           >
@@ -255,18 +255,18 @@ export default function DashboardView({
             </div>
             <div>
               <p className="font-bold text-slate-100 text-xs truncate">Ampra & Mutasi</p>
-              <p className="text-[10px] text-slate-400 mt-1">Aliran internal & Satelit</p>
+              <p className="text-[10px] text-slate-300 mt-1">Aliran internal & Satelit</p>
             </div>
             <div className="bg-amber-500/10 text-amber-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
               {ampras.length} Permintaan
             </div>
-            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+            <div className="absolute right-2 bottom-2 text-white/70 text-[10px] font-bold group-hover:text-white transition-colors">&rarr;</div>
           </div>
 
           {/* Node 4: Pelayanan Resep */}
           <div 
             onClick={() => onNavigateChange('apotek')}
-            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/50 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
             title="Klik untuk melayani Resep Dokter"
             id="node-prescriptions"
           >
@@ -278,18 +278,18 @@ export default function DashboardView({
             </div>
             <div>
               <p className="font-bold text-slate-100 text-xs truncate">Apotek Resep</p>
-              <p className="text-[10px] text-slate-400 mt-1">Pelayanan resep pasien</p>
+              <p className="text-[10px] text-slate-300 mt-1">Pelayanan resep pasien</p>
             </div>
             <div className="bg-emerald-500/10 text-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
               {prescriptions.length} Resep Rekom
             </div>
-            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+            <div className="absolute right-2 bottom-2 text-white/70 text-[10px] font-bold group-hover:text-white transition-colors">&rarr;</div>
           </div>
 
           {/* Node 5: Terminal Unit */}
           <div 
             onClick={() => onNavigateChange('satellites')}
-            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/50 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
             title="Klik untuk melihat Terminal Pustu & IGD"
             id="node-satellites"
           >
@@ -301,18 +301,18 @@ export default function DashboardView({
             </div>
             <div>
               <p className="font-bold text-slate-100 text-xs truncate">Terminal Unit</p>
-              <p className="text-[10px] text-slate-400 mt-1">Harian sub-unit & pustu</p>
+              <p className="text-[10px] text-slate-300 mt-1">Harian sub-unit & pustu</p>
             </div>
             <div className="bg-violet-500/10 text-violet-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit">
               {usages.length} Log Terdata
             </div>
-            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+            <div className="absolute right-2 bottom-2 text-white/70 text-[10px] font-bold group-hover:text-white transition-colors">&rarr;</div>
           </div>
 
           {/* Node 6: Audit & LPLPO */}
           <div 
             onClick={() => onNavigateChange('reports')}
-            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-550/55 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
+            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/50 p-3.5 rounded-xl transition-all cursor-pointer group space-y-2 relative shadow-xs" 
             title="Ulas Audit Terbuka & Rekap LPLPO Kesehatan"
             id="node-audit"
           >
@@ -324,12 +324,12 @@ export default function DashboardView({
             </div>
             <div>
               <p className="font-bold text-slate-100 text-xs truncate">Laporan & Audit</p>
-              <p className="text-[10px] text-slate-400 mt-1">LPLPO, Keuangan & Opname</p>
+              <p className="text-[10px] text-slate-300 mt-1">LPLPO, Keuangan & Opname</p>
             </div>
             <div className="bg-fuchsia-500/10 text-fuchsia-300 font-bold text-[10px] px-2 py-0.5 rounded-full w-fit uppercase">
               7 Modul Laporan
             </div>
-            <div className="absolute right-2 bottom-2 text-white/20 text-[10px] font-bold group-hover:text-white/40 transition-colors">&rarr;</div>
+            <div className="absolute right-2 bottom-2 text-white/70 text-[10px] font-bold group-hover:text-white transition-colors">&rarr;</div>
           </div>
 
         </div>
@@ -341,7 +341,7 @@ export default function DashboardView({
             <h2 className="text-2xl font-bold text-slate-800 font-display">
               {metrics.totalItemsInGudang.toLocaleString('id-ID')}
             </h2>
-            <p className="text-xs text-slate-400">Pcs sediaan farmasi</p>
+            <p className="text-xs text-slate-300">Pcs sediaan farmasi</p>
           </div>
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
             <Package className="w-6 h-6" />
@@ -354,7 +354,7 @@ export default function DashboardView({
             <h2 className="text-2xl font-bold text-slate-800 font-display">
               {metrics.totalItemsInApotek.toLocaleString('id-ID')}
             </h2>
-            <p className="text-xs text-slate-400">Sedia dilayani ke pasien</p>
+            <p className="text-xs text-slate-300">Sedia dilayani ke pasien</p>
           </div>
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
             <Zap className="w-6 h-6" />
@@ -367,7 +367,7 @@ export default function DashboardView({
             <h2 className="text-2xl font-bold text-slate-800 font-display">
               {metrics.totalItemsInUnits.toLocaleString('id-ID')}
             </h2>
-            <p className="text-xs text-slate-400">Cadangan di 9 sub-unit</p>
+            <p className="text-xs text-slate-300">Cadangan di 9 sub-unit</p>
           </div>
           <div className="p-3 bg-violet-50 text-violet-600 rounded-xl">
             <ClipboardList className="w-6 h-6" />
@@ -380,7 +380,7 @@ export default function DashboardView({
             <h2 className="text-2xl font-bold text-amber-600 font-display">
               {metrics.pendingAmpra}
             </h2>
-            <p className="text-xs text-slate-400">Pengajuan Ampra Aktif</p>
+            <p className="text-xs text-slate-300">Pengajuan Ampra Aktif</p>
           </div>
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
             <Bell className="w-6 h-6 animate-pulse" />
@@ -413,7 +413,7 @@ export default function DashboardView({
                 </div>
 
                 {expiryAlerts.red.length === 0 ? (
-                  <div className="p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-300">
                     Tidak ada obat dalam kategori kritis (&le; 6 bulan)
                   </div>
                 ) : (
@@ -450,7 +450,7 @@ export default function DashboardView({
                 </div>
 
                 {expiryAlerts.yellow.length === 0 ? (
-                  <div className="p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-300">
                     Tidak ada obat dalam kategori peringatan (7bln - 1th)
                   </div>
                 ) : (
@@ -535,11 +535,11 @@ export default function DashboardView({
               </div>
             </div>
 
-            <p className="text-xs text-slate-400">Total volume pemakaian resep apotek ditambah log unit</p>
+            <p className="text-xs text-slate-300">Total volume pemakaian resep apotek ditambah log unit</p>
 
             {topMedicines.length === 0 ? (
-              <div className="p-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center text-sm text-slate-400 flex flex-col items-center justify-center gap-2">
-                <Package className="w-10 h-10 text-slate-300" />
+              <div className="p-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center text-sm text-slate-300 flex flex-col items-center justify-center gap-2">
+                <Package className="w-10 h-10 text-slate-200" />
                 <p>Belum ada data pemakaian dalam periode terpilih.</p>
               </div>
             ) : (
@@ -557,7 +557,7 @@ export default function DashboardView({
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="font-bold text-slate-800">{med.qty}</span>
-                          <span className="text-slate-400 text-[10px]">pcs</span>
+                          <span className="text-slate-300 text-[10px]">pcs</span>
                         </div>
                       </div>
                       
@@ -573,7 +573,7 @@ export default function DashboardView({
                           style={{ width: `${pct}%` }}
                         ></div>
                       </div>
-                      <div className="flex justify-between text-[10px] text-slate-400">
+                      <div className="flex justify-between text-[10px] text-slate-300">
                         <span>{med.type === 'generik' ? 'Generik' : 'Paten'} {med.isNarkotikaPsikotropika && '• Napza'}</span>
                         <span>{pct}% Vol</span>
                       </div>
