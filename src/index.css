@@ -128,3 +128,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(max-width:390px){
  #main-content-pane [class*="grid-cols-4"],#main-content-pane [class*="grid-cols-3"],#main-content-pane [class*="grid-cols-2"]{grid-template-columns:minmax(0,1fr)}
 }
+
+/* Mobile workspace: one authoritative scroll container, no blank viewport after module changes */
+@media(max-width:767px){
+ html,body,#root{height:100%;min-height:100%;overflow:hidden}
+ #main-app{height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important}
+ #app-workspace{min-height:0!important;overflow:hidden!important}
+ #scrollable-content-area{display:block!important;min-height:0!important;height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch}
+ #scrollable-content-area>div{min-height:100%!important}
+ #main-content-pane{display:block!important;width:100%!important;min-height:280px!important;visibility:visible!important;opacity:1!important}
+ #main-content-pane>#module-render-status{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:1}
+}
