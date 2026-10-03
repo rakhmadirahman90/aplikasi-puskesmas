@@ -238,7 +238,7 @@ export default function PenerimaanGudangView({
             <ArrowDownLeft className="w-3 h-3 rotate-[135deg]" />
           </button>
         </div>
-        <div className="w-full sm:w-auto text-[10px] text-emerald-600/70 font-mono flex items-center gap-1 leading-relaxed">
+        <div className="w-full sm:w-auto text-[10px] text-emerald-700 font-mono flex items-center gap-1 leading-relaxed">
           <Database className="w-3 h-3" /> Data Tersinkronisasi Global
         </div>
       </div>
