@@ -19,6 +19,7 @@ import UserManagementView from './components/UserManagementView';
 import MasterDataView from './components/MasterDataView';
 import DisposalCorrectionView from './components/DisposalCorrectionView';
 import OpeningReconciliationView from './components/OpeningReconciliationView';
+import ModuleErrorBoundary from './components/ModuleErrorBoundary';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -750,6 +751,7 @@ export default function App() {
           <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-7 py-4 sm:py-6">
             <div className="mb-4 flex items-center justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,.65)]" /><span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400">Modul aktif</span></div><h2 className="mt-1 font-display text-lg sm:text-xl font-bold tracking-tight text-slate-900 break-words">{activeNavItem?.label || 'Dashboard'}</h2></div><div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"><CircleUserRound className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-semibold text-slate-600">{roleLabel}</span></div></div>
             <main className="min-w-0 w-full pb-20 space-y-6" id="main-content-pane">
+          <ModuleErrorBoundary key={activeTab} moduleName={activeNavItem?.label || activeTab} onError={(message)=>addNotification('error',message)} onRetry={()=>window.location.reload()} onHome={()=>setActiveTab('dashboard')}>
           
           {activeTab === 'dashboard' && (
             <DashboardView
@@ -894,6 +896,7 @@ export default function App() {
             />
           )}
 
+          </ModuleErrorBoundary>
             </main>
           </div>
         </section>
