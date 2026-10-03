@@ -57,9 +57,9 @@ export default function AmpraGudangView({
   const [qty, setQty] = useState<number>(0);
 
   const filteredMedicines = medicines.filter(m =>
-    m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
-    m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
-    m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+    String(m?.name || '').toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+    String(m?.type || '').toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+    String(m?.group || '').toLowerCase().includes(mSearchTerm.toLowerCase())
   );
 
   // Gudang allocation state for a selected ampra card
@@ -128,7 +128,7 @@ export default function AmpraGudangView({
   const startReview = (ampra: Ampra) => {
     setReviewingAmpraId(ampra.id);
     const initialMap: { [medId: string]: number } = {};
-    ampra.items.forEach(item => {
+    (Array.isArray(ampra.items) ? ampra.items : []).forEach(item => {
       // Intelligently suggest up to request quantity, bounded by actual Gudang stock
       const gudangStock = stocks['gudang']?.[item.medicineId]?.total || 0;
       initialMap[item.medicineId] = Math.min(item.requestedQty, gudangStock);
@@ -138,7 +138,7 @@ export default function AmpraGudangView({
 
   const submitAllocation = (ampra: Ampra) => {
     // Save allocation numbers
-    const updatedItems = ampra.items.map(item => ({
+    const updatedItems = (Array.isArray(ampra.items) ? ampra.items : []).map(item => ({
       ...item,
       approvedQty: allocationMap[item.medicineId] ?? item.requestedQty
     }));
@@ -453,7 +453,7 @@ export default function AmpraGudangView({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-xs">
-                        {reviewingAmpra.items.map((item, idx) => {
+                        {(Array.isArray(reviewingAmpra.items) ? reviewingAmpra.items : []).map((item, idx) => {
                           const med = medicines.find(m => m.id === item.medicineId);
                           const gudStock = stocks['gudang']?.[item.medicineId]?.total || 0;
                           const currentAlloc = allocationMap[item.medicineId] ?? 0;
@@ -547,8 +547,8 @@ export default function AmpraGudangView({
           <div className="divide-y divide-slate-100" id="ampras-rows-list">
             {ampras.map((amp) => {
               const sourceUnit = units.find(u => u.id === amp.sourceUnitId);
-              const totalItemsRequested = amp.items.reduce((sum, item) => sum + item.requestedQty, 0);
-              const totalItemsApproved = amp.items.reduce((sum, item) => sum + item.approvedQty, 0);
+              const totalItemsRequested = (Array.isArray(amp.items) ? amp.items : []).reduce((sum, item) => sum + item.requestedQty, 0);
+              const totalItemsApproved = (Array.isArray(amp.items) ? amp.items : []).reduce((sum, item) => sum + item.approvedQty, 0);
 
               return (
                 <div key={amp.id} className="p-5 hover:bg-slate-50/50 transition-colors" id={`amp-row-${amp.id}`}>
@@ -688,7 +688,7 @@ export default function AmpraGudangView({
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                      {amp.items.map((line, idx) => {
+                      {(Array.isArray(amp.items) ? amp.items : []).map((line, idx) => {
                         const med = medicines.find(m => m.id === line.medicineId);
                         return (
                           <div key={idx} className="bg-white p-2.5 rounded-lg border border-slate-150 flex flex-col justify-between shadow-2xs space-y-1 bg-gradient-to-b from-white to-slate-50">
