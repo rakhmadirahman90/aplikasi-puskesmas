@@ -406,7 +406,9 @@ export default function App() {
         qSnap.forEach((docSnap) => {
           updatedUsers.push(docSnap.data() as UserAccount);
         });
-        if (updatedUsers.length > 0) setUsers(updatedUsers);
+        setUsers(updatedUsers);
+      }, (error) => {
+        if (activeRole === 'admin') addNotification('error', `Data Pengguna gagal dimuat: ${error?.message || 'akses database ditolak'}`);
       });
       unsubscribes.push(unsubUsers);
 
