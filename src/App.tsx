@@ -18,6 +18,7 @@ import LoginView from './components/LoginView';
 import UserManagementView from './components/UserManagementView';
 import MasterDataView from './components/MasterDataView';
 import DisposalCorrectionView from './components/DisposalCorrectionView';
+import OpeningReconciliationView from './components/OpeningReconciliationView';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -228,8 +229,8 @@ export default function App() {
 
   // Role-based navigation: users only see modules relevant to their role.
   const ROLE_TAB_ACCESS: Record<AppRole, string[]> = {
-    admin: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'users'],
-    apj: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports'],
+    admin: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'opening-reconciliation', 'users'],
+    apj: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'opening-reconciliation'],
     gudang: ['dashboard', 'receipts', 'disposals', 'ampra', 'satellites', 'reports'],
     farmasi: ['dashboard', 'ampra', 'apotek', 'satellites', 'reports'],
     unit: ['dashboard', 'ampra', 'satellites', 'reports']
@@ -249,6 +250,7 @@ export default function App() {
     { id: 'satellites', label: 'Pemakaian Harian Unit', short: 'Unit', icon: Database, section: 'Pelayanan & Pemakaian' },
     { id: 'reports', label: 'Laporan Terpadu', short: 'Laporan', icon: FileText, section: 'Pelaporan' },
     { id: 'master', label: 'Katalog Obat & Data Unit', short: 'Master', icon: Database, section: 'Master Data' },
+    { id: 'opening-reconciliation', label: 'Rekonsiliasi Opening Stock', short: 'Opening', icon: ShieldCheck, section: 'Pengaturan' },
     { id: 'users', label: 'Pengguna & Hak Akses', short: 'User', icon: ShieldCheck, section: 'Pengaturan' }
   ];
 
@@ -750,6 +752,10 @@ export default function App() {
               onSetSystemDate={handleSetSystemDate}
               onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
             />
+          )}
+
+          {activeTab === 'opening-reconciliation' && canAccessTab('opening-reconciliation') && (
+            <OpeningReconciliationView onNotify={addNotification} />
           )}
 
           {activeTab === 'users' && activeRole === 'admin' && (
