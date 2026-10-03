@@ -205,6 +205,7 @@ export default function App() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [usages, setUsages] = useState<DailyUsage[]>([]);
   const [disposals, setDisposals] = useState<Disposal[]>([]);
+  const [reversedTransactionKeys, setReversedTransactionKeys] = useState<Set<string>>(new Set());
 
   // Expiration calibrators
   const [systemDate, setSystemDate] = useState<string>(new Date().toISOString().slice(0,10));
@@ -284,6 +285,18 @@ export default function App() {
     const { data: listener } = supabase.auth.onAuthStateChange(() => { void loadSessionUser(); });
     return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
+
+  const refreshReversalRegistry = async () => {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc('list_transaction_reversals');
+    if (error) { console.error('Gagal memuat registry reversal:', error); return; }
+    setReversedTransactionKeys(new Set((data || []).map((r: any) => `${r.transaction_kind}:${r.transaction_id}`)));
+  };
+
+  useEffect(() => {
+    if (currentUser?.id) void refreshReversalRegistry();
+    else setReversedTransactionKeys(new Set());
+  }, [currentUser?.id]);
 
   const handleLogin = (user: UserAccount) => {
     setCurrentUser(user);
@@ -597,6 +610,7 @@ export default function App() {
       if (!supabase) throw new Error('Supabase belum tersedia.');
       const { error } = await supabase.rpc('reverse_transaction_atomic', { p_kind: kind, p_id: id, p_reason: reason });
       if (error) throw error;
+      await refreshReversalRegistry();
       addNotification('success', `Reversal ${id} selesai atomik. Dokumen asli tetap tersimpan untuk audit.`);
       return true;
     } catch (e: any) {
@@ -853,10 +867,10 @@ export default function App() {
               medicines={medicines}
               units={units}
               stocks={stocks}
-              receipts={receipts}
-              ampras={ampras}
-              prescriptions={prescriptions}
-              usages={usages}
+              receipts={receipts.filter(x => !reversedTransactionKeys.has(`receipt:${x.id}`))}
+              ampras={ampras.filter(x => !reversedTransactionKeys.has(`ampra:${x.id}`))}
+              prescriptions={prescriptions.filter(x => !reversedTransactionKeys.has(`prescription:${x.id}`))}
+              usages={usages.filter(x => !reversedTransactionKeys.has(`usage:${x.id}`))}
               userName={userName}
               onNotify={addNotification}
               onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
