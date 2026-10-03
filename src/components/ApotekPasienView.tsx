@@ -724,7 +724,7 @@ export default function ApotekPasienView({
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-y-auto overscroll-contain flex flex-col animate-in fade-in zoom-in duration-200" id="edit-prescription-modal-content">
             
             {/* Header */}
-            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50' sticky top-0 z-10">
+            <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
               <div>
                 <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                   <Edit className="w-4 h-4 text-indigo-600" /> Edit / Koreksi Resep Pasien
