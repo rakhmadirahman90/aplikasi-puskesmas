@@ -113,3 +113,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  #main-content-pane [role="dialog"]>div,#main-content-pane .fixed.inset-0>div{max-width:100%;max-height:calc(100dvh - 20px)}
  #main-content-pane table td:last-child,#main-content-pane table th:last-child{padding-right:12px!important}
 }
+
+/* Cross-module visual consistency */
+#main-content-pane>div{width:100%;min-width:0}
+#main-content-pane section,#main-content-pane article{min-width:0}
+#main-content-pane .overflow-x-auto{border-radius:12px}
+#main-content-pane table button{flex-shrink:0}
+@media(max-width:767px){
+ #main-content-pane [class*="grid-cols-4"],#main-content-pane [class*="grid-cols-3"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #main-content-pane form [class*="grid-cols-4"],#main-content-pane form [class*="grid-cols-3"]{grid-template-columns:minmax(0,1fr)}
+ #main-content-pane [class*="gap-6"]{gap:14px!important}
+ #main-content-pane [class*="space-y-6"]>:not([hidden])~:not([hidden]){margin-top:14px!important}
+}
+@media(max-width:390px){
+ #main-content-pane [class*="grid-cols-4"],#main-content-pane [class*="grid-cols-3"],#main-content-pane [class*="grid-cols-2"]{grid-template-columns:minmax(0,1fr)}
+}
