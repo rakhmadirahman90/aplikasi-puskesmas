@@ -204,3 +204,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 #main-content-pane .sifp-inverse-surface :where(h1,h2,h3,h4,h5,h6,.font-bold){color:#fff!important}
 #main-content-pane .sifp-inverse-surface :where(p,small){color:#d1fae5!important}
 #main-content-pane .sifp-inverse-surface svg{color:currentColor}
+
+/* Mobile app navigation polish */
+@media(max-width:767px){
+ .mobile-app-drawer{scrollbar-width:none;-ms-overflow-style:none}
+ .mobile-app-drawer::-webkit-scrollbar{display:none}
+ .mobile-app-drawer{-webkit-overflow-scrolling:touch}
+ body{overscroll-behavior-y:none}
+}
