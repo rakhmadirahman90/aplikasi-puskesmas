@@ -240,6 +240,13 @@ export default function App() {
 
   const canAccessTab = (tab: string) => ROLE_TAB_ACCESS[activeRole]?.includes(tab) ?? false;
 
+  // Never leave the content pane blank when the authenticated role cannot access a stale tab.
+  useEffect(() => {
+    if (!ROLE_TAB_ACCESS[activeRole]?.includes(activeTab)) {
+      setActiveTab(ROLE_TAB_ACCESS[activeRole]?.[0] || 'dashboard');
+    }
+  }, [activeRole, activeTab]);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
