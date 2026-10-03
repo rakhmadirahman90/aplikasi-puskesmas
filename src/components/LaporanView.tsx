@@ -1608,7 +1608,7 @@ export default function LaporanView({
                       <tr key={idx} className="hover:bg-slate-50">
                         <td className="p-3 font-semibold text-slate-800">{item.medicine.name}</td>
                         <td className="p-3">
-                          <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded">
+                          <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded">
                             {item.medicine.type === 'generik' ? 'Generik' : 'Paten'} {item.medicine.isNarkotikaPsikotropika && '&bull; Napza'}
                           </span>
                         </td>
@@ -1819,7 +1819,7 @@ export default function LaporanView({
               </div>
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 text-center">
                 <span className="text-xs text-slate-500 block font-semibold">Resep Rawat Jalan</span>
-                <span className="text-3xl font-bold text-indigo-700 font-display mt-1 block">
+                <span className="text-3xl font-bold text-teal-700 font-display mt-1 block">
                   {kefarmasianMetrics.rawatJalanCount}
                 </span>
                 <p className="text-[10px] text-slate-400 mt-1">Poli Umum, KIA, Gigi, Gizi</p>
@@ -1886,7 +1886,7 @@ export default function LaporanView({
                           <td className="p-3 text-slate-800">{rx.patientName} ({rx.age} Thn)</td>
                           <td className="p-3">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              rx.type === 'Rawat Jalan' ? 'bg-indigo-50 text-indigo-700' : 'bg-teal-50 text-teal-700'
+                              rx.type === 'Rawat Jalan' ? 'bg-teal-50 text-teal-700' : 'bg-teal-50 text-teal-700'
                             }`}>
                               {rx.type}
                             </span>
@@ -1895,7 +1895,7 @@ export default function LaporanView({
                           <td className="p-3"><span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold">{rx.paymentType || 'JKN'}</span></td>
                           <td className="p-3 text-[10px] text-slate-600">{rx.counseling ? 'Konseling' : '-'} / {rx.drugInformation ? 'PIO' : '-'}</td>
                           <td className="p-3 text-right text-slate-880">{rx.items.length} macam</td>
-                          <td className="p-3 text-right font-bold text-indigo-700">{qtySum} pcs</td>
+                          <td className="p-3 text-right font-bold text-teal-700">{qtySum} pcs</td>
                         </tr>
                       );
                     })}
