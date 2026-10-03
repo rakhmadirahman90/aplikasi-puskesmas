@@ -224,7 +224,9 @@ export default function App() {
 
   // Authenticated Role Accessors
   const activeRole = currentUser?.role || 'unit';
-  const activeUnitId = currentUser?.unitId || 'pustu';
+  const authenticatedUnitId = currentUser?.unitId || (activeRole === 'farmasi' ? 'ruang_farmasi' : '');
+  const [adminViewUnitId, setAdminViewUnitId] = useState('pustu');
+  const activeUnitId = activeRole === 'unit' || activeRole === 'farmasi' ? authenticatedUnitId : adminViewUnitId;
   const userName = currentUser?.name || 'Guest User';
 
   // Role-based navigation: users only see modules relevant to their role.
@@ -860,7 +862,7 @@ export default function App() {
               usages={usages}
               activeRole={activeRole as any}
               activeUnitId={activeUnitId}
-              onSetSimulationUnit={() => {}}
+              onSetSimulationUnit={(unitId) => { if (activeRole === 'admin' || activeRole === 'apj' || activeRole === 'gudang') setAdminViewUnitId(unitId); }}
               onAddUsage={handleAddUsage}
               onDeleteUsage={handleDeleteUsage}
               onUpdateUsage={handleUpdateUsage}
