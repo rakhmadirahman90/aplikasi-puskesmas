@@ -151,9 +151,9 @@ export default function PenerimaanGudangView({
   };
 
   const filteredMedicines = medicines.filter(m => 
-    m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) || 
-    m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) || 
-    m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+    String(m?.name || '').toLowerCase().includes(mSearchTerm.toLowerCase()) || 
+    String(m?.type || '').toLowerCase().includes(mSearchTerm.toLowerCase()) || 
+    String(m?.group || '').toLowerCase().includes(mSearchTerm.toLowerCase())
   );
 
   const handleAddItemRow = () => {
@@ -550,7 +550,7 @@ export default function PenerimaanGudangView({
           <>
             <div className="md:hidden divide-y divide-slate-100" id="receipts-mobile-list">
               {receipts.map((rcp) => {
-                const totalItems = rcp.items.reduce((sum, i) => sum + i.quantity, 0);
+                const totalItems = (Array.isArray(rcp.items) ? rcp.items : []).reduce((sum, i) => sum + i.quantity, 0);
                 return (
                   <article key={rcp.id} className="p-3.5 bg-white">
                     <div className="flex items-start justify-between gap-3 min-w-0">
@@ -583,7 +583,7 @@ export default function PenerimaanGudangView({
                     <div className="mt-2.5">
                       <p className="text-[9px] uppercase tracking-wide font-bold text-slate-400 mb-1.5">Item Rincian</p>
                       <div className="space-y-1.5">
-                        {rcp.items.map((line, lIdx) => {
+                        {(Array.isArray(rcp.items) ? rcp.items : []).map((line, lIdx) => {
                           const medNode = medicines.find(m => m.id === line.medicineId);
                           return (
                             <div key={lIdx} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2">
@@ -647,7 +647,7 @@ export default function PenerimaanGudangView({
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {receipts.map((rcp) => {
-                  const totalItems = rcp.items.reduce((sum, i) => sum + i.quantity, 0);
+                  const totalItems = (Array.isArray(rcp.items) ? rcp.items : []).reduce((sum, i) => sum + i.quantity, 0);
 
                   return (
                     <React.Fragment key={rcp.id}>
@@ -729,7 +729,7 @@ export default function PenerimaanGudangView({
                           <div className="px-4 py-2 border-l-2 border-slate-200">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">Item Rincian Penerimaan:</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                              {rcp.items.map((line, lIdx) => {
+                              {(Array.isArray(rcp.items) ? rcp.items : []).map((line, lIdx) => {
                                 const medNode = medicines.find(m => m.id === line.medicineId);
                                 return (
                                   <div key={lIdx} className="bg-white p-2.5 rounded-lg border border-slate-150 shadow-2xs space-y-1">
@@ -943,7 +943,7 @@ export default function PenerimaanGudangView({
                     >
                       <option value="">-- Pilih Obat --</option>
                       {medicines
-                        .filter(m => m.name.toLowerCase().includes(editMSearchTerm.toLowerCase()))
+                        .filter(m => String(m?.name || '').toLowerCase().includes(editMSearchTerm.toLowerCase()))
                         .map(m => (
                           <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
                         ))
