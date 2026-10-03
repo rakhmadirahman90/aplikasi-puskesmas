@@ -419,7 +419,7 @@ export default function UsageUnitView({
                   setShowUsageForm(false);
                   setUseLines([]);
                 }}
-                className="w-full sm:w-auto px-4 py-2 border border-slate-200 text-slate-650 text-xs font-semibold rounded-lg hover:bg-slate-50"
+                className="w-full sm:w-auto px-4 py-2 border border-slate-200 text-slate-600 text-xs font-semibold rounded-lg hover:bg-slate-50"
               >
                 Batal
               </button>
@@ -506,7 +506,7 @@ export default function UsageUnitView({
                       {onUpdateUsage && (activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
                         <button
                           onClick={() => initiateEditUsage(use)}
-                          className="p-1 text-slate-400 hover:text-emerald-650 hover:bg-emerald-50 rounded transition"
+                          className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition"
                           title="Edit / Koreksi Laporan Pengeluaran"
                           id={`edit-use-${use.id}`}
                         >
@@ -516,7 +516,7 @@ export default function UsageUnitView({
                       {onDeleteUsage && (activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
                         <button
                           onClick={() => onDeleteUsage(use.id)}
-                          className="p-1 text-slate-400 hover:text-red-650 hover:bg-rose-50 rounded transition"
+                          className="p-1 text-slate-400 hover:text-red-600 hover:bg-rose-50 rounded transition"
                           title="Batalkan / Hapus Laporan Pengeluaran"
                           id={`delete-use-${use.id}`}
                         >
@@ -633,13 +633,13 @@ export default function UsageUnitView({
                           <th className="p-2 text-center w-12">Aksi</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 font-medium text-slate-705">
+                      <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                         {editItems.map((it, idx) => {
                           const medMatch = medicines.find(m => m.id === it.medicineId);
                           return (
                             <tr key={idx} className="hover:bg-slate-50">
                               <td className="p-2 pl-3 font-semibold text-slate-800">{medMatch ? medMatch.name : 'Unknown'}</td>
-                              <td className="p-2 text-right text-red-650 font-bold">-{it.qtyUsed} {medMatch?.unit || 'pcs'}</td>
+                              <td className="p-2 text-right text-red-600 font-bold">-{it.qtyUsed} {medMatch?.unit || 'pcs'}</td>
                               <td className="p-2 text-center">
                                 <button
                                   type="button"
