@@ -162,9 +162,9 @@ export async function deleteDoc(ref:DocRef) {
 
 function tables(name:string){return ({system:['system_config'],stocks:['stock_balances','stock_batches'],users:['app_users'],units:['units'],medicines:['medicines'],receipts:['receipts','receipt_items'],ampras:['ampras','ampra_items'],prescriptions:['prescriptions','prescription_items'],usages:['daily_usages','daily_usage_items'],disposals:['disposals','disposal_items']} as Record<string,string[]>)[name]||[];}
 
-export function onSnapshot(ref:CollRef|DocRef,callback:(snap:any)=>void){
+export function onSnapshot(ref:CollRef|DocRef,callback:(snap:any)=>void,onError?:(error:any)=>void){
   if(!supabase)return()=>{};
-  const refresh=()=>void (ref.type==='document'?getDoc(ref):getDocs(ref)).then(callback).catch(console.error);
+  const refresh=()=>void (ref.type==='document'?getDoc(ref):getDocs(ref)).then(callback).catch(error=>{ console.error(error); onError?.(error); });
   refresh();
   const channel=supabase.channel('sifp:'+ref.type+':'+(ref.type==='document'?ref.collection+':'+ref.id:ref.name));
   for(const table of tables(ref.type==='document'?ref.collection:ref.name))channel.on('postgres_changes',{event:'*',schema:'public',table},refresh);
