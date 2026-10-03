@@ -57,9 +57,9 @@ export default function UsageUnitView({
 
   const filteredMedicines = useMemo(() => {
     return medicines.filter(m =>
-      m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
-      m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
-      m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+      String(m?.name || '').toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      String(m?.type || '').toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      String(m?.group || '').toLowerCase().includes(mSearchTerm.toLowerCase())
     );
   }, [medicines, mSearchTerm]);
 
@@ -535,7 +535,7 @@ export default function UsageUnitView({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                      {use.items.map((line, idx) => {
+                      {(Array.isArray(use.items) ? use.items : []).map((line, idx) => {
                         const m = medicines.find(med => med.id === line.medicineId);
                         return (
                           <tr key={idx}>
@@ -676,7 +676,7 @@ export default function UsageUnitView({
                     >
                       <option value="">-- Pilih Obat --</option>
                       {medicines
-                        .filter(m => m.name.toLowerCase().includes(editMSearchTerm.toLowerCase()))
+                        .filter(m => String(m?.name || '').toLowerCase().includes(editMSearchTerm.toLowerCase()))
                         .map(m => {
                           const uStock = stocks[editingUsage.unitId]?.[m.id]?.total || 0;
                           return (
