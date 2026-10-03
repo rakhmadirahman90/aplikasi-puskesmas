@@ -60,9 +60,9 @@ export default function ApotekPasienView({
 
   const filteredMedicines = useMemo(() => {
     return medicines.filter(m =>
-      m.name.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
-      m.type.toLowerCase().includes(mSearchTerm.toLowerCase()) ||
-      m.group.toLowerCase().includes(mSearchTerm.toLowerCase())
+      String(m?.name || '').toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      String(m?.type || '').toLowerCase().includes(mSearchTerm.toLowerCase()) ||
+      String(m?.group || '').toLowerCase().includes(mSearchTerm.toLowerCase())
     );
   }, [medicines, mSearchTerm]);
 
@@ -235,7 +235,7 @@ export default function ApotekPasienView({
         rx.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         rx.items.some(i => {
           const m = medicines.find(med => med.id === i.medicineId);
-          return m && m.name.toLowerCase().includes(searchQuery.toLowerCase());
+          return m && String(m?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
         });
 
       const matchDr = !searchDr || rx.drName.toLowerCase().includes(searchDr.toLowerCase());
@@ -664,7 +664,7 @@ export default function ApotekPasienView({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {rx.items.map((line, idx) => {
+                      {(Array.isArray(rx.items) ? rx.items : []).map((line, idx) => {
                         const m = medicines.find(med => med.id === line.medicineId);
                         return (
                           <tr key={idx} className="text-slate-700">
@@ -874,7 +874,7 @@ export default function ApotekPasienView({
                     >
                       <option value="">-- Pilih Sediaan Obat --</option>
                       {medicines
-                        .filter(m => m.name.toLowerCase().includes(editMSearchTerm.toLowerCase()))
+                        .filter(m => String(m?.name || '').toLowerCase().includes(editMSearchTerm.toLowerCase()))
                         .map(m => (
                           <option key={m.id} value={m.id}>
                             {m.name} [Stok Apotek: {apotekStock[m.id]?.total || 0} {m.unit}]
