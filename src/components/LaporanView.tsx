@@ -142,7 +142,7 @@ export default function LaporanView({
       let totalPenerimaan = 0;
       receipts.forEach(r => {
         if (r.verifiedByAPJ) {
-          r.items.forEach(item => {
+          (Array.isArray(r.items) ? r.items : []).forEach(item => {
             if (item.medicineId === med.id) {
               totalPenerimaan += item.quantity;
             }
@@ -153,14 +153,14 @@ export default function LaporanView({
       // 3. Pengeluaran (Mutasi/Distribusi/Bahan Keluar) - prescriptions & usages
       let totalPengeluaran = 0;
       prescriptions.forEach(p => {
-        p.items.forEach(item => {
+        (Array.isArray(p.items) ? p.items : []).forEach(item => {
           if (item.medicineId === med.id) {
             totalPengeluaran += item.qty;
           }
         });
       });
       usages.forEach(u => {
-        u.items.forEach(item => {
+        (Array.isArray(u.items) ? u.items : []).forEach(item => {
           if (item.medicineId === med.id) {
             totalPengeluaran += item.qtyUsed;
           }
@@ -250,12 +250,12 @@ export default function LaporanView({
       // Aggregate logged expenditure (Patient prescription or log usages)
       let totalUsage = 0;
       prescriptions.forEach(p => {
-        p.items.forEach(i => {
+        (Array.isArray(p.items) ? p.items : []).forEach(i => {
           if (i.medicineId === med.id) totalUsage += i.qty;
         });
       });
       usages.forEach(u => {
-        u.items.forEach(i => {
+        (Array.isArray(u.items) ? u.items : []).forEach(i => {
           if (i.medicineId === med.id) totalUsage += i.qtyUsed;
         });
       });
@@ -291,7 +291,7 @@ export default function LaporanView({
 
     prescriptions.forEach(p => {
       totalLinesInRx += p.items.length;
-      p.items.forEach(item => {
+      (Array.isArray(p.items) ? p.items : []).forEach(item => {
         totalItemsDispensed += item.qty;
       });
     });
@@ -326,7 +326,7 @@ export default function LaporanView({
 
     prescriptions.forEach(p => {
       if ((p.paymentType || 'JKN') === 'JKN') jknPrescriptionCount++; else umumPrescriptionCount++;
-      p.items.forEach(item => {
+      (Array.isArray(p.items) ? p.items : []).forEach(item => {
         totalLineItems++;
         const med = medicines.find(m => m.id === item.medicineId);
         
@@ -487,7 +487,7 @@ export default function LaporanView({
         rx.type,
         rx.drName,
         String(rx.items.length),
-        String(rx.items.reduce((s, i) => s + i.qty, 0))
+        String((Array.isArray(rx.items) ? rx.items : []).reduce((s, i) => s + i.qty, 0))
       ]);
       downloadCSVForExcel(filename, headers, rows);
     } else if (type === 'generik_paten') {
@@ -1053,7 +1053,7 @@ export default function LaporanView({
       doc.setFont("Helvetica", "normal");
       doc.setFontSize(8);
       kefarmasianMetrics.prescriptionHistory.forEach(rx => {
-        const qtySum = rx.items.reduce((s, i) => s + i.qty, 0);
+        const qtySum = (Array.isArray(rx.items) ? rx.items : []).reduce((s, i) => s + i.qty, 0);
         if (currentY > doc.internal.pageSize.getHeight() - 35) {
           doc.addPage();
           currentY = 20;
@@ -1847,7 +1847,7 @@ export default function LaporanView({
                   </thead>
                   <tbody className="divide-y divide-slate-150 font-medium">
                     {kefarmasianMetrics.prescriptionHistory.map((rx, idx) => {
-                      const qtySum = rx.items.reduce((s, i) => s + i.qty, 0);
+                      const qtySum = (Array.isArray(rx.items) ? rx.items : []).reduce((s, i) => s + i.qty, 0);
                       return (
                         <tr key={idx} className="hover:bg-slate-50">
                           <td className="p-3 font-mono font-bold text-slate-700">{rx.id}</td>
