@@ -17,6 +17,7 @@ import LaporanView from './components/LaporanView';
 import LoginView from './components/LoginView';
 import UserManagementView from './components/UserManagementView';
 import MasterDataView from './components/MasterDataView';
+import DisposalCorrectionView from './components/DisposalCorrectionView';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -203,6 +204,7 @@ export default function App() {
   const [ampras, setAmpras] = useState<Ampra[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [usages, setUsages] = useState<DailyUsage[]>([]);
+  const [disposals, setDisposals] = useState<Disposal[]>([]);
 
   // Expiration calibrators
   const [systemDate, setSystemDate] = useState<string>(new Date().toISOString().slice(0,10));
@@ -225,9 +227,9 @@ export default function App() {
 
   // Role-based navigation: users only see modules relevant to their role.
   const ROLE_TAB_ACCESS: Record<AppRole, string[]> = {
-    admin: ['dashboard', 'receipts', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'users'],
-    apj: ['dashboard', 'receipts', 'ampra', 'apotek', 'satellites', 'reports'],
-    gudang: ['dashboard', 'receipts', 'ampra', 'satellites', 'reports'],
+    admin: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'users'],
+    apj: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports'],
+    gudang: ['dashboard', 'receipts', 'disposals', 'ampra', 'satellites', 'reports'],
     farmasi: ['dashboard', 'ampra', 'apotek', 'satellites', 'reports'],
     unit: ['dashboard', 'ampra', 'satellites', 'reports']
   };
@@ -240,6 +242,7 @@ export default function App() {
   const NAV_ITEMS: Array<{ id: string; label: string; short: string; icon: React.ElementType; section?: string }> = [
     { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, section: 'Ringkasan' },
     { id: 'receipts', label: 'Penerimaan BAP / PBF', short: 'Terima', icon: Truck, section: 'Transaksi Gudang' },
+    { id: 'disposals', label: 'Retur, Rusak & Koreksi', short: 'Koreksi', icon: AlertTriangle, section: 'Transaksi Gudang' },
     { id: 'ampra', label: 'Distribusi (Ampra Unit)', short: 'Ampra', icon: ArrowRightLeft, section: 'Transaksi Gudang' },
     { id: 'apotek', label: 'Resep (Ruang Farmasi)', short: 'Resep', icon: Pill, section: 'Pelayanan & Pemakaian' },
     { id: 'satellites', label: 'Pemakaian Harian Unit', short: 'Unit', icon: Database, section: 'Pelayanan & Pemakaian' },
@@ -372,6 +375,15 @@ export default function App() {
         setUsages(updatedUsages);
       });
       unsubscribes.push(unsubUsages);
+
+      // 7. Real-time retur/kadaluarsa
+      const unsubDisposals = onSnapshot(collection(db, 'disposals'), (qSnap) => {
+        const rows: Disposal[] = [];
+        qSnap.forEach((docSnap) => rows.push(docSnap.data() as Disposal));
+        rows.sort((a,b) => new Date(b.timestamp || b.date).getTime() - new Date(a.timestamp || a.date).getTime());
+        setDisposals(rows);
+      });
+      unsubscribes.push(unsubDisposals);
 
       // 7. Real-time users
       const unsubUsers = onSnapshot(collection(db, 'users'), (qSnap) => {
@@ -566,6 +578,34 @@ export default function App() {
     }
   };
 
+  const handleProcessDisposal = async (payload: Disposal): Promise<boolean> => {
+    try {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('process_disposal_atomic', { p_payload: payload });
+      if (error) throw error;
+      addNotification('success', `${payload.type} ${payload.documentNo} diproses atomik dan ledger batch tersimpan.`);
+      return true;
+    } catch (e: any) {
+      console.error(e);
+      addNotification('error', e?.message || 'Gagal memproses Retur/Kadaluarsa.');
+      return false;
+    }
+  };
+
+  const handleReverseTransaction = async (kind: string, id: string, reason: string): Promise<boolean> => {
+    try {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('reverse_transaction_atomic', { p_kind: kind, p_id: id, p_reason: reason });
+      if (error) throw error;
+      addNotification('success', `Reversal ${id} selesai atomik. Dokumen asli tetap tersimpan untuk audit.`);
+      return true;
+    } catch (e: any) {
+      console.error(e);
+      addNotification('error', e?.message || 'Reversal transaksi gagal.');
+      return false;
+    }
+  };
+
   // PRESCRIPTION CHECKOUT IN APOTEK
   const handleAddPrescription = async (newRx: Prescription) => {
     try {
@@ -579,38 +619,16 @@ export default function App() {
     }
   };
 
-  const handleUpdatePrescription = async (rxId: string, updatedRx: Prescription) => {
-    try {
-      const originalRx = prescriptions.find(p => p.id === rxId);
-      if (!originalRx) return;
-
-      const currentStocks = JSON.parse(JSON.stringify(stocks));
-      if (!currentStocks['ruang_farmasi']) currentStocks['ruang_farmasi'] = {};
-
-      // 1. Return old quantities
-      originalRx.items.forEach(item => {
-        const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
-        rfObj.total += item.qty;
-        currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
-      });
-
-      // 2. Deduct new quantities
-      updatedRx.items.forEach(item => {
-        const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
-        rfObj.total = Math.max(0, rfObj.total - item.qty);
-        currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
-      });
-
-      await setDoc(doc(db, 'stocks', 'ruang_farmasi'), currentStocks['ruang_farmasi'] || {});
-      await setDoc(doc(db, 'prescriptions', rxId), updatedRx);
-      addNotification('success', `Resep ${rxId} berhasil diperbarui secara real-time!`);
-    } catch (e) {
-      console.error(e);
-      addNotification('error', "Gagal memperbarui resep.");
-    }
+  const handleUpdatePrescription = async (rxId: string, _updatedRx: Prescription) => {
+    addNotification('warning', `Resep final ${rxId} tidak dapat ditimpa. Gunakan menu Retur, Rusak & Koreksi untuk reversal, lalu buat resep pengganti.`);
   };
 
-  // DAILY SATELLITE USAGE RECORD
+  const handleDeletePrescription = async (rxId: string) => {
+    const reason = window.prompt(`Alasan reversal resep ${rxId} (dokumen asli tidak akan dihapus):`);
+    if (!reason) return;
+    await handleReverseTransaction('prescription', rxId, reason);
+  };
+
   const handleAddUsage = async (newUsage: DailyUsage) => {
     try {
       if (!supabase) throw new Error('Supabase belum tersedia.');
@@ -623,115 +641,14 @@ export default function App() {
     }
   };
 
-  const handleUpdateUsage = async (usageId: string, updatedUsage: DailyUsage) => {
-    try {
-      const originalUsage = usages.find(u => u.id === usageId);
-      if (!originalUsage) return;
-
-      const currentStocks = JSON.parse(JSON.stringify(stocks));
-      const targetUnit = originalUsage.unitId;
-      if (!currentStocks[targetUnit]) currentStocks[targetUnit] = {};
-
-      // 1. Return old quantities
-      originalUsage.items.forEach(item => {
-        const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
-        unitObj.total += item.qtyUsed;
-        currentStocks[targetUnit][item.medicineId] = unitObj;
-      });
-
-      // 2. Deduct new quantities
-      updatedUsage.items.forEach(item => {
-        const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
-        unitObj.total = Math.max(0, unitObj.total - item.qtyUsed);
-        currentStocks[targetUnit][item.medicineId] = unitObj;
-      });
-
-      await setDoc(doc(db, 'stocks', targetUnit), currentStocks[targetUnit] || {});
-      await setDoc(doc(db, 'usages', usageId), updatedUsage);
-      addNotification('success', `Laporan pemakaian ${usageId} berhasil diperbarui secara real-time!`);
-    } catch (e) {
-      console.error(e);
-      addNotification('error', "Gagal memperbarui laporan pemakaian.");
-    }
-  };
-
-  // DELETE OPERATIONS FOR FULL CRUD
-  const handleDeleteReceipt = async (receiptId: string) => {
-    if (!window.confirm(`Hapus draft penerimaan ${receiptId}? Dokumen yang sudah diverifikasi APJ tidak dapat dihapus langsung.`)) return;
-    try {
-      if (!supabase) throw new Error('Supabase belum tersedia.');
-      const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'receipt', p_id: receiptId });
-      if (error) throw error;
-      addNotification('success', `Draft penerimaan ${receiptId} berhasil dihapus.`);
-    } catch (e: any) {
-      console.error(e);
-      addNotification('error', e?.message || "Gagal menghapus dokumen penerimaan.");
-    }
-  };
-
-  const handleDeleteAmpra = async (ampraId: string) => {
-    if (!window.confirm(`Hapus Ampra ${ampraId}? Ampra yang sudah selesai tidak dapat dihapus langsung karena telah memengaruhi stok.`)) return;
-    try {
-      if (!supabase) throw new Error('Supabase belum tersedia.');
-      const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'ampra', p_id: ampraId });
-      if (error) throw error;
-      addNotification('success', `Ampra ${ampraId} berhasil dihapus.`);
-    } catch (e: any) {
-      console.error(e);
-      addNotification('error', e?.message || "Gagal menghapus dokumen Ampra.");
-    }
-  };
-
-  const handleDeletePrescription = async (rxId: string) => {
-    if (!window.confirm(`Apakah Anda yakin ingin membatalkan/menghapus resep ${rxId}? Stok ruangan farmasi akan dikembalikan.`)) {
-      return;
-    }
-    try {
-      const rxToDelete = prescriptions.find(p => p.id === rxId);
-      if (!rxToDelete) return;
-
-      const currentStocks = JSON.parse(JSON.stringify(stocks));
-      rxToDelete.items.forEach(item => {
-        if (!currentStocks['ruang_farmasi']) currentStocks['ruang_farmasi'] = {};
-        const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
-        rfObj.total += item.qty;
-        currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
-      });
-
-      await setDoc(doc(db, 'stocks', 'ruang_farmasi'), currentStocks['ruang_farmasi'] || {});
-      await deleteDoc(doc(db, 'prescriptions', rxId));
-      addNotification('success', `Resep ${rxId} berhasil dibatalkan dan dihapus secara real-time.`);
-    } catch (e) {
-      console.error(e);
-      addNotification('error', "Gagal membatalkan resep obat.");
-    }
+  const handleUpdateUsage = async (usageId: string, _updatedUsage: DailyUsage) => {
+    addNotification('warning', `Pemakaian final ${usageId} tidak dapat ditimpa. Gunakan menu Retur, Rusak & Koreksi untuk reversal, lalu buat catatan pengganti.`);
   };
 
   const handleDeleteUsage = async (usageId: string) => {
-    if (!window.confirm(`Apakah Anda yakin ingin membatalkan/menghapus laporan pemakaian harian ${usageId}? Stok unit akan dikembalikan.`)) {
-      return;
-    }
-    try {
-      const usageToDelete = usages.find(u => u.id === usageId);
-      if (!usageToDelete) return;
-
-      const currentStocks = JSON.parse(JSON.stringify(stocks));
-      const targetUnit = usageToDelete.unitId;
-
-      usageToDelete.items.forEach(item => {
-        if (!currentStocks[targetUnit]) currentStocks[targetUnit] = {};
-        const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
-        unitObj.total += item.qtyUsed;
-        currentStocks[targetUnit][item.medicineId] = unitObj;
-      });
-
-      await setDoc(doc(db, 'stocks', targetUnit), currentStocks[targetUnit] || {});
-      await deleteDoc(doc(db, 'usages', usageId));
-      addNotification('success', `Laporan pemakaian ${usageId} berhasil dihapus.`);
-    } catch (e) {
-      console.error(e);
-      addNotification('error', "Gagal menghapus laporan pemakaian.");
-    }
+    const reason = window.prompt(`Alasan reversal pemakaian ${usageId} (dokumen asli tidak akan dihapus):`);
+    if (!reason) return;
+    await handleReverseTransaction('usage', usageId, reason);
   };
 
   if (!currentUser) {
@@ -859,6 +776,24 @@ export default function App() {
               systemDate={systemDate}
               onNotify={addNotification}
               onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
+            />
+          )}
+
+          {activeTab === 'disposals' && canAccessTab('disposals') && (
+            <DisposalCorrectionView
+              medicines={medicines}
+              stocks={stocks}
+              disposals={disposals}
+              receipts={receipts}
+              ampras={ampras}
+              prescriptions={prescriptions}
+              usages={usages}
+              activeRole={activeRole}
+              userName={userName}
+              systemDate={systemDate}
+              onProcessDisposal={handleProcessDisposal}
+              onReverse={handleReverseTransaction}
+              onNotify={addNotification}
             />
           )}
 
