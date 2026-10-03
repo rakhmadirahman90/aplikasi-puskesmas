@@ -624,67 +624,13 @@ export default function App() {
       if (!targetAmpra) return;
 
       const updatedAmpra = { ...targetAmpra, ...updates };
-      await setDoc(doc(db, 'ampras', ampraId), updatedAmpra);
-
-      // CRITICAL CORE LOGIC: When status shifts to 'Selesai' (Authorized by APJ):
-      // 1. Deduct Gudang stocks (using FEFO/First Expired First Out method)
-      // 2. Automatically Add stocks to destination satellite unit (Ruang Farmasi, IGD, Pustu, etc.)
       if (updates.status === 'Selesai' && targetAmpra.status !== 'Selesai') {
-        const currentStocks = JSON.parse(JSON.stringify(stocks));
-
-        // Get accurate lines to transfer
-        const linesToTransfer = updates.items || targetAmpra.items;
-
-        linesToTransfer.forEach(line => {
-          const medId = line.medicineId;
-          const qtyToTransfer = line.approvedQty;
-
-          if (qtyToTransfer <= 0) return;
-
-          // A. DEDUCT GUDANG (FEFO logic)
-          const gudStockObj = currentStocks['gudang']?.[medId];
-          if (gudStockObj) {
-            // Subtract total gudang
-            gudStockObj.total = Math.max(0, gudStockObj.total - qtyToTransfer);
-
-            // Subtract batch records selectively using FEFO
-            if (gudStockObj.batches && gudStockObj.batches.length > 0) {
-              // Sort batches: earliest expiring first
-              gudStockObj.batches.sort((a: any, b: any) => new Date(a.expDate).getTime() - new Date(b.expDate).getTime());
-
-              let remainingToDeduct = qtyToTransfer;
-              for (let i = 0; i < gudStockObj.batches.length; i++) {
-                const b = gudStockObj.batches[i];
-                if (b.quantity >= remainingToDeduct) {
-                  b.quantity -= remainingToDeduct;
-                  remainingToDeduct = 0;
-                  break;
-                } else {
-                  remainingToDeduct -= b.quantity;
-                  b.quantity = 0;
-                }
-              }
-
-              // Remove empty batches
-              gudStockObj.batches = gudStockObj.batches.filter((b: any) => b.quantity > 0);
-            }
-          }
-
-          // B. ADD TO SOURCE UNIT (Stock transfer flow)
-          if (!currentStocks[targetAmpra.sourceUnitId]) {
-            currentStocks[targetAmpra.sourceUnitId] = {};
-          }
-
-          const unitItem = currentStocks[targetAmpra.sourceUnitId][medId] || { total: 0 };
-          unitItem.total += qtyToTransfer;
-          currentStocks[targetAmpra.sourceUnitId][medId] = unitItem;
-        });
-
-        // Write both 'gudang' and source unit stock changes to Firestore
-        await setDoc(doc(db, 'stocks', 'gudang'), currentStocks['gudang'] || {});
-        await setDoc(doc(db, 'stocks', targetAmpra.sourceUnitId), currentStocks[targetAmpra.sourceUnitId] || {});
-        addNotification('success', `Ampra ${ampraId} tuntas! Stok Gudang \& ${targetAmpra.sourceUnitId} disinkronkan real-time.`);
+        if (!supabase) throw new Error('Supabase belum tersedia.');
+        const { error } = await supabase.rpc('complete_ampra', { p_ampra_id: ampraId, p_updates: updates });
+        if (error) throw error;
+        addNotification('success', `Ampra ${ampraId} selesai secara atomik. Stok Gudang dan unit tujuan telah disinkronkan dengan batch FEFO.`);
       } else {
+        await setDoc(doc(db, 'ampras', ampraId), updatedAmpra);
         addNotification('success', `Permintaan (Ampra) ${ampraId} berhasil diperbarui.`);
       }
     } catch (e) {
@@ -696,24 +642,13 @@ export default function App() {
   // PRESCRIPTION CHECKOUT IN APOTEK
   const handleAddPrescription = async (newRx: Prescription) => {
     try {
-      // 1. Add record to Firestore
-      await setDoc(doc(db, 'prescriptions', newRx.id), newRx);
-
-      // 2. Reduce Apotheke Stocks instantly in Firestore
-      const currentStocks = JSON.parse(JSON.stringify(stocks));
-      newRx.items.forEach(item => {
-        if (!currentStocks['ruang_farmasi']) currentStocks['ruang_farmasi'] = {};
-        const rfObj = currentStocks['ruang_farmasi'][item.medicineId] || { total: 0 };
-        
-        rfObj.total = Math.max(0, rfObj.total - item.qty);
-        currentStocks['ruang_farmasi'][item.medicineId] = rfObj;
-      });
-
-      await setDoc(doc(db, 'stocks', 'ruang_farmasi'), currentStocks['ruang_farmasi'] || {});
-      addNotification('success', `Resep untuk ${newRx.patientName} direkam secara real-time!`);
-    } catch (e) {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('process_prescription', { p_payload: newRx });
+      if (error) throw error;
+      addNotification('success', `Resep untuk ${newRx.patientName} direkam dan stok Ruang Farmasi dikurangi secara atomik.`);
+    } catch (e: any) {
       console.error(e);
-      addNotification('error', "Gagal memproses resep obat.");
+      addNotification('error', e?.message || "Gagal memproses resep obat.");
     }
   };
 
@@ -751,26 +686,13 @@ export default function App() {
   // DAILY SATELLITE USAGE RECORD
   const handleAddUsage = async (newUsage: DailyUsage) => {
     try {
-      // 1. Add use record in Firestore
-      await setDoc(doc(db, 'usages', newUsage.id), newUsage);
-
-      // 2. Reduce corresponding satellite unit stocks instantly in Firestore
-      const currentStocks = JSON.parse(JSON.stringify(stocks));
-      const targetUnit = newUsage.unitId;
-
-      newUsage.items.forEach(item => {
-        if (!currentStocks[targetUnit]) currentStocks[targetUnit] = {};
-        const unitObj = currentStocks[targetUnit][item.medicineId] || { total: 0 };
-
-        unitObj.total = Math.max(0, unitObj.total - item.qtyUsed);
-        currentStocks[targetUnit][item.medicineId] = unitObj;
-      });
-
-      await setDoc(doc(db, 'stocks', targetUnit), currentStocks[targetUnit] || {});
-      addNotification('success', `Laporan pemakaian unit disinkronkan secara real-time!`);
-    } catch (e) {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('process_daily_usage', { p_payload: newUsage });
+      if (error) throw error;
+      addNotification('success', 'Pemakaian harian dan pengurangan stok unit berhasil diproses secara atomik.');
+    } catch (e: any) {
       console.error(e);
-      addNotification('error', "Gagal merekam pemakaian harian.");
+      addNotification('error', e?.message || "Gagal merekam pemakaian harian.");
     }
   };
 
