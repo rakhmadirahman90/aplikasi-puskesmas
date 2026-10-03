@@ -284,7 +284,8 @@ export default function App() {
 
   const visibleNavItems = NAV_ITEMS.filter(item => canAccessTab(item.id));
   const activeNavItem = visibleNavItems.find(item => item.id === activeTab) || visibleNavItems[0];
-  const mobileQuickItems = visibleNavItems.slice(0, 5);
+  // Keep the mobile bottom bar compact. Secondary modules are opened from the drawer.
+  const mobileQuickItems = visibleNavItems.slice(0, 3);
   const mobileMoreActive = !mobileQuickItems.some(item => item.id === activeTab);
   const roleLabel = activeRole === 'apj' ? 'APJ / Apoteker' : activeRole === 'unit' ? 'Unit • ' + activeUnitId : activeRole.charAt(0).toUpperCase() + activeRole.slice(1);
 
