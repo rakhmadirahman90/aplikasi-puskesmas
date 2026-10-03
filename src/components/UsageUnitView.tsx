@@ -440,7 +440,7 @@ export default function UsageUnitView({
         <div className="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden" id="unit-stock-list">
           <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
             <h3 className="font-semibold text-slate-800 font-display text-sm">
-              Sisa Stok Fisik Riil &mdash; <b className="text-indigo-700">{activeUnitDetails.name}</b>
+              Sisa Stok Fisik Riil &mdash; <b className="text-teal-700">{activeUnitDetails.name}</b>
             </h3>
             <span className="text-xs text-slate-500">Sesuai Alokasi Ampra</span>
           </div>
@@ -460,7 +460,7 @@ export default function UsageUnitView({
                   return (
                     <div key={medId} className="p-3.5 bg-slate-50 rounded-xl border border-slate-150 flex items-center justify-between hover:bg-slate-100/40 transition">
                       <div className="space-y-0.5 max-w-[70%]">
-                        <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1 py-0.2 rounded">
+                        <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1 py-0.2 rounded">
                           {m.type === 'generik' ? 'Generik' : 'Paten'} {m.isNarkotikaPsikotropika && '• Napza'}
                         </span>
                         <p className="text-xs font-bold text-slate-800 truncate" title={m.name}>{m.name}</p>
@@ -501,7 +501,7 @@ export default function UsageUnitView({
                 <div key={use.id} className="p-3.5 bg-slate-50 rounded-xl border border-slate-150 space-y-3">
                   <div className="flex justify-between items-center text-[11px] border-b border-slate-200/50 pb-2 font-sans">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-indigo-700 bg-white px-1.5 py-0.5 border border-slate-200 rounded">{use.id}</span>
+                      <span className="font-mono font-bold text-teal-700 bg-white px-1.5 py-0.5 border border-slate-200 rounded">{use.id}</span>
                       {onUpdateUsage && (activeRole === 'admin' || activeRole === 'apj' || (activeRole === 'unit' && use.unitId === activeUnitId)) && (
                         <button
                           onClick={() => initiateEditUsage(use)}
