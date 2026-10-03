@@ -102,3 +102,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(min-width:768px){#main-content-pane{overflow-x:visible}#main-content-pane .fixed.inset-0{padding:1rem}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media print{body{background:#fff!important;color:#000}aside,nav,header,footer,button,.print-hidden{display:none!important}#main-app,#scrollable-content-area,#main-content-pane{overflow:visible!important;width:100%!important;max-width:none!important}#main-content-pane{padding:0!important}#main-content-pane [class*="shadow"]{box-shadow:none!important}#main-content-pane .overflow-x-auto{overflow:visible!important}#main-content-pane .overflow-x-auto>table{width:100%!important;min-width:0!important;font-size:9pt}#main-content-pane thead th{position:static;background:#eee!important;color:#000!important}}
+
+/* Authenticated UI audit hardening */
+#main-content-pane button[class*="p-1.5"],#main-content-pane button[class*="p-2"]{min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}
+#main-content-pane form .grid{align-items:start}
+#main-content-pane [class*="max-h-[90vh]"]{overscroll-behavior:contain}
+@media(max-width:767px){
+ #main-content-pane button[class*="p-1.5"],#main-content-pane button[class*="p-2"]{min-width:44px;min-height:44px}
+ #main-content-pane form [class*="grid-cols-2"],#main-content-pane form [class*="grid-cols-3"],#main-content-pane form [class*="grid-cols-4"]{grid-template-columns:minmax(0,1fr)}
+ #main-content-pane [role="dialog"]>div,#main-content-pane .fixed.inset-0>div{max-width:100%;max-height:calc(100dvh - 20px)}
+ #main-content-pane table td:last-child,#main-content-pane table th:last-child{padding-right:12px!important}
+}
