@@ -139,7 +139,7 @@ export default function UsageUnitView({
   };
 
   const activeUnitDetails = useMemo(() => {
-    return units.find(u => u.id === activeUnitId) || units[1];
+    return units.find(u => u.id === activeUnitId) || units.find(u => u.id !== 'gudang') || { id: activeUnitId, name: 'Unit belum tersedia', type: 'unit_internal', description: '', manager: '' } as UnitInfo;
   }, [units, activeUnitId]);
 
   // Current stock inventory for active satellite unit
@@ -257,8 +257,9 @@ export default function UsageUnitView({
           <div className="w-full sm:w-auto max-w-full">
             <select
               value={activeUnitId}
+              disabled={activeRole === 'unit' || activeRole === 'farmasi'}
               onChange={(e) => onSetSimulationUnit(e.target.value)}
-              className="w-full sm:w-auto border border-slate-250 bg-white font-bold text-slate-800 outline-none focus:ring-1 focus:ring-emerald-500 text-xs rounded-lg px-3 py-1.5 truncate max-w-full"
+              className="w-full sm:w-auto border border-slate-250 bg-white disabled:bg-slate-100 disabled:text-slate-500 font-bold text-slate-800 outline-none focus:ring-1 focus:ring-emerald-500 text-xs rounded-lg px-3 py-1.5 truncate max-w-full"
               id="terminal-unit-switcher"
             >
               {satelliteUnits.map((u) => (
