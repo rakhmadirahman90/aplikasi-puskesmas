@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// deployment-sync: 2026-10-03T17:52:22.650Z
+// deployment-sync: 2026-10-04T00:00:00Z notifications-ui-release
 import React, { useState, useEffect } from 'react';
 import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, Disposal, UnitInfo, UserAccount, AppRole, ThemeInfo, THEMES_LIST, SystemConfig } from './types';
 import { db, seedDatabaseIfEmpty, onSnapshot, collection, doc, setDoc, deleteDoc, supabase } from './firebase';
