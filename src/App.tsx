@@ -197,6 +197,13 @@ export default function App() {
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
+  type ConfirmState = { title:string; message:string; confirmLabel:string; tone:'danger'|'warning'|'info'; resolve:(value:boolean)=>void };
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+  const requestConfirm = (title:string, message:string, confirmLabel='Lanjutkan', tone:'danger'|'warning'|'info'='warning') =>
+    new Promise<boolean>((resolve) => setConfirmState({title,message,confirmLabel,tone,resolve}));
+  const closeConfirm = (result:boolean) => {
+    setConfirmState(prev => { prev?.resolve(result); return null; });
+  };
 
   // Core SIFP State
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -337,9 +344,19 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
-    setCurrentUser(null);
-    setActiveTab('dashboard');
+    const ok = await requestConfirm('Keluar dari aplikasi?', 'Sesi akun Anda akan diakhiri. Pastikan transaksi yang sedang diisi sudah disimpan.', 'Ya, Logout', 'warning');
+    if (!ok) { addNotification('info', 'Logout dibatalkan. Anda tetap masuk ke aplikasi.'); return; }
+    try {
+      if (supabase) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      }
+      addNotification('success', 'Logout berhasil. Sesi aplikasi telah ditutup dengan aman.');
+      setCurrentUser(null);
+      setActiveTab('dashboard');
+    } catch (e:any) {
+      addNotification('error', e?.message || 'Logout gagal. Silakan coba kembali.');
+    }
   };
 
   // Set up Firebase Firestore Real-Time Subscriptions
@@ -969,6 +986,14 @@ export default function App() {
         </div>
       </nav>
 
+      <AnimatePresence>
+        {confirmState && <motion.div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>closeConfirm(false)}>
+          <motion.div role="dialog" aria-modal="true" aria-labelledby="confirm-title" className="w-full max-w-sm overflow-hidden rounded-[24px] border border-white/70 bg-white shadow-[0_28px_80px_rgba(15,23,42,.28)]" initial={{opacity:0,scale:.94,y:18}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:.96,y:12}} onClick={e=>e.stopPropagation()}>
+            <div className="p-5"><div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${confirmState.tone==='danger'?'bg-rose-50 text-rose-600':confirmState.tone==='warning'?'bg-amber-50 text-amber-600':'bg-blue-50 text-blue-600'}`}><AlertTriangle className="h-6 w-6"/></div><h3 id="confirm-title" className="text-lg font-black text-slate-900">{confirmState.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{confirmState.message}</p></div>
+            <div className="grid grid-cols-2 gap-2 border-t border-slate-100 bg-slate-50 p-3"><button type="button" onClick={()=>closeConfirm(false)} className="h-11 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 active:scale-[.98]">Batal</button><button type="button" onClick={()=>closeConfirm(true)} className={`h-11 rounded-xl text-sm font-bold text-white shadow-sm active:scale-[.98] ${confirmState.tone==='danger'?'bg-rose-600':'bg-[#0f766e]'}`}>{confirmState.confirmLabel}</button></div>
+          </motion.div>
+        </motion.div>}
+      </AnimatePresence>
       {/* Premium Toast Notifications Container */}
       <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[9999] flex flex-col gap-3 w-[calc(100vw-1.5rem)] sm:w-full max-w-sm pointer-events-none" id="toast-container">
         <AnimatePresence>
