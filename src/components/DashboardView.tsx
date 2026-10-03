@@ -186,7 +186,7 @@ export default function DashboardView({
             </div>
             <p className="text-[11px] text-slate-300">Peta interaktif aliran obat: Penerimaan &rarr; Penyimpanan &rarr; Distribusi &rarr; Pelayanan &rarr; Audit</p>
           </div>
-          <span className="text-[9px] bg-emerald-500/10 text-emerald-350 border border-emerald-500/25 px-2 py-0.5 rounded font-mono uppercase font-bold self-start">
+          <span className="text-[9px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 px-2 py-0.5 rounded font-mono uppercase font-bold self-start">
             Status: Sinkron & Aktif
           </span>
         </div>
@@ -202,7 +202,7 @@ export default function DashboardView({
             id="node-receipts"
           >
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">1. TERIMA</span>
+              <span className="text-[9px] font-mono text-emerald-300 font-bold uppercase tracking-wider block">1. TERIMA</span>
               <div className="p-1.5 bg-sky-500/20 text-sky-400 rounded-lg group-hover:scale-110 transition-transform">
                 <Truck className="w-4 h-4" />
               </div>
@@ -225,8 +225,8 @@ export default function DashboardView({
             id="node-storage"
           >
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">2. SIMPAN</span>
-              <div className="p-1.5 bg-blue-500/20 text-blue-450 rounded-lg group-hover:scale-110 transition-transform">
+              <span className="text-[9px] font-mono text-emerald-300 font-bold uppercase tracking-wider block">2. SIMPAN</span>
+              <div className="p-1.5 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
                 <Database className="w-4 h-4" />
               </div>
             </div>
@@ -248,7 +248,7 @@ export default function DashboardView({
             id="node-ampra"
           >
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">3. DISTRIBUSI</span>
+              <span className="text-[9px] font-mono text-emerald-300 font-bold uppercase tracking-wider block">3. DISTRIBUSI</span>
               <div className="p-1.5 bg-amber-500/20 text-amber-400 rounded-lg group-hover:scale-110 transition-transform">
                 <ArrowRightLeft className="w-4 h-4" />
               </div>
@@ -271,7 +271,7 @@ export default function DashboardView({
             id="node-prescriptions"
           >
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">4. LAYANI</span>
+              <span className="text-[9px] font-mono text-emerald-300 font-bold uppercase tracking-wider block">4. LAYANI</span>
               <div className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform">
                 <Zap className="w-4 h-4" />
               </div>
@@ -294,7 +294,7 @@ export default function DashboardView({
             id="node-satellites"
           >
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">5. PAKAI</span>
+              <span className="text-[9px] font-mono text-emerald-300 font-bold uppercase tracking-wider block">5. PAKAI</span>
               <div className="p-1.5 bg-violet-500/20 text-violet-400 rounded-lg group-hover:scale-110 transition-transform">
                 <Activity className="w-4 h-4" />
               </div>
@@ -317,7 +317,7 @@ export default function DashboardView({
             id="node-audit"
           >
             <div className="flex justify-between items-start">
-              <span className="text-[9px] font-mono text-emerald-350 font-bold uppercase tracking-wider block">6. AUDIT & LPLPO</span>
+              <span className="text-[9px] font-mono text-emerald-300 font-bold uppercase tracking-wider block">6. AUDIT & LPLPO</span>
               <div className="p-1.5 bg-fuchsia-500/20 text-fuchsia-400 rounded-lg group-hover:scale-110 transition-transform">
                 <FileText className="w-4 h-4" />
               </div>
