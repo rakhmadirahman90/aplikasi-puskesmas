@@ -511,6 +511,7 @@ export default function App() {
   };
 
   const handleDeleteUser = async (id: string) => {
+    if (!(await requestConfirm('Hapus pengguna?', 'Akun pengguna akan dihapus dan aksesnya ke aplikasi dihentikan.', 'Hapus Pengguna', 'danger'))) { addNotification('info','Penghapusan pengguna dibatalkan.'); return; }
     try {
       await deleteDoc(doc(db, 'users', id));
       addNotification('success', "User berhasil dihapus.");
@@ -540,6 +541,7 @@ export default function App() {
     catch { addNotification('error', 'Gagal update obat.'); }
   };
   const handleDeleteMedicine = async (id: string) => {
+    if (!(await requestConfirm('Hapus obat?', 'Data master obat akan dihapus. Pastikan obat tidak sedang dibutuhkan transaksi aktif.', 'Hapus Obat', 'danger'))) { addNotification('info','Penghapusan obat dibatalkan.'); return; }
     try { await deleteDoc(doc(db, 'medicines', id)); addNotification('success', 'Obat berhasil dihapus.'); }
     catch { addNotification('error', 'Gagal hapus obat.'); }
   };
@@ -553,6 +555,7 @@ export default function App() {
     catch { addNotification('error', 'Gagal update unit.'); }
   };
   const handleDeleteUnit = async (id: string) => {
+    if (!(await requestConfirm('Hapus unit?', 'Unit/jejaring akan dihapus dari master data aplikasi.', 'Hapus Unit', 'danger'))) { addNotification('info','Penghapusan unit dibatalkan.'); return; }
     try { await deleteDoc(doc(db, 'units', id)); addNotification('success', 'Unit berhasil dihapus.'); }
     catch { addNotification('error', 'Gagal hapus unit.'); }
   };
@@ -585,6 +588,7 @@ export default function App() {
   };
 
   const handleDeleteReceipt = async (receiptId: string) => {
+    if (!(await requestConfirm('Hapus draft penerimaan?', `Draft ${receiptId} akan dihapus. Dokumen yang sudah final tidak boleh diubah.`, 'Hapus Draft', 'danger'))) { addNotification('info','Penghapusan draft penerimaan dibatalkan.'); return; }
     try {
       if (!supabase) throw new Error('Supabase belum tersedia.');
       const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'receipt', p_id: receiptId });
@@ -655,6 +659,7 @@ export default function App() {
   };
 
   const handleDeleteAmpra = async (ampraId: string) => {
+    if (!(await requestConfirm('Hapus draft Ampra?', `Draft ${ampraId} akan dihapus dari daftar transaksi.`, 'Hapus Draft', 'danger'))) { addNotification('info','Penghapusan draft Ampra dibatalkan.'); return; }
     try {
       if (!supabase) throw new Error('Supabase belum tersedia.');
       const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'ampra', p_id: ampraId });
