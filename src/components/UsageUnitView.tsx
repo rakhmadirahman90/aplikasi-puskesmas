@@ -43,7 +43,7 @@ export default function UsageUnitView({
     if (onNotify) {
       onNotify(type, message);
     } else {
-      alert(message);
+      onNotify?.('warning', message);
     }
   };
   const [showUsageForm, setShowUsageForm] = useState(false);
