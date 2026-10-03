@@ -190,77 +190,46 @@ export default function LaporanView({
 
 
   // 2. LAPORAN KEUANGAN DINAS KESEHATAN
+  // Source attribution follows batch provenance across Gudang, Ruang Farmasi, units and jejaring.
   const keuanganDinasData = useMemo(() => {
-    // Collect batch-level stock in Gudang filtered by source (DAK / DAU / Program)
-    // For other units, we approximate the source proportional to Gudang's current batch ratios, or display Gudang real vs other satellite stores
     return medicines.map(med => {
-      let gudangApprovedBatchesTotal = 0;
+      let gudangQty = 0;
+      let satelliteQty = 0;
       let valuation = 0;
-      
-      const gudStockObj = stocks['gudang']?.[med.id];
-      if (gudStockObj && gudStockObj.batches) {
-        gudStockObj.batches.forEach(b => {
-          const isMatch = financeSourceFilter === 'ALL' || b.source === financeSourceFilter;
-          const isDinasSource = b.source === 'DAK' || b.source === 'DAU' || b.source === 'Program';
-          
-          if (isMatch && (financeSourceFilter !== 'ALL' || isDinasSource)) {
-            gudangApprovedBatchesTotal += b.quantity;
-          }
+      units.forEach(unit => {
+        const batches = stocks[unit.id]?.[med.id]?.batches || [];
+        batches.forEach(batch => {
+          const dinasSource = batch.source === 'DAK' || batch.source === 'DAU' || batch.source === 'Program';
+          const match = financeSourceFilter === 'ALL' ? dinasSource : batch.source === financeSourceFilter;
+          if (!match) return;
+          if (unit.id === 'gudang') gudangQty += batch.quantity; else satelliteQty += batch.quantity;
+          valuation += batch.quantity * (batch.price ?? GET_DRUG_PRICE(med.id));
         });
-      }
-
-      // Pro-rate other units' stock if no batch trace
-      // Non-gudang sisa stok is added to Dinas if not specifically JKN
-      let satelliteTotal = 0;
-      units.filter(u => u.id !== 'gudang').forEach(u => {
-        satelliteTotal += stocks[u.id]?.[med.id]?.total || 0;
       });
-
-      // Sum all Dinas stocks
-      const combinedDinasQty = gudangApprovedBatchesTotal + (financeSourceFilter === 'ALL' ? satelliteTotal : 0);
-      valuation = combinedDinasQty * GET_DRUG_PRICE(med.id);
-
-      return {
-        medicine: med,
-        gudangQty: gudangApprovedBatchesTotal,
-        satelliteQty: financeSourceFilter === 'ALL' ? satelliteTotal : 0,
-        combinedTotal: combinedDinasQty,
-        price: GET_DRUG_PRICE(med.id),
-        valuation
-      };
+      return { medicine: med, gudangQty, satelliteQty, combinedTotal: gudangQty + satelliteQty, price: GET_DRUG_PRICE(med.id), valuation };
     }).filter(item => item.combinedTotal > 0);
   }, [medicines, stocks, financeSourceFilter, units]);
 
-
   // 3. LAPORAN KEUANGAN JKN (PEMBELIAN SENDIRI)
+  // JKN is calculated from actual batch provenance in every location; no patent/generic approximation.
   const keuanganJKNData = useMemo(() => {
     return medicines.map(med => {
-      let jknGudangQty = 0;
-      
-      const gudStockObj = stocks['gudang']?.[med.id];
-      if (gudStockObj && gudStockObj.batches) {
-        gudStockObj.batches.forEach(b => {
-          if (b.source === 'JKN') {
-            jknGudangQty += b.quantity;
-          }
+      let gudangQty = 0;
+      let apotekQty = 0;
+      let otherUnitQty = 0;
+      let valuation = 0;
+      units.forEach(unit => {
+        const batches = stocks[unit.id]?.[med.id]?.batches || [];
+        batches.filter(batch => batch.source === 'JKN').forEach(batch => {
+          if (unit.id === 'gudang') gudangQty += batch.quantity;
+          else if (unit.id === 'ruang_farmasi') apotekQty += batch.quantity;
+          else otherUnitQty += batch.quantity;
+          valuation += batch.quantity * (batch.price ?? GET_DRUG_PRICE(med.id));
         });
-      }
-
-      // Approx Ruang Farmasi patent medicines as JKN-funded
-      const apotekQty = stocks['ruang_farmasi']?.[med.id]?.total || 0;
-      const combinedJKNQyt = jknGudangQty + (med.type === 'paten' ? apotekQty : 0);
-      const valuation = combinedJKNQyt * GET_DRUG_PRICE(med.id);
-
-      return {
-        medicine: med,
-        gudangQty: jknGudangQty,
-        apotekQty: med.type === 'paten' ? apotekQty : 0,
-        combinedTotal: combinedJKNQyt,
-        price: GET_DRUG_PRICE(med.id),
-        valuation
-      };
+      });
+      return { medicine: med, gudangQty, apotekQty, otherUnitQty, combinedTotal: gudangQty + apotekQty + otherUnitQty, price: GET_DRUG_PRICE(med.id), valuation };
     }).filter(item => item.combinedTotal > 0);
-  }, [medicines, stocks]);
+  }, [medicines, stocks, units]);
 
 
   // 4. LAPORAN NARKOTIKA & PSIKOTROPIKA (NAPZA)
