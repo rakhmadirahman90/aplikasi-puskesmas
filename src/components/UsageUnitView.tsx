@@ -233,7 +233,7 @@ export default function UsageUnitView({
             </p>
           </div>
           
-          {!showUsageForm && (
+          {!showUsageForm && activeRole !== 'gudang' && (
             <button
               onClick={() => {
                 setOfficerName(activeUnitDetails.manager);
