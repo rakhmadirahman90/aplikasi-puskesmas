@@ -107,7 +107,7 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
     }
   };
 
-  const filteredUsers = users.filter(u => u.username.toLowerCase().includes(searchTerm.toLowerCase()) || u.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredUsers = users.filter(u => String(u?.username || '').toLowerCase().includes(searchTerm.toLowerCase()) || String(u?.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
