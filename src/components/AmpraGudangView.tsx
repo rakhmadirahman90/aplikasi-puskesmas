@@ -569,7 +569,7 @@ export default function AmpraGudangView({
                       </div>
 
                       <h4 className="text-sm font-bold text-slate-800">
-                        Mutasi ke: <span className="text-indigo-650">{sourceUnit?.name}</span>
+                        Mutasi ke: <span className="text-indigo-600">{sourceUnit?.name}</span>
                       </h4>
                       <p className="text-xs text-slate-500 leading-relaxed max-w-lg">
                         {sourceUnit?.description}
@@ -667,7 +667,7 @@ export default function AmpraGudangView({
                         <button
                           type="button"
                           onClick={() => onDeleteAmpra(amp.id)}
-                          className="mt-2 text-[10px] text-red-650 hover:text-red-750 font-bold flex items-center gap-1 px-2.5 py-1 hover:bg-red-50 rounded-lg transition duration-155 self-end"
+                          className="mt-2 text-[10px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 px-2.5 py-1 hover:bg-red-50 rounded-lg transition duration-155 self-end"
                           id={`delete-amp-${amp.id}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Batal & Hapus Ampra
