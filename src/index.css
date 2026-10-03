@@ -148,3 +148,26 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  #main-app>nav[aria-label="Navigasi mobile"] button{min-height:40px!important}
  #main-app>nav[aria-label="Navigasi mobile"] svg{width:18px;height:18px}
 }
+
+/* Readability audit: explicit contrast for authenticated application UI */
+#main-content-pane{color:#334155}
+#main-content-pane .text-slate-400{color:#64748b}
+#main-content-pane .text-slate-500{color:#475569}
+#main-content-pane .text-slate-600{color:#334155}
+#main-content-pane .text-slate-700{color:#1e293b}
+#main-content-pane .text-slate-800,#main-content-pane .text-slate-900{color:#0f172a}
+#main-content-pane input::placeholder,#main-content-pane textarea::placeholder{color:#64748b;opacity:1}
+@media(max-width:767px){
+ #main-content-pane .text-slate-400{color:#64748b!important}
+ #main-content-pane .text-slate-500{color:#475569!important}
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-emerald-"],
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-teal-"]{color:#fff}
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-emerald-"] h1,
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-emerald-"] h2,
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-emerald-"] h3,
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-teal-"] h1,
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-teal-"] h2,
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-teal-"] h3{color:#fff!important}
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-emerald-"] p,
+ #main-content-pane [class*="bg-gradient-to-br"][class*="from-teal-"] p{color:#ccfbf1!important}
+}
