@@ -566,6 +566,18 @@ export default function App() {
     }
   };
 
+  const handleDeleteReceipt = async (receiptId: string) => {
+    try {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'receipt', p_id: receiptId });
+      if (error) throw error;
+      addNotification('success', `Draft penerimaan ${receiptId} berhasil dihapus.`);
+    } catch (e: any) {
+      console.error(e);
+      addNotification('error', e?.message || 'Gagal menghapus draft penerimaan.');
+    }
+  };
+
   // APJ verification posts receipt and Gudang stock in one PostgreSQL transaction
 
   const handleVerifyReceipt = async (receiptId: string, apjName: string) => {
@@ -621,6 +633,18 @@ export default function App() {
     } catch (e) {
       console.error(e);
       addNotification('error', "Gagal memperbarui status permintaan.");
+    }
+  };
+
+  const handleDeleteAmpra = async (ampraId: string) => {
+    try {
+      if (!supabase) throw new Error('Supabase belum tersedia.');
+      const { error } = await supabase.rpc('delete_draft_transaction', { p_kind: 'ampra', p_id: ampraId });
+      if (error) throw error;
+      addNotification('success', `Draft Ampra ${ampraId} berhasil dihapus.`);
+    } catch (e: any) {
+      console.error(e);
+      addNotification('error', e?.message || 'Gagal menghapus draft Ampra.');
     }
   };
 
