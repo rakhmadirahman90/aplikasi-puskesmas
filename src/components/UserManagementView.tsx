@@ -283,8 +283,8 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
       </div>
 
       {resetUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/50 p-3 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
+          <div className="w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white shadow-2xl">
             <div className="flex items-start justify-between border-b border-slate-100 p-5">
               <div>
                 <h3 id="reset-password-title" className="text-lg font-bold text-slate-800">Reset Password User</h3>
