@@ -229,7 +229,7 @@ export default function AmpraGudangView({
       {/* active role indicator */}
       <div className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-slate-100 text-xs text-slate-600 shadow-3xs">
         <span className="font-bold text-slate-700">Akses Mandat:</span>
-        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded font-bold uppercase">{activeRole === 'admin' ? 'Administrator' : activeRole === 'farmasi' ? 'Petugas Ruang Farmasi' : activeRole === 'gudang' ? 'Petugas Gudang' : activeRole === 'apj' ? 'Apoteker Penanggung Jawab (APJ)' : 'Petugas Unit / Pustu'}</span>
+        <span className="px-2 py-0.5 bg-teal-50 text-teal-700 rounded font-bold uppercase">{activeRole === 'admin' ? 'Administrator' : activeRole === 'farmasi' ? 'Petugas Ruang Farmasi' : activeRole === 'gudang' ? 'Petugas Gudang' : activeRole === 'apj' ? 'Apoteker Penanggung Jawab (APJ)' : 'Petugas Unit / Pustu'}</span>
         {activeRole === 'unit' && (
           <span>Unit Aktif: <b className="text-slate-800">{units.find(u => u.id === activeUnitId)?.name || activeUnitId}</b></span>
         )}
@@ -484,7 +484,7 @@ export default function AmpraGudangView({
                                   <button
                                     type="button"
                                     onClick={() => setAllocationMap({ ...allocationMap, [item.medicineId]: item.requestedQty })}
-                                    className="text-[10px] text-indigo-600 hover:underline font-semibold"
+                                    className="text-[10px] text-teal-700 hover:underline font-semibold"
                                   >
                                     Samakan
                                   </button>
@@ -560,7 +560,7 @@ export default function AmpraGudangView({
                           {amp.id}
                         </span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                          amp.cycleType === 'Bulanan' ? 'bg-indigo-100 text-indigo-700' : 'bg-teal-100 text-teal-800'
+                          amp.cycleType === 'Bulanan' ? 'bg-indigo-100 text-teal-700' : 'bg-teal-100 text-teal-800'
                         }`}>
                           {amp.cycleType === 'Bulanan' ? 'Bulanan (LPLPO)' : 'Harian / Unit'}
                         </span>
@@ -619,7 +619,7 @@ export default function AmpraGudangView({
                       {amp.status === 'Disiapkan' && (activeRole === 'unit' || activeRole === 'farmasi' || activeRole === 'admin') && (
                         <button
                           onClick={() => confirmReceiptByUnit(amp)}
-                          className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
+                          className="px-4 py-2 bg-indigo-650 hover:bg-teal-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
                         >
                           <CheckCircle className="w-4 h-4" /> Konfirmasi Obat Tiba (Unit)
                         </button>
@@ -642,7 +642,7 @@ export default function AmpraGudangView({
                         </span>
                       )}
                       {amp.status === 'Disiapkan' && activeRole !== 'unit' && activeRole !== 'farmasi' && (
-                        <span className="text-[11px] text-indigo-600 font-medium italic">
+                        <span className="text-[11px] text-teal-700 font-medium italic">
                           Menunggu pengusul tanda tangan serah terima (Unit Role)
                         </span>
                       )}
