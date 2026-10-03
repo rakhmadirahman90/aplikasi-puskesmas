@@ -795,7 +795,7 @@ export default function PenerimaanGudangView({
               
               {/* Alert Warning if Already Verified */}
               {editingReceipt.verifiedByAPJ && (
-                <div className="p-3 bg-amber-55/60 rounded-lg border border-amber-200 flex gap-3 text-xs text-amber-800">
+                <div className="p-3 bg-amber-50/80 rounded-lg border border-amber-200 flex gap-3 text-xs text-amber-800">
                   <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
                   <div>
                     <span className="font-bold">Perhatian:</span> Dokumen penerimaan ini telah diverifikasi oleh APJ. 
