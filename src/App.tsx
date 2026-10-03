@@ -241,6 +241,24 @@ export default function App() {
 
   const canAccessTab = (tab: string) => ROLE_TAB_ACCESS[activeRole]?.includes(tab) ?? false;
 
+  const navigateToTab = (tab: string) => {
+    if (!canAccessTab(tab)) {
+      addNotification('warning', 'Menu tersebut tidak tersedia untuk kewenangan akun Anda.');
+      return;
+    }
+    setActiveTab(tab);
+    setMobileNavOpen(false);
+    window.requestAnimationFrame(() => {
+      document.getElementById('scrollable-content-area')?.scrollTo({ top: 0, behavior: 'auto' });
+      document.getElementById('main-content-pane')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    });
+  };
+
+  useEffect(() => {
+    const pane = document.getElementById('scrollable-content-area');
+    if (pane) pane.scrollTop = 0;
+  }, [activeTab]);
+
   // Never leave the content pane blank when the authenticated role cannot access a stale tab.
   useEffect(() => {
     if (!ROLE_TAB_ACCESS[activeRole]?.includes(activeTab)) {
@@ -731,7 +749,7 @@ export default function App() {
                 const sectionChanged = index === 0 || visibleNavItems[index - 1].section !== item.section;
                 return <React.Fragment key={item.id}>
                   {!sidebarCollapsed && sectionChanged && <div className="px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">{item.section}</div>}
-                  <button type="button" onClick={() => setActiveTab(item.id)} title={sidebarCollapsed ? item.label : undefined} className={`group relative w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-200 ${active ? 'bg-[#0b554f] text-white shadow-md ring-1 ring-teal-400/20' : 'text-teal-50 hover:bg-teal-700/70 hover:text-white'}`}>
+                  <button type="button" onClick={() => navigateToTab(item.id)} title={sidebarCollapsed ? item.label : undefined} className={`group relative w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-200 ${active ? 'bg-[#0b554f] text-white shadow-md ring-1 ring-teal-400/20' : 'text-teal-50 hover:bg-teal-700/70 hover:text-white'}`}>
                     {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-teal-300" />}
                     <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? 'text-teal-200' : 'text-teal-300 group-hover:text-teal-100'}`}><Icon className="h-5 w-5" /></span>
                     {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
@@ -744,7 +762,7 @@ export default function App() {
         </aside>
         {mobileNavOpen && <div className="md:hidden absolute inset-0 z-50 bg-slate-950/55 backdrop-blur-[2px]" onClick={() => setMobileNavOpen(false)}><aside className="flex h-full w-[88%] max-w-sm flex-col border-r border-teal-700 bg-[#116b63] text-white shadow-2xl" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-teal-400/25 px-5 py-5"><div><div className="flex items-center gap-2 text-lg font-black tracking-[0.08em]"><HeartPulse className="h-6 w-6 text-teal-200" />SIMF APP</div><div className="mt-1 pl-8 text-xs font-medium text-teal-200">Puskesmas Terpadu</div></div><button type="button" onClick={() => setMobileNavOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-teal-400/30 bg-teal-800/50 text-teal-100 hover:bg-teal-800" aria-label="Tutup navigasi"><X className="h-6 w-6" /></button></div>
-          <nav className="flex-1 overflow-y-auto px-4 py-3" aria-label="Navigasi mobile">{visibleNavItems.map((item,index) => { const Icon=item.icon; const active=activeTab===item.id; const sectionChanged=index===0||visibleNavItems[index-1].section!==item.section; return <React.Fragment key={item.id}>{sectionChanged&&<div className="px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">{item.section}</div>}<button type="button" onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }} className={`relative mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-[14px] font-semibold transition-all ${active?'bg-[#0b554f] text-white shadow-md ring-1 ring-teal-400/20':'text-teal-50 hover:bg-teal-700/70'}`}>{active&&<span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-teal-300"/>}<span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${active?'text-teal-200':'text-teal-300'}`}><Icon className="h-5 w-5"/></span><span>{item.label}</span></button></React.Fragment>; })}</nav>
+          <nav className="flex-1 overflow-y-auto px-4 py-3" aria-label="Navigasi mobile">{visibleNavItems.map((item,index) => { const Icon=item.icon; const active=activeTab===item.id; const sectionChanged=index===0||visibleNavItems[index-1].section!==item.section; return <React.Fragment key={item.id}>{sectionChanged&&<div className="px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">{item.section}</div>}<button type="button" onClick={() => navigateToTab(item.id)} className={`relative mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-[14px] font-semibold transition-all ${active?'bg-[#0b554f] text-white shadow-md ring-1 ring-teal-400/20':'text-teal-50 hover:bg-teal-700/70'}`}>{active&&<span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-teal-300"/>}<span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${active?'text-teal-200':'text-teal-300'}`}><Icon className="h-5 w-5"/></span><span>{item.label}</span></button></React.Fragment>; })}</nav>
           <div className="border-t border-teal-400/25 bg-[#0d5d56] p-4"><div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-200 font-black text-teal-800">{userName.slice(0,2).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-sm font-bold text-white">{userName}</p><p className="truncate text-xs text-teal-200">{roleLabel} • Puskesmas</p></div></div></div>
         </aside></div>}
         <section className="flex-1 min-w-0 overflow-y-auto bg-[#f0fdf4]" id="scrollable-content-area">
@@ -763,7 +781,7 @@ export default function App() {
               usages={usages}
               systemDate={systemDate}
               onSetSystemDate={handleSetSystemDate}
-              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
+              onNavigateChange={(view) => navigateToTab(view)}
             />
           )}
 
@@ -808,7 +826,7 @@ export default function App() {
               onUpdateReceipt={handleUpdateReceipt}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
+              onNavigateChange={(view) => navigateToTab(view)}
             />
           )}
 
@@ -844,7 +862,7 @@ export default function App() {
               onDeleteAmpra={handleDeleteAmpra}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
+              onNavigateChange={(view) => navigateToTab(view)}
             />
           )}
 
@@ -859,7 +877,7 @@ export default function App() {
               activeRole={activeRole as any}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
+              onNavigateChange={(view) => navigateToTab(view)}
             />
           )}
 
@@ -877,7 +895,7 @@ export default function App() {
               onUpdateUsage={handleUpdateUsage}
               systemDate={systemDate}
               onNotify={addNotification}
-              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
+              onNavigateChange={(view) => navigateToTab(view)}
             />
           )}
 
@@ -892,7 +910,7 @@ export default function App() {
               usages={usages.filter(x => !reversedTransactionKeys.has(`usage:${x.id}`))}
               userName={userName}
               onNotify={addNotification}
-              onNavigateChange={(view) => { if (canAccessTab(view)) setActiveTab(view); }}
+              onNavigateChange={(view) => navigateToTab(view)}
             />
           )}
 
@@ -904,7 +922,7 @@ export default function App() {
 
       <nav className="md:hidden relative z-40 shrink-0 h-16 border-t border-teal-800 bg-[#0f625b] px-1.5 pb-[env(safe-area-inset-bottom)] shadow-[0_-5px_20px_rgba(15,98,91,.18)]" aria-label="Navigasi cepat">
         <div className="h-full flex items-center justify-around">
-          {mobileQuickItems.map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }} aria-current={active ? 'page' : undefined} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-bold transition-colors ${active ? 'text-white' : 'text-teal-200'}`}>{active && <span className="absolute top-0 h-1 w-9 rounded-b-full bg-teal-200 shadow-[0_0_10px_rgba(153,246,228,.55)]" />}<Icon className={`w-[18px] h-[18px] ${active ? 'drop-shadow-sm' : ''}`} /><span className="truncate max-w-16">{item.short}</span></button>; })}
+          {mobileQuickItems.map(item => { const Icon=item.icon; const active=activeTab===item.id; return <button key={item.id} type="button" onClick={() => navigateToTab(item.id)} aria-current={active ? 'page' : undefined} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[8px] font-bold transition-colors ${active ? 'text-white' : 'text-teal-200'}`}>{active && <span className="absolute top-0 h-1 w-9 rounded-b-full bg-teal-200 shadow-[0_0_10px_rgba(153,246,228,.55)]" />}<Icon className={`w-[18px] h-[18px] ${active ? 'drop-shadow-sm' : ''}`} /><span className="truncate max-w-16">{item.short}</span></button>; })}
           <button type="button" onClick={() => setMobileNavOpen(true)} aria-current={mobileMoreActive ? 'page' : undefined} className={`relative min-w-0 flex-1 h-full flex flex-col items-center justify-center gap-1 text-[9px] font-bold transition-colors ${mobileMoreActive ? 'text-white' : 'text-teal-200'}`}>{mobileMoreActive && <span className="absolute top-0 h-1 w-9 rounded-b-full bg-teal-200 shadow-[0_0_10px_rgba(153,246,228,.55)]" />}<Menu className="w-[18px] h-[18px]" /><span>Menu</span></button>
         </div>
       </nav>
