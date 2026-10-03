@@ -20,6 +20,7 @@ import MasterDataView from './components/MasterDataView';
 import DisposalCorrectionView from './components/DisposalCorrectionView';
 import OpeningReconciliationView from './components/OpeningReconciliationView';
 import ModuleErrorBoundary from './components/ModuleErrorBoundary';
+import { MobileReceiptsView, MobileAmpraView } from './components/MobileTransactionViews';
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -818,7 +819,9 @@ export default function App() {
           )}
 
           {activeTab === 'receipts' && canAccessTab('receipts') && (
-            <PenerimaanGudangView
+            <>
+            <MobileReceiptsView receipts={receipts} medicines={medicines} />
+            <div className="hidden md:block"><PenerimaanGudangView
               medicines={medicines}
               receipts={receipts}
               activeRole={activeRole as any}
@@ -830,7 +833,8 @@ export default function App() {
               systemDate={systemDate}
               onNotify={addNotification}
               onNavigateChange={(view) => navigateToTab(view)}
-            />
+            /></div>
+            </>
           )}
 
           {activeTab === 'disposals' && canAccessTab('disposals') && (
@@ -852,7 +856,9 @@ export default function App() {
           )}
 
           {activeTab === 'ampra' && canAccessTab('ampra') && (
-            <AmpraGudangView
+            <>
+            <MobileAmpraView ampras={ampras} medicines={medicines} units={units} />
+            <div className="hidden md:block"><AmpraGudangView
               medicines={medicines}
               units={units}
               ampras={ampras}
@@ -866,7 +872,8 @@ export default function App() {
               systemDate={systemDate}
               onNotify={addNotification}
               onNavigateChange={(view) => navigateToTab(view)}
-            />
+            /></div>
+            </>
           )}
 
           {activeTab === 'apotek' && canAccessTab('apotek') && (
