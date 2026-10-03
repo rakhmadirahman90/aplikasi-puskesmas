@@ -391,7 +391,7 @@ export default function UsageUnitView({
                         const med = medicines.find(m => m.id === line.medicineId);
                         return (
                           <tr key={idx} className="hover:bg-slate-50">
-                            <td className="p-3 font-semibold text-slate-850">{med ? med.name : 'Unknown'}</td>
+                            <td className="p-3 font-semibold text-slate-900">{med ? med.name : 'Unknown'}</td>
                             <td className="p-3 text-slate-500">{med?.unit}</td>
                             <td className="p-3 font-bold text-slate-800">{line.qtyUsed} pcs</td>
                             <td className="p-3 text-center">
