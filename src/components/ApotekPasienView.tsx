@@ -37,7 +37,7 @@ export default function ApotekPasienView({
     if (onNotify) {
       onNotify(type, message);
     } else {
-      alert(message);
+      onNotify?.('warning', message);
     }
   };
   // Prescription Form State
