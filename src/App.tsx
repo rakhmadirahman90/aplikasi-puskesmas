@@ -758,11 +758,11 @@ export default function App() {
               })}
             </nav>
           </div>
-          {!sidebarCollapsed && <div className="border-t border-teal-400/25 bg-[#0d5d56] p-4"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-200 font-black text-teal-800">{userName.slice(0,2).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-xs font-bold text-white">{userName}</p><p className="truncate text-[10px] text-teal-200">{roleLabel} • Puskesmas</p></div></div></div>}
+          {!sidebarCollapsed && <div className="border-t border-teal-400/20 bg-[#0d5d56] p-3"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-200 font-black text-teal-800">{userName.slice(0,2).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-xs font-bold text-white">{userName}</p><p className="truncate text-[10px] text-teal-200">{roleLabel} • Puskesmas</p></div></div></div>}
         </aside>
-        {mobileNavOpen && <div className="md:hidden fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px]" onClick={() => setMobileNavOpen(false)}><aside className="flex h-full w-[88%] max-w-sm flex-col border-r border-teal-700 bg-[#116b63] text-white shadow-2xl" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center justify-between border-b border-teal-400/25 px-5 py-5"><div><div className="flex items-center gap-2 text-lg font-black tracking-[0.08em]"><HeartPulse className="h-6 w-6 text-teal-200" />SIMF APP</div><div className="mt-1 pl-8 text-xs font-medium text-teal-200">Puskesmas Terpadu</div></div><button type="button" onClick={() => setMobileNavOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-teal-400/30 bg-teal-800/50 text-teal-100 hover:bg-teal-800" aria-label="Tutup navigasi"><X className="h-6 w-6" /></button></div>
-          <nav className="flex-1 overflow-y-auto px-4 py-3" aria-label="Navigasi mobile">{visibleNavItems.map((item,index) => { const Icon=item.icon; const active=activeTab===item.id; const sectionChanged=index===0||visibleNavItems[index-1].section!==item.section; return <React.Fragment key={item.id}>{sectionChanged&&<div className="px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">{item.section}</div>}<button type="button" onClick={() => navigateToTab(item.id)} className={`relative mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-[14px] font-semibold transition-all ${active?'bg-[#0b554f] text-white shadow-md ring-1 ring-teal-400/20':'text-teal-50 hover:bg-teal-700/70'}`}>{active&&<span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-teal-300"/>}<span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${active?'text-teal-200':'text-teal-300'}`}><Icon className="h-5 w-5"/></span><span>{item.label}</span></button></React.Fragment>; })}</nav>
+        {mobileNavOpen && <div className="md:hidden fixed inset-0 z-[80] bg-slate-950/55 backdrop-blur-[2px]" onClick={() => setMobileNavOpen(false)}><aside className="flex h-full w-[84%] max-w-[320px] flex-col border-r border-teal-700/70 bg-[#0f625b] text-white shadow-[20px_0_50px_rgba(2,44,40,.28)]" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between border-b border-teal-400/20 px-4 py-3.5"><div><div className="flex items-center gap-2 text-lg font-black tracking-[0.08em]"><HeartPulse className="h-6 w-6 text-teal-200" />SIMF APP</div><div className="mt-1 pl-8 text-xs font-medium text-teal-200">Puskesmas Terpadu</div></div><button type="button" onClick={() => setMobileNavOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-teal-400/30 bg-teal-800/50 text-teal-100 hover:bg-teal-800" aria-label="Tutup navigasi"><X className="h-6 w-6" /></button></div>
+          <nav className="flex-1 overflow-y-auto px-2.5 py-2 overscroll-contain" aria-label="Navigasi mobile">{visibleNavItems.map((item,index) => { const Icon=item.icon; const active=activeTab===item.id; const sectionChanged=index===0||visibleNavItems[index-1].section!==item.section; return <React.Fragment key={item.id}>{sectionChanged&&<div className="px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">{item.section}</div>}<button type="button" onClick={() => navigateToTab(item.id)} className={`relative mb-0.5 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12px] font-semibold transition-all ${active?'bg-[#0b554f] text-white shadow-md ring-1 ring-teal-400/20':'text-teal-50 hover:bg-teal-700/70'}`}>{active&&<span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-teal-300"/>}<span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active?'text-teal-200':'text-teal-300'}`}><Icon className="h-5 w-5"/></span><span>{item.label}</span></button></React.Fragment>; })}</nav>
           <div className="border-t border-teal-400/25 bg-[#0d5d56] p-4"><div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-200 font-black text-teal-800">{userName.slice(0,2).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-sm font-bold text-white">{userName}</p><p className="truncate text-xs text-teal-200">{roleLabel} • Puskesmas</p></div></div></div>
         </aside></div>}
         <section className="flex-1 min-w-0 min-h-0 overflow-y-auto overscroll-contain bg-[#f0fdf4]" id="scrollable-content-area">
@@ -923,12 +923,12 @@ export default function App() {
         </section>
       </div>
 
-      <nav className="md:hidden relative z-40 shrink-0 border-t border-teal-800 bg-[#0f625b] px-2 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-5px_20px_rgba(15,98,91,.18)]" aria-label="Navigasi mobile">
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => navigateToTab('dashboard')} className={`h-12 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition ${activeTab==='dashboard' ? 'bg-[#0b554f] text-white ring-1 ring-teal-300/30' : 'bg-teal-700/50 text-teal-100'}`}>
+      <nav className="md:hidden relative z-40 shrink-0 border-t border-teal-700/70 bg-[#0f625b] px-3 pt-1.5 pb-[max(.375rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,98,91,.16)]" aria-label="Navigasi mobile">
+        <div className="grid grid-cols-2 gap-1.5">
+          <button type="button" onClick={() => navigateToTab('dashboard')} className={`h-10 rounded-lg flex items-center justify-center gap-2 text-[11px] font-bold transition ${activeTab==='dashboard' ? 'bg-[#0b554f] text-white ring-1 ring-teal-300/30' : 'bg-teal-700/50 text-teal-100'}`}>
             <LayoutDashboard className="w-5 h-5"/><span>Dashboard</span>
           </button>
-          <button type="button" onClick={() => setMobileNavOpen(true)} className={`h-12 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition ${mobileMoreActive ? 'bg-[#0b554f] text-white ring-1 ring-teal-300/30' : 'bg-teal-700/50 text-teal-100'}`}>
+          <button type="button" onClick={() => setMobileNavOpen(true)} className={`h-10 rounded-lg flex items-center justify-center gap-2 text-[11px] font-bold transition ${mobileMoreActive ? 'bg-[#0b554f] text-white ring-1 ring-teal-300/30' : 'bg-teal-700/50 text-teal-100'}`}>
             <Menu className="w-5 h-5"/><span>{mobileMoreActive ? (activeNavItem?.short || 'Menu') : 'Semua Menu'}</span>
           </button>
         </div>
@@ -980,7 +980,7 @@ export default function App() {
         </AnimatePresence>
       </div>
       {/* SIFP public health footer */}
-      <footer className="bg-slate-900 border-t border-slate-950 text-slate-500 py-3 text-center text-xs shrink-0" id="sifp-footer">
+      <footer className="hidden md:block bg-slate-900 border-t border-slate-950 text-slate-500 py-3 text-center text-xs shrink-0" id="sifp-footer">
         <p>&copy; 2026 Sistem Informasi Farmasi Puskesmas • Dinas Kesehatan Kota Parepare</p>
       </footer>
     </div>
