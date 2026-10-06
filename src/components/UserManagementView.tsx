@@ -151,7 +151,7 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-600">Role Sistem</label>
               <select required value={role} onChange={e => setRole(e.target.value as AppRole)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500/30 text-sm bg-white">
-                <option value="admin">Admin (Akses Penuh Seluruh Menu CRUD)</option>
+                <option value="admin">Admin (Akses Penuh Seluruh Menu CRUD)</option>\n                <option value="dinkes">Dinas Kesehatan (Monitoring, Gudang & Laporan)</option>
                 <option value="apj">APJ (Apoteker Penanggung Jawab)</option>
                 <option value="gudang">Petugas Gudang Farmasi</option>
                 <option value="farmasi">Petugas Ruang Farmasi (Apotek Layanan)</option>
@@ -215,7 +215,7 @@ export default function UserManagementView({ users, units, onAddUser, onUpdateUs
                   </td>
                   <td className="p-4">
                     <span className={`px-2 py-1 text-[10px] uppercase font-bold rounded-full border ${
-                      u.role === 'admin' ? 'bg-purple-100 text-purple-700 border-purple-200' :
+                      u.role === 'admin' ? 'bg-purple-100 text-purple-700 border-purple-200' :\n                      u.role === 'dinkes' ? 'bg-cyan-100 text-cyan-700 border-cyan-200' :
                       u.role === 'apj' ? 'bg-blue-100 text-blue-700 border-blue-200' :
                       u.role === 'gudang' ? 'bg-amber-100 text-amber-700 border-amber-200' :
                       'bg-emerald-100 text-emerald-700 border-emerald-200'
