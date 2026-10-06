@@ -241,7 +241,7 @@ export default function App() {
 
   // Role-based navigation: users only see modules relevant to their role.
   const ROLE_TAB_ACCESS: Record<AppRole, string[]> = {
-    admin: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'opening-reconciliation', 'users'],
+    admin: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'opening-reconciliation', 'users'],\n    dinkes: ['dashboard', 'receipts', 'disposals', 'ampra', 'reports'],
     apj: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'opening-reconciliation'],
     gudang: ['dashboard', 'receipts', 'disposals', 'ampra', 'satellites', 'reports'],
     farmasi: ['dashboard', 'ampra', 'apotek', 'satellites', 'reports'],
@@ -295,7 +295,7 @@ export default function App() {
   const activeNavItem = visibleNavItems.find(item => item.id === activeTab) || visibleNavItems[0];
   // Mobile navigation uses the exact same authorized menu source/order as the desktop sidebar.
   const mobileMoreActive = activeTab !== 'dashboard';
-  const roleLabel = activeRole === 'apj' ? 'APJ / Apoteker' : activeRole === 'unit' ? 'Unit • ' + activeUnitId : activeRole.charAt(0).toUpperCase() + activeRole.slice(1);
+  const roleLabel = activeRole === 'dinkes' ? 'Dinas Kesehatan' : activeRole === 'apj' ? 'APJ / Apoteker' : activeRole === 'unit' ? 'Unit • ' + activeUnitId : activeRole.charAt(0).toUpperCase() + activeRole.slice(1);
 
   // Keep navigation inside the authenticated user's role scope.
   useEffect(() => {
