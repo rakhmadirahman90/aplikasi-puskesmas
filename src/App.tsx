@@ -241,7 +241,8 @@ export default function App() {
 
   // Role-based navigation: users only see modules relevant to their role.
   const ROLE_TAB_ACCESS: Record<AppRole, string[]> = {
-    admin: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'opening-reconciliation', 'users'],\n    dinkes: ['dashboard', 'receipts', 'disposals', 'ampra', 'reports'],
+    admin: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'master', 'opening-reconciliation', 'users'],
+    dinkes: ['dashboard', 'receipts', 'disposals', 'ampra', 'reports'],
     apj: ['dashboard', 'receipts', 'disposals', 'ampra', 'apotek', 'satellites', 'reports', 'opening-reconciliation'],
     gudang: ['dashboard', 'receipts', 'disposals', 'ampra', 'satellites', 'reports'],
     farmasi: ['dashboard', 'ampra', 'apotek', 'satellites', 'reports'],
