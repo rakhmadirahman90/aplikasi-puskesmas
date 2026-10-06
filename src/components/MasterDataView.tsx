@@ -54,6 +54,8 @@ export default function MasterDataView({
   const [isMedFormOpen, setIsMedFormOpen] = useState(false);
   const [medId, setMedId] = useState('');
   const [medName, setMedName] = useState('');
+  const [itemKind, setItemKind] = useState<'obat'|'bmhp'>('obat');
+  const [itemFilter, setItemFilter] = useState<'semua'|'obat'|'bmhp'>('semua');
   const [medType, setMedType] = useState<'generik'|'paten'>('generik');
   const [medUnit, setMedUnit] = useState('');
   const [medGroup, setMedGroup] = useState<'biasa'|'narkotika'|'psikotropika'>('biasa');
@@ -73,13 +75,13 @@ export default function MasterDataView({
     setIsMedFormOpen(false);
     setIsUnitFormOpen(false);
     setEditingId(null);
-    setMedId(''); setMedName(''); setMedType('generik'); setMedUnit(''); setMedGroup('biasa'); setMedCompoundType('non-racikan');
+    setMedId(''); setMedName(''); setItemKind('obat'); setMedType('generik'); setMedUnit(''); setMedGroup('biasa'); setMedCompoundType('non-racikan');
     setUnitId(''); setUnitName(''); setUnitType('pustu'); setUnitManager(''); setUnitDesc('');
   };
 
   const handleEditMed = (m: Medicine) => {
     resetForms();
-    setMedId(m.id); setMedName(m.name); setMedType(m.type); setMedUnit(m.unit); setMedGroup(m.group); setMedCompoundType(m.compoundType);
+    setMedId(m.id); setMedName(m.name); setItemKind(m.itemKind || 'obat'); setMedType(m.type); setMedUnit(m.unit); setMedGroup(m.group); setMedCompoundType(m.compoundType);
     setEditingId(m.id);
     setIsMedFormOpen(true);
   };
@@ -94,9 +96,9 @@ export default function MasterDataView({
   const saveMed = (e: React.FormEvent) => {
     e.preventDefault();
     if(editingId) {
-      onUpdateMedicine(editingId, { name: medName, type: medType, unit: medUnit, group: medGroup, compoundType: medCompoundType, isNarkotikaPsikotropika: medGroup !== 'biasa' });
+      onUpdateMedicine(editingId, { name: medName, itemKind, type: medType, unit: medUnit, group: itemKind === 'bmhp' ? 'biasa' : medGroup, compoundType: itemKind === 'bmhp' ? 'non-racikan' : medCompoundType, isNarkotikaPsikotropika: itemKind === 'obat' && medGroup !== 'biasa' });
     } else {
-      onAddMedicine({ id: medId, name: medName, type: medType, unit: medUnit, group: medGroup, compoundType: medCompoundType, isNarkotikaPsikotropika: medGroup !== 'biasa' });
+      onAddMedicine({ id: medId, name: medName, itemKind, type: medType, unit: medUnit, group: itemKind === 'bmhp' ? 'biasa' : medGroup, compoundType: itemKind === 'bmhp' ? 'non-racikan' : medCompoundType, isNarkotikaPsikotropika: itemKind === 'obat' && medGroup !== 'biasa' });
     }
     resetForms();
   };
@@ -111,7 +113,7 @@ export default function MasterDataView({
     resetForms();
   };
 
-  const filteredMedicines = medicines.filter(m => String(m?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || String(m?.id || '').toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredMedicines = medicines.filter(m => (itemFilter === 'semua' || (m.itemKind || 'obat') === itemFilter) && (String(m?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || String(m?.id || '').toLowerCase().includes(searchTerm.toLowerCase())));
   const filteredUnits = units.filter(u => String(u?.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
@@ -122,7 +124,7 @@ export default function MasterDataView({
         </h2>
         <div className="flex gap-4 border-b">
           <button onClick={() => {setView('medicines'); resetForms();}} className={`pb-2 px-4 font-bold text-sm ${view === 'medicines' ? 'border-b-2 border-teal-600 text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}>
-            Data Obat
+            Obat & BMHP
           </button>
           <button onClick={() => {setView('units'); resetForms();}} className={`pb-2 px-4 font-bold text-sm ${view === 'units' ? 'border-b-2 border-teal-600 text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}>
             Data Unit
@@ -145,7 +147,7 @@ export default function MasterDataView({
               if(view === 'medicines') setIsMedFormOpen(true);
               else setIsUnitFormOpen(true);
             }} className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" /> {view === 'medicines' ? 'Tambah Obat' : 'Tambah Unit'}
+              <Plus className="w-4 h-4" /> {view === 'medicines' ? 'Tambah Item' : 'Tambah Unit'}
             </button>
           </div>
         )}
@@ -153,23 +155,23 @@ export default function MasterDataView({
         {/* Medicine Form */}
         {isMedFormOpen && view === 'medicines' && (
           <form onSubmit={saveMed} className="p-6 bg-slate-50 border-b grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Kode Obat / ID</label><input required disabled={!!editingId} value={medId} onChange={e=>setMedId(e.target.value)} className="w-full p-2 border rounded" placeholder="med-01" /></div>
-            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Nama Obat</label><input required value={medName} onChange={e=>setMedName(e.target.value)} className="w-full p-2 border rounded" placeholder="Nama..." /></div>
-            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Tipe</label>
+            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Kode Item / ID</label><input required disabled={!!editingId} value={medId} onChange={e=>setMedId(e.target.value)} className="w-full p-2 border rounded" placeholder="med-01" /></div>
+            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Nama Item</label><input required value={medName} onChange={e=>setMedName(e.target.value)} className="w-full p-2 border rounded" placeholder="Nama..." /></div>
+            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Jenis Item</label><select required value={itemKind} onChange={e=>setItemKind(e.target.value as any)} className="w-full p-2 border rounded"><option value="obat">Obat</option><option value="bmhp">BMHP</option></select></div>\n            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Tipe Obat</label>
               <select required value={medType} onChange={e=>setMedType(e.target.value as any)} className="w-full p-2 border rounded">
                 <option value="generik">Generik</option>
                 <option value="paten">Paten</option>
               </select>
             </div>
             <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Satuan (Unit)</label><input required value={medUnit} onChange={e=>setMedUnit(e.target.value)} className="w-full p-2 border rounded" placeholder="PCS, BTL, KTK" /></div>
-            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Grup / Kelompok</label>
+            <div className={itemKind === "bmhp" ? "hidden" : "space-y-1"}><label className="text-xs font-bold text-slate-600">Grup / Kelompok</label>
               <select required value={medGroup} onChange={e=>setMedGroup(e.target.value as any)} className="w-full p-2 border rounded">
                 <option value="biasa">Biasa</option>
                 <option value="narkotika">Narkotika</option>
                 <option value="psikotropika">Psikotropika</option>
               </select>
             </div>
-            <div className="space-y-1"><label className="text-xs font-bold text-slate-600">Tipe Sediaan</label>
+            <div className={itemKind === "bmhp" ? "hidden" : "space-y-1"}><label className="text-xs font-bold text-slate-600">Tipe Sediaan</label>
               <select required value={medCompoundType} onChange={e=>setMedCompoundType(e.target.value as any)} className="w-full p-2 border rounded">
                 <option value="non-racikan">Non-Racikan</option>
                 <option value="racikan">Racikan</option>
@@ -248,13 +250,13 @@ export default function MasterDataView({
         )}
 
         {view !== 'config' && (
-          <div className="overflow-x-auto p-4">
+          <div className="overflow-x-auto p-4">{view === "medicines" && <div className="flex gap-2 mb-4">{(["semua","obat","bmhp"] as const).map(f => <button key={f} onClick={()=>setItemFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${itemFilter===f ? "bg-teal-600 text-white border-teal-600" : "bg-white text-slate-600"}`}>{f === "semua" ? "Semua" : f === "obat" ? "Obat" : "BMHP"}</button>)}</div>}
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="border-b text-slate-500">
                 <th className="pb-3 border-b border-slate-200">ID</th>
                 <th className="pb-3 border-b border-slate-200">Nama</th>
-                <th className="pb-3 border-b border-slate-200">{view === 'medicines' ? 'Tipe' : 'Tipe'}</th>
+                <th className="pb-3 border-b border-slate-200">{view === 'medicines' ? 'Jenis' : 'Tipe'}</th>
                 <th className="pb-3 border-b border-slate-200">{view === 'medicines' ? 'Grup' : 'Penanggung Jawab'}</th>
                 <th className="pb-3 border-b border-slate-200 text-right">Aksi</th>
               </tr>
@@ -264,7 +266,7 @@ export default function MasterDataView({
                 <tr key={m.id} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="py-3 font-mono text-xs">{m.id}</td>
                   <td className="py-3 font-bold text-slate-700">{m.name} <span className="text-xs font-normal text-slate-500 ml-1">({m.unit})</span></td>
-                  <td className="py-3 text-slate-600 uppercase text-xs">{m.type}</td>
+                  <td className="py-3 text-slate-600 uppercase text-xs font-bold">{m.itemKind === "bmhp" ? "BMHP" : "Obat"}</td>
                   <td className="py-3 text-slate-600 uppercase text-xs">{m.group}</td>
                   <td className="py-3 text-right">
                     <button onClick={()=>handleEditMed(m)} className="p-1.5 text-blue-600"><Edit className="w-4 h-4"/></button>
@@ -286,7 +288,7 @@ export default function MasterDataView({
             </tbody>
           </table>
           
-          {(view === 'medicines' && filteredMedicines.length === 0) && <div className="p-10 text-center text-slate-400 font-bold">Data obat tidak ditemukan</div>}
+          {(view === 'medicines' && filteredMedicines.length === 0) && <div className="p-10 text-center text-slate-400 font-bold">Data Obat/BMHP tidak ditemukan</div>}
           {(view === 'units' && filteredUnits.length === 0) && <div className="p-10 text-center text-slate-400 font-bold">Data unit tidak ditemukan</div>}
         </div>
         )}
