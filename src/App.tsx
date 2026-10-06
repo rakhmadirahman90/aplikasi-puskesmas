@@ -286,7 +286,7 @@ export default function App() {
     { id: 'apotek', label: 'Resep (Ruang Farmasi)', short: 'Resep', icon: Pill, section: 'Pelayanan & Pemakaian' },
     { id: 'satellites', label: 'Pemakaian Harian Unit', short: 'Unit', icon: Database, section: 'Pelayanan & Pemakaian' },
     { id: 'reports', label: 'Laporan Terpadu', short: 'Laporan', icon: FileText, section: 'Pelaporan' },
-    { id: 'master', label: 'Katalog Obat & Data Unit', short: 'Master', icon: Database, section: 'Master Data' },
+    { id: 'master', label: 'Master Obat, BMHP & Unit', short: 'Master', icon: Database, section: 'Master Data' },
     { id: 'opening-reconciliation', label: 'Rekonsiliasi Opening Stock', short: 'Opening', icon: ShieldCheck, section: 'Pengaturan' },
     { id: 'users', label: 'Pengguna & Hak Akses', short: 'User', icon: ShieldCheck, section: 'Pengaturan' }
   ];
