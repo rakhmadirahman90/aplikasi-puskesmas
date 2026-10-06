@@ -42,6 +42,17 @@ export default function PenerimaanGudangView({
       onNotify?.('warning', message);
     }
   };
+  // Reject incoming inventory whose remaining shelf life is below 6 calendar months.
+  const isBelowSixMonthsShelfLife = (dateValue: string) => {
+    if (!dateValue) return false;
+    const expiry = new Date(dateValue + 'T00:00:00');
+    const base = new Date((systemDate || new Date().toISOString().slice(0, 10)) + 'T00:00:00');
+    if (Number.isNaN(expiry.getTime()) || Number.isNaN(base.getTime())) return false;
+    const minimumExpiry = new Date(base);
+    minimumExpiry.setMonth(minimumExpiry.getMonth() + 6);
+    return expiry < minimumExpiry;
+  };
+
   // Add Receipt Form State
   const [showForm, setShowForm] = useState(false);
   const [sourceType, setSourceType] = useState<'Instalasi Farmasi Kota' | 'PBF'>('Instalasi Farmasi Kota');
@@ -92,6 +103,11 @@ export default function PenerimaanGudangView({
   const handleAddEditItem = () => {
     if (!editSelectedMedId || editQty <= 0 || !editBatchNo || !editExpDate) {
       showNotice('warning', 'Peringatan: Mohon pilih obat, isi jumlah masuk, nomor batch, dan kedaluwarsa dengan lengkap!');
+      return;
+    }
+
+    if (isBelowSixMonthsShelfLife(editExpDate)) {
+      showNotice('error', 'Penerimaan ditolak: masa kedaluwarsa item kurang dari 6 bulan dari tanggal penerimaan. Persediaan tidak dapat dimasukkan.');
       return;
     }
 
@@ -162,6 +178,11 @@ export default function PenerimaanGudangView({
       return;
     }
 
+    if (isBelowSixMonthsShelfLife(expDate)) {
+      showNotice('error', 'Penerimaan ditolak: masa kedaluwarsa item kurang dari 6 bulan dari tanggal penerimaan. Persediaan tidak dapat dimasukkan.');
+      return;
+    }
+
     const newItem: ReceiptItem = {
       medicineId: selectedMedId,
       quantity: qty,
@@ -194,6 +215,11 @@ export default function PenerimaanGudangView({
     }
     if (items.length === 0) {
       showNotice('warning', 'Gagal mengajukan penerimaan: Mohon tambahkan minimal 1 item obat!');
+      return;
+    }
+
+    if (items.some(item => isBelowSixMonthsShelfLife(item.expDate))) {
+      showNotice('error', 'Penerimaan ditolak: terdapat persediaan dengan masa kedaluwarsa kurang dari 6 bulan. Periksa kembali seluruh item.');
       return;
     }
 
