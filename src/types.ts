@@ -148,7 +148,7 @@ export interface Disposal {
   timestamp: string;
 }
 
-export type AppRole = 'admin' | 'apj' | 'gudang' | 'farmasi' | 'unit';
+export type AppRole = 'admin' | 'dinkes' | 'apj' | 'gudang' | 'farmasi' | 'unit';
 
 export interface UserAccount {
   id: string;
