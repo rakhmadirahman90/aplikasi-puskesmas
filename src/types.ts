@@ -21,6 +21,7 @@ export const THEMES_LIST: ThemeInfo[] = [
 export interface Medicine {
   id: string;
   name: string;
+  itemKind?: 'obat' | 'bmhp'; // default legacy records to obat
   type: 'generik' | 'paten';
   isNarkotikaPsikotropika: boolean;
   group: 'narkotika' | 'psikotropika' | 'biasa';
