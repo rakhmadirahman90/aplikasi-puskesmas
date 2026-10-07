@@ -396,7 +396,25 @@ export default function LaporanView({
     document.body.removeChild(link);
   };
 
+  const officialReportFor=(type:string)=>type==='keuangan_dinas'?officialDau:type==='keuangan_jkn'?officialJkn:undefined;
+  const exportOfficialExcel=(report:OfficialReport)=>{
+    const n=(v:number|null|undefined)=>v==null?'':String(v); const esc=(v:any)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let body=''; let cat='';
+    report.rows.forEach(r=>{ if(r.category!==cat){cat=r.category;body+='<tr><td colspan="17" style="font-weight:bold;background:#ddd">'+cat+'</td></tr>';}; const vals=[r.no,r.name,r.unit,r.source,r.unit_price,r.opening_qty,r.opening_value,r.receipt_qty,r.receipt_value,r.available_qty,r.available_value,r.usage_qty,r.usage_value,r.return_qty,r.return_value,r.closing_qty,r.closing_value]; body+='<tr>'+vals.map(v=>'<td>'+esc(n(v as any))+'</td>').join('')+'</tr>'; });
+    const html='<html><head><meta charset="UTF-8"></head><body><table border="1"><tr><th colspan="17">DINAS KESEHATAN<br>UPTD PUSKESMAS CEMPAE<br>'+esc(report.address)+'<br>'+esc(report.title)+'<br>NAMA PUSKESMAS: '+esc(report.facility)+'<br>'+esc(report.source_title)+'</th></tr><tr><th rowspan="2">NO</th><th rowspan="2">NAMA OBAT</th><th rowspan="2">KEMASAN</th><th rowspan="2">SUMBER</th><th rowspan="2">HARGA SATUAN</th><th colspan="2">STOK AWAL 1 SEP 2026</th><th colspan="2">PENERIMAAN SEP 2026</th><th colspan="2">PERSEDIAAN SEP 2026</th><th colspan="4">PENGELUARAN SEP 2026</th><th colspan="2">SISA STOK 30 SEP 2026</th></tr><tr><th>JUMLAH</th><th>HARGA</th><th>JUMLAH</th><th>HARGA</th><th>JUMLAH</th><th>HARGA</th><th>PEMAKAIAN JUMLAH</th><th>PEMAKAIAN HARGA</th><th>RETUR JUMLAH</th><th>RETUR HARGA</th><th>JUMLAH</th><th>HARGA</th></tr>'+body+'</table></body></html>';
+    const blob=new Blob(['\ufeff',html],{type:'application/vnd.ms-excel;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Laporan_Obat_Perbekalan_'+report.id+'.xls'; a.click(); URL.revokeObjectURL(url);
+  };
+  const exportOfficialPDF=(report:OfficialReport)=>{
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'}); const W=doc.internal.pageSize.getWidth(); const left=5; let y=8;
+    const header=()=>{doc.setFont('Helvetica','bold');doc.setFontSize(9);doc.text('DINAS KESEHATAN',W/2,y,{align:'center'});y+=4;doc.setFontSize(10);doc.text('UPTD PUSKESMAS CEMPAE',W/2,y,{align:'center'});y+=3.5;doc.setFont('Helvetica','normal');doc.setFontSize(5.5);doc.text(report.address||'',W/2,y,{align:'center'});y+=4;doc.setLineWidth(.5);doc.line(left,y,W-left,y);y+=4;doc.setFont('Helvetica','bold');doc.setFontSize(7);doc.text(report.title,W/2,y,{align:'center'});y+=3.5;doc.text('NAMA PUSKESMAS: '+report.facility,W/2,y,{align:'center'});y+=3.5;doc.text(report.source_title,W/2,y,{align:'center'});y+=4;};
+    const widths=[8,48,15,15,18,13,18,13,18,13,18,13,18,13,18,13,18]; const heads=['NO','NAMA OBAT','KEMASAN','SUMBER','HARGA SATUAN','AWAL JML','AWAL HARGA','TERIMA JML','TERIMA HARGA','SEDIA JML','SEDIA HARGA','PAKAI JML','PAKAI HARGA','RETUR JML','RETUR HARGA','SISA JML','SISA HARGA'];
+    const tableHead=()=>{let x=left;doc.setFont('Helvetica','bold');doc.setFontSize(4.7);heads.forEach((h,i)=>{doc.rect(x,y,widths[i],7);doc.text(h,x+1,y+4.5,{maxWidth:widths[i]-2});x+=widths[i]});y+=7;};
+    header();tableHead(); let cat=''; doc.setFontSize(4.5);
+    report.rows.forEach(r=>{if(y>198){doc.addPage();y=8;header();tableHead();}if(r.category!==cat){cat=r.category;doc.setFont('Helvetica','bold');doc.rect(left,y,widths.reduce((a,b)=>a+b,0),5);doc.text(cat,left+1,y+3.5);y+=5;}const vals:any[]=[r.no,r.name,r.unit,r.source,r.unit_price,r.opening_qty,r.opening_value,r.receipt_qty,r.receipt_value,r.available_qty,r.available_value,r.usage_qty,r.usage_value,r.return_qty,r.return_value,r.closing_qty,r.closing_value];let x=left;doc.setFont('Helvetica','normal');vals.forEach((v,i)=>{doc.rect(x,y,widths[i],5);const s=v==null?'-':(typeof v==='number'?v.toLocaleString('id-ID',{maximumFractionDigits:2}):String(v));doc.text(s.substring(0,i===1?28:16),x+1,y+3.4,{maxWidth:widths[i]-2});x+=widths[i]});y+=5;});
+    doc.save('Laporan_Obat_Perbekalan_'+report.id+'.pdf');
+  };
   const handleExportExcel = (type: string) => {
+    const official=officialReportFor(type); if(official){exportOfficialExcel(official);showNotice('success','Laporan resmi September 2026 berhasil diekspor ke Excel sesuai format sumber.');return;}
     const currentDateStr = new Date().toISOString().split('T')[0];
     if (type === 'stok_opname') {
       const filename = `Laporan_Stok_Opname_SIFP_${currentDateStr}.csv`;
@@ -515,6 +533,7 @@ export default function LaporanView({
   };
 
   const handleExportPDF = (type: string) => {
+    const official=officialReportFor(type); if(official){exportOfficialPDF(official);showNotice('success','Laporan resmi September 2026 berhasil diekspor ke PDF sesuai format sumber.');return;}
     const doc = new jsPDF({
       orientation: type === 'stok_opname' ? 'landscape' : 'portrait',
       unit: 'mm',
