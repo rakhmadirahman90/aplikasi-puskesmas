@@ -22,11 +22,11 @@ export interface Medicine {
   id: string;
   name: string;
   itemKind?: 'obat' | 'bmhp'; // default legacy records to obat
-  type: 'generik' | 'paten';
+  type: 'generik' | 'paten' | 'tidak-ditentukan';
   isNarkotikaPsikotropika: boolean;
-  group: 'narkotika' | 'psikotropika' | 'biasa';
+  group: 'narkotika' | 'psikotropika' | 'biasa' | 'tidak-ditentukan';
   unit: string; // tablet, botol, vial, ampul, sirup, dll
-  compoundType: 'non-racikan' | 'racikan';
+  compoundType: 'non-racikan' | 'racikan' | 'tidak-ditentukan';
   description?: string;
 }
 
@@ -34,7 +34,7 @@ export interface BatchStock {
   batchNo: string;
   expDate: string; // YYYY-MM-DD
   quantity: number;
-  source: 'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF' | 'Lainnya';
+  source: string;
   price?: number; // Harga masuk obat
 }
 
@@ -54,7 +54,7 @@ export interface ReceiptItem {
   quantity: number;
   batchNo: string;
   expDate: string; // YYYY-MM-DD
-  source: 'DAK' | 'DAU' | 'Program' | 'JKN' | 'PBF';
+  source: string;
   condition: 'Baik' | 'Rusak';
   price?: number; // Harga masuk obat
 }
