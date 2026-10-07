@@ -65,7 +65,7 @@ async function load(name: string) {
   }
   if (name === 'medicines') {
     const { data, error } = await s.from('medicines').select('*').order('name'); if (error) throw error;
-    return (data || []).map((r: any) => ({ id:r.id, data:()=>({id:r.id,name:r.name,type:r.type,isNarkotikaPsikotropika:r.is_narkotika_psikotropika,group:r.medicine_group,unit:r.unit,compoundType:r.compound_type,description:r.description}) }));
+    return (data || []).map((r: any) => ({ id:r.id, data:()=>({id:r.id,name:r.name,type:r.type,itemKind:(r.item_kind || 'obat'),isNarkotikaPsikotropika:Boolean(r.is_narkotika_psikotropika),group:r.medicine_group,unit:r.unit,compoundType:r.compound_type,description:r.description}) }));
   }
   if (name === 'users') {
     const { data, error } = await s.from('app_users').select('*').order('username'); if (error) throw error;
@@ -146,7 +146,7 @@ async function saveCompound(name:string,id:string,data:any) {
 export async function setDoc(ref:DocRef,data:any) {
   const s=client();
   if(ref.collection==='units'){const {error}=await s.from('units').upsert({id:ref.id,name:data.name,type:data.type,description:data.description,manager:data.manager});if(error)throw error;return;}
-  if(ref.collection==='medicines'){const {error}=await s.from('medicines').upsert({id:ref.id,name:data.name,type:data.type,is_narkotika_psikotropika:data.isNarkotikaPsikotropika,medicine_group:data.group,unit:data.unit,compound_type:data.compoundType,description:data.description??null});if(error)throw error;return;}
+  if(ref.collection==='medicines'){const {error}=await s.from('medicines').upsert({id:ref.id,name:data.name,type:data.type,item_kind:data.itemKind || 'obat',is_narkotika_psikotropika:Boolean(data.isNarkotikaPsikotropika),medicine_group:data.group,unit:data.unit,compound_type:data.compoundType,description:data.description??null});if(error)throw error;return;}
   if(ref.collection==='users'){const {error}=await s.from('app_users').upsert({id:ref.id,username:data.username,name:data.name,role:data.role,unit_id:data.unitId??null});if(error)throw error;return;}
   if(ref.collection==='stocks'){
     const {error:bd}=await s.from('stock_batches').delete().eq('unit_id',ref.id);if(bd)throw bd;
