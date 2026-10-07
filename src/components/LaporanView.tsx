@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, UnitInfo } from '../types';
 import { ClipboardList, TrendingUp, BarChart2, Shield, DollarSign, Pill, Layers, Layers3, Activity, Download, Filter, HelpCircle, Server, FileText, AlertCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { supabase } from '../firebase';
 
 interface LaporanViewProps {
   medicines: Medicine[];
@@ -60,6 +61,14 @@ export default function LaporanView({
   const [financeSourceFilter, setFinanceSourceFilter] = useState<'ALL' | 'DAK' | 'DAU' | 'Program'>('ALL');
   const [napzaGroupFilter, setNapzaGroupFilter] = useState<'ALL' | 'narkotika' | 'psikotropika'>('ALL');
   const [expandedDrugId, setExpandedDrugId] = useState<string | null>(null);
+
+  type OfficialReportRow = { category:'OBAT'|'BMHP'; no:number; name:string; unit:string; source:string; unit_price:number|null; opening_qty:number|null; opening_value:number|null; receipt_qty:number|null; receipt_value:number|null; available_qty:number|null; available_value:number|null; usage_qty:number|null; usage_value:number|null; return_qty:number|null; return_value:number|null; closing_qty:number|null; closing_value:number|null };
+  type OfficialReport = { id:string; period:string; title:string; facility:string; source_title:string; address?:string; email?:string; website?:string; rows:OfficialReportRow[]; totals:Record<string,any> };
+  const [officialReports,setOfficialReports]=useState<OfficialReport[]>([]);
+  useEffect(()=>{ let alive=true; (async()=>{ if(!supabase)return; const {data,error}=await supabase.from('official_monthly_inventory_reports').select('*').eq('period','2026-09').order('source_title'); if(error){console.error('[SIFP] laporan resmi gagal dimuat',error);return;} if(alive)setOfficialReports((data||[]) as OfficialReport[]); })(); return()=>{alive=false}; },[]);
+  const officialDau=officialReports.find(r=>r.id==='sep-2026-dak-dau');
+  const officialJkn=officialReports.find(r=>r.id==='sep-2026-jkn');
+  const fmt=(v:number|null|undefined)=>v==null?'—':v.toLocaleString('id-ID',{maximumFractionDigits:2});
 
   // Unified Estimated pricing for valuation reports
   const GET_DRUG_PRICE = (medId: string) => {
@@ -1511,171 +1520,21 @@ export default function LaporanView({
           </div>
         )}
 
-        {/* TAB 2: LAPORAN KEUANGAN SUMBER DINAS KESEHATAN (DAK/DAU/PROGRAM) */}
-        {activeReportTab === 'keuangan_dinas' && (
-          <div className="p-5 space-y-4" id="view-finance-dinas-tab">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold text-slate-800 text-sm">Laporan Keuangan Sediaan Farmasi (Sumber APBD/Dinas)</h3>
-                <p className="text-xs text-slate-500">Mencakup rekapitulasi obat DAK, DAU, dan Program Kesehatan Nasional</p>
-              </div>
-
-              {/* Filter source */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 font-semibold flex items-center gap-1"><Filter className="w-3.5 h-3.5" /> Filter Anggaran:</span>
-                <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs" id="dinas-filter-tabs">
-                  {(['ALL', 'DAK', 'DAU', 'Program'] as const).map(src => (
-                    <button
-                      key={src}
-                      onClick={() => setFinanceSourceFilter(src)}
-                      className={`px-3 py-1 rounded-md font-medium transition-colors ${financeSourceFilter === src ? 'bg-white text-emerald-800 shadow-3xs' : 'text-slate-500 hover:text-slate-800'}`}
-                    >
-                      {src === 'ALL' ? 'Semua Dinas' : src}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* TAB 2 & 3: LAPORAN RESMI SEPTEMBER 2026 SESUAI DOKUMEN SUMBER */}
+        {(activeReportTab === 'keuangan_dinas' || activeReportTab === 'keuangan_jkn') && (()=>{
+          const report=activeReportTab==='keuangan_dinas'?officialDau:officialJkn;
+          if(!report) return <div className="p-12 text-center text-slate-400">Memuat laporan resmi September 2026…</div>;
+          const total=report.totals?.['TOTAL KESELURUHAN'];
+          return <div className="p-5 space-y-4">
+            <div className="text-center border-b border-slate-200 pb-4">
+              <div className="font-bold text-sm">DINAS KESEHATAN</div><div className="font-extrabold text-base">UPTD PUSKESMAS CEMPAE</div>
+              <div className="text-[10px] text-slate-500">{report.address}</div><div className="text-[10px] text-slate-500">Email: {report.email} • Website: {report.website}</div>
+              <h3 className="mt-3 font-extrabold text-sm">{report.title}</h3><div className="font-bold text-xs">NAMA PUSKESMAS: {report.facility}</div><div className="font-bold text-xs">{report.source_title}</div>
             </div>
-
-            {/* Export Toolbar */}
-            <div className="flex flex-wrap justify-between items-center bg-slate-50/50 p-3 rounded-xl border border-slate-150 gap-2 text-xs" id="export-bar-keuangan-dinas">
-              <span className="text-slate-500 font-medium">Menu Ekspor Evaluasi Anggaran Dinas (DAK/DAU):</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleExportExcel('keuangan_dinas')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold rounded-lg border border-emerald-200 transition-all cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" /> Unduh Excel (.csv)
-                </button>
-                <button
-                  onClick={() => handleExportPDF('keuangan_dinas')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-lg border border-rose-200 transition-all cursor-pointer"
-                >
-                  <FileText className="w-3.5 h-3.5" /> Cetak PDF (Kop Resmi)
-                </button>
-              </div>
-            </div>
-
-            {keuanganDinasData.length === 0 ? (
-              <div className="p-12 text-center text-slate-400">Tidak ada sediaan dalam porsi anggaran ini.</div>
-            ) : (
-              <div className="overflow-x-auto border border-slate-200 rounded-xl" id="dinas-table-box">
-                <table className="w-full text-left border-collapse text-xs min-w-[850px]">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
-                      <th className="p-3">Obat</th>
-                      <th className="p-3">Kategori Sediaan</th>
-                      <th className="p-3 text-center">Fisik di Gudang DAK/DAU</th>
-                      <th className="p-3 text-center">Porsi di Kamar Pelayanan</th>
-                      <th className="p-3 text-right">Gabungan Sisa Stok</th>
-                      <th className="p-3 text-right">Harga Satuan (E-Katalog)</th>
-                      <th className="p-3 text-right bg-slate-50 text-slate-900 font-bold">Estimasi Anggaran</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-150">
-                    {keuanganDinasData.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="p-3 font-semibold text-slate-800">{item.medicine.name}</td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded">
-                            {item.medicine.type === 'generik' ? 'Generik' : 'Paten'} {item.medicine.isNarkotikaPsikotropika && '&bull; Napza'}
-                          </span>
-                        </td>
-                        <td className="p-3 text-center font-bold text-slate-700">{item.gudangQty}</td>
-                        <td className="p-3 text-center text-slate-600 font-medium">{item.satelliteQty}</td>
-                        <td className="p-3 text-right font-bold text-slate-800">{item.combinedTotal} pcs</td>
-                        <td className="p-3 text-right text-slate-500">Rp {item.price.toLocaleString('id-ID')}</td>
-                        <td className="p-3 text-right font-extrabold text-emerald-700 bg-slate-50/50">
-                          Rp {item.valuation.toLocaleString('id-ID')}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="bg-slate-100 font-bold">
-                      <td colSpan={6} className="p-3 text-right">Total Anggaran Dinas Terpenuhi:</td>
-                      <td className="p-3 text-right text-emerald-800 text-sm">
-                        Rp {keuanganDinasData.reduce((s, i) => s + i.valuation, 0).toLocaleString('id-ID')}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: LAPORAN KEUANGAN MANDIRI (JKN PEMBELIAN SENDIRI) */}
-        {activeReportTab === 'keuangan_jkn' && (
-          <div className="p-5 space-y-4" id="view-finance-jkn-tab">
-            <div>
-              <h3 className="font-bold text-slate-800 text-sm">Laporan Keuangan Sediaan Sourced JKN (Pembelian Puskesmas)</h3>
-              <p className="text-xs text-slate-500">Menyajikan sisa stok khusus pengadaan JKN mandiri puskesmas untuk pertanggungjawaban dana kapitasi</p>
-            </div>
-
-            {/* Export Toolbar */}
-            <div className="flex flex-wrap justify-between items-center bg-slate-50/50 p-3 rounded-xl border border-slate-150 gap-2 text-xs" id="export-bar-keuangan-jkn">
-              <span className="text-slate-500 font-medium">Menu Ekspor Laporan Pertanggungjawaban Realisasi JKN:</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleExportExcel('keuangan_jkn')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold rounded-lg border border-emerald-200 transition-all cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" /> Unduh Excel (.csv)
-                </button>
-                <button
-                  onClick={() => handleExportPDF('keuangan_jkn')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-lg border border-rose-200 transition-all cursor-pointer"
-                >
-                  <FileText className="w-3.5 h-3.5" /> Cetak PDF (Kop Resmi)
-                </button>
-              </div>
-            </div>
-
-            {keuanganJKNData.length === 0 ? (
-              <div className="p-12 text-center text-slate-400">Tidak ada sediaan dalam porsi dana JKN.</div>
-            ) : (
-              <div className="overflow-x-auto border border-slate-200 rounded-xl" id="jkn-table-box">
-                <table className="w-full text-left border-collapse text-xs min-w-[850px]">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
-                      <th className="p-3">Obat</th>
-                      <th className="p-3">Merek / Formulir</th>
-                      <th className="p-3 text-center">Fisik JKN di Gudang</th>
-                      <th className="p-3 text-center">Porsi di Apotek</th>
-                      <th className="p-3 text-right">Sisa Stok JKN</th>
-                      <th className="p-3 text-right">Harga Pengadaan JKN</th>
-                      <th className="p-3 text-right bg-slate-50 text-slate-900 font-bold">Nilai Kapitasi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-150">
-                    {keuanganJKNData.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="p-3 font-semibold text-slate-800">{item.medicine.name}</td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded">
-                            {item.medicine.type === 'paten' ? 'Paten Non-Ekat' : 'Generik Formularium'}
-                          </span>
-                        </td>
-                        <td className="p-3 text-center font-bold text-slate-700">{item.gudangQty}</td>
-                        <td className="p-3 text-center text-slate-600 font-medium">{item.apotekQty}</td>
-                        <td className="p-3 text-right font-bold text-slate-800">{item.combinedTotal} pcs</td>
-                        <td className="p-3 text-right text-slate-500">Rp {item.price.toLocaleString('id-ID')}</td>
-                        <td className="p-3 text-right font-extrabold text-blue-700 bg-slate-50/50">
-                          Rp {item.valuation.toLocaleString('id-ID')}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="bg-slate-100 font-bold">
-                      <td colSpan={6} className="p-3 text-right">Total Realisasi Pembelian Kapitasi JKN:</td>
-                      <td className="p-3 text-right text-blue-800 text-sm">
-                        Rp {keuanganJKNData.reduce((s, i) => s + i.valuation, 0).toLocaleString('id-ID')}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+            <div className="flex justify-end gap-2"><button onClick={()=>handleExportExcel(activeReportTab)} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-lg border border-emerald-200"><Download className="w-3.5 h-3.5"/> Unduh Excel</button><button onClick={()=>handleExportPDF(activeReportTab)} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 font-bold rounded-lg border border-rose-200"><FileText className="w-3.5 h-3.5"/> Cetak PDF</button></div>
+            <div className="overflow-x-auto border border-slate-200 rounded-xl"><table className="w-full text-[10px] min-w-[1500px] border-collapse"><thead><tr className="bg-slate-100"><th rowSpan={2} className="p-2 border">No</th><th rowSpan={2} className="p-2 border">Nama Obat/BMHP</th><th rowSpan={2} className="p-2 border">Kemasan</th><th rowSpan={2} className="p-2 border">Sumber</th><th rowSpan={2} className="p-2 border">Harga Satuan</th><th colSpan={2} className="p-2 border">Stok Awal 1 Sep 2026</th><th colSpan={2} className="p-2 border">Penerimaan Sep 2026</th><th colSpan={2} className="p-2 border">Persediaan Sep 2026</th><th colSpan={2} className="p-2 border">Pemakaian</th><th colSpan={2} className="p-2 border">Retur</th><th colSpan={2} className="p-2 border">Sisa Stok 30 Sep 2026</th></tr><tr className="bg-slate-50">{Array.from({length:6}).flatMap((_,i)=>[<th key={'q'+i} className="p-2 border">Jumlah</th>,<th key={'v'+i} className="p-2 border">Harga</th>])}</tr></thead><tbody>{report.rows.map((r,i)=><React.Fragment key={report.id+'-'+i}>{(i===0||report.rows[i-1]?.category!==r.category)&&<tr className="bg-slate-200 font-extrabold"><td colSpan={17} className="p-2 border">{r.category}</td></tr>}<tr><td className="p-1.5 border text-center">{r.no}</td><td className="p-1.5 border font-semibold">{r.name}</td><td className="p-1.5 border">{r.unit}</td><td className="p-1.5 border">{r.source}</td><td className="p-1.5 border text-right">{fmt(r.unit_price)}</td>{[r.opening_qty,r.opening_value,r.receipt_qty,r.receipt_value,r.available_qty,r.available_value,r.usage_qty,r.usage_value,r.return_qty,r.return_value,r.closing_qty,r.closing_value].map((v,j)=><td key={j} className="p-1.5 border text-right">{fmt(v)}</td>)}</tr></React.Fragment>)}</tbody><tfoot><tr className="bg-slate-100 font-extrabold"><td colSpan={5} className="p-2 border text-right">TOTAL KESELURUHAN</td><td colSpan={2} className="p-2 border text-right">Rp {fmt(total?.opening_value)}</td><td colSpan={2} className="p-2 border text-right">Rp {fmt(total?.receipt_value)}</td><td colSpan={2} className="p-2 border text-right">Rp {fmt(total?.available_value)}</td><td colSpan={2} className="p-2 border text-right">Rp {fmt(total?.usage_value)}</td><td colSpan={2} className="p-2 border text-right">Rp {fmt(total?.return_value)}</td><td colSpan={2} className="p-2 border text-right">Rp {fmt(total?.closing_value)}</td></tr></tfoot></table></div>
+          </div>;
+        })()}
 
         {/* TAB 4: LAPORAN NARKOTIKA & PSIKOTROPIKA (NAPZA) */}
         {activeReportTab === 'napza' && (
