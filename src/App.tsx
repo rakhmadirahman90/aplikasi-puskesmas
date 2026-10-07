@@ -973,6 +973,7 @@ export default function App() {
               ampras={ampras.filter(x => !reversedTransactionKeys.has(`ampra:${x.id}`))}
               prescriptions={prescriptions.filter(x => !reversedTransactionKeys.has(`prescription:${x.id}`))}
               usages={usages.filter(x => !reversedTransactionKeys.has(`usage:${x.id}`))}
+              disposals={disposals.filter(x => !reversedTransactionKeys.has(`disposal:${x.id}`))}
               userName={userName}
               onNotify={addNotification}
               onNavigateChange={(view) => navigateToTab(view)}
