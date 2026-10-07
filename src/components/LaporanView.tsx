@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, UnitInfo } from '../types';
+import { Medicine, StockStore, Receipt, Ampra, Prescription, DailyUsage, UnitInfo, Disposal } from '../types';
 import { ClipboardList, TrendingUp, BarChart2, Shield, DollarSign, Pill, Layers, Layers3, Activity, Download, Filter, HelpCircle, Server, FileText, AlertCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { supabase } from '../firebase';
@@ -17,6 +17,7 @@ interface LaporanViewProps {
   ampras: Ampra[];
   prescriptions: Prescription[];
   usages: DailyUsage[];
+  disposals: Disposal[];
   userName?: string;
   onNotify?: (type: 'success' | 'error' | 'warning' | 'info', message: string) => void;
   onNavigateChange?: (view: string) => void;
@@ -30,6 +31,7 @@ export default function LaporanView({
   ampras,
   prescriptions,
   usages,
+  disposals,
   userName = 'Petugas Farmasi',
   onNotify,
   onNavigateChange,
@@ -70,27 +72,50 @@ export default function LaporanView({
   const officialJkn=officialReports.find(r=>r.id==='sep-2026-jkn');
   const fmt=(v:number|null|undefined)=>v==null?'—':v.toLocaleString('id-ID',{maximumFractionDigits:2});
 
-  // Unified Estimated pricing for valuation reports
-  const GET_DRUG_PRICE = (medId: string) => {
-    const prices: { [k: string]: number } = {
-      'med-01': 350,   // Paracetamol
-      'med-02': 650,   // Amoxicillin
-      'med-03': 1200,  // Amlodipine
-      'med-04': 450,   // Metformin
-      'med-05': 18500, // Amoxsan Syr
-      'med-06': 1500,  // Diazepam
-      'med-07': 3500,  // Codein
-      'med-08': 2500,  // Alprazolam
-      'med-09': 4000,  // Clobazam
-      'med-10': 95000, // Ventolin
-      'med-11': 45000, // Ceftriaxone
-      'med-12': 125000,// Fentanyl
-      'med-13': 1500,  // Racikan Flu
-      'med-14': 22000, // Sanmol Syr
-      'med-15': 38000, // Diazepam Inj
-    };
-    return prices[medId] || 1000;
+  // One synchronized valuation source. Never use legacy dummy med-01..med-15 prices.
+  // Priority: live batch price -> verified receipt price -> 0 (unknown, never fabricated).
+  const normalizeSource = (source?: string) => String(source || '').trim().toUpperCase();
+  const sourceFamily = (source?: string) => {
+    const s = normalizeSource(source);
+    if (s.startsWith('DAK')) return 'DAK';
+    if (s.startsWith('DAU')) return 'DAU';
+    if (s.startsWith('PROGRAM')) return 'Program';
+    if (s.startsWith('JKN') || s.startsWith('BLUD')) return 'JKN';
+    return s;
   };
+  const GET_DRUG_PRICE = (medId: string) => {
+    const batchPrices:number[] = [];
+    units.forEach(unit => (stocks[unit.id]?.[medId]?.batches || []).forEach(b => {
+      if (typeof b.price === 'number' && Number.isFinite(b.price) && b.price > 0) batchPrices.push(b.price);
+    }));
+    if (batchPrices.length) return batchPrices[batchPrices.length - 1];
+    for (let i = receipts.length - 1; i >= 0; i--) {
+      if (!receipts[i].verifiedByAPJ) continue;
+      const item = (receipts[i].items || []).find(x => x.medicineId === medId && typeof x.price === 'number' && (x.price || 0) > 0);
+      if (item?.price) return item.price;
+    }
+    return 0;
+  };
+
+  // Shared transaction ledger: every report reads the same verified business events.
+  const transactionLedger = useMemo(() => {
+    const receiptIn:Record<string,number> = {};
+    const consumptionOut:Record<string,number> = {};
+    const disposalOut:Record<string,number> = {};
+    receipts.filter(r => r.verifiedByAPJ).forEach(r => (r.items || []).forEach(i => {
+      receiptIn[i.medicineId] = (receiptIn[i.medicineId] || 0) + Number(i.quantity || 0);
+    }));
+    prescriptions.forEach(p => (p.items || []).forEach(i => {
+      consumptionOut[i.medicineId] = (consumptionOut[i.medicineId] || 0) + Number(i.qty || 0);
+    }));
+    usages.forEach(u => (u.items || []).forEach(i => {
+      consumptionOut[i.medicineId] = (consumptionOut[i.medicineId] || 0) + Number(i.qtyUsed || 0);
+    }));
+    disposals.filter(d => d.isApprovedAPJ).forEach(d => (d.items || []).forEach(i => {
+      disposalOut[i.medicineId] = (disposalOut[i.medicineId] || 0) + Number(i.qty || 0);
+    }));
+    return { receiptIn, consumptionOut, disposalOut };
+  }, [receipts, prescriptions, usages, disposals]);
 
   // 1. LAPORAN STOK OPNAME PERSIDIAAN BULANAN
   const stokOpnameData = useMemo(() => {
@@ -111,7 +136,7 @@ export default function LaporanView({
       if (gudStockObj && gudStockObj.batches) {
         gudStockObj.batches.forEach(b => {
           gudTotalInBatches += b.quantity;
-          const price = b.price || GET_DRUG_PRICE(med.id);
+          const price = b.price ?? GET_DRUG_PRICE(med.id);
           valueEstimation += b.quantity * price;
         });
       }
@@ -147,34 +172,9 @@ export default function LaporanView({
         stokAkhir += stocks[unit.id]?.[med.id]?.total || 0;
       });
 
-      // 2. Penerimaan (Stok Masuk) - from verified receipts
-      let totalPenerimaan = 0;
-      receipts.forEach(r => {
-        if (r.verifiedByAPJ) {
-          (Array.isArray(r.items) ? r.items : []).forEach(item => {
-            if (item.medicineId === med.id) {
-              totalPenerimaan += item.quantity;
-            }
-          });
-        }
-      });
-
-      // 3. Pengeluaran (Mutasi/Distribusi/Bahan Keluar) - prescriptions & usages
-      let totalPengeluaran = 0;
-      prescriptions.forEach(p => {
-        (Array.isArray(p.items) ? p.items : []).forEach(item => {
-          if (item.medicineId === med.id) {
-            totalPengeluaran += item.qty;
-          }
-        });
-      });
-      usages.forEach(u => {
-        (Array.isArray(u.items) ? u.items : []).forEach(item => {
-          if (item.medicineId === med.id) {
-            totalPengeluaran += item.qtyUsed;
-          }
-        });
-      });
+      // Penerimaan/pengeluaran memakai ledger transaksi yang sama untuk semua tab laporan.
+      const totalPenerimaan = transactionLedger.receiptIn[med.id] || 0;
+      const totalPengeluaran = (transactionLedger.consumptionOut[med.id] || 0) + (transactionLedger.disposalOut[med.id] || 0);
 
       // 4. Stok Awal = Stok Akhir + Pengeluaran - Penerimaan
       const stokAwal = Math.max(0, stokAkhir + totalPengeluaran - totalPenerimaan);
@@ -195,7 +195,7 @@ export default function LaporanView({
         valueEstimation
       };
     });
-  }, [stokOpnameData, medicines, units, stocks, receipts, prescriptions, usages]);
+  }, [stokOpnameData, medicines, units, stocks, transactionLedger]);
 
 
   // 2. LAPORAN KEUANGAN DINAS KESEHATAN
@@ -208,8 +208,9 @@ export default function LaporanView({
       units.forEach(unit => {
         const batches = stocks[unit.id]?.[med.id]?.batches || [];
         batches.forEach(batch => {
-          const dinasSource = batch.source === 'DAK' || batch.source === 'DAU' || batch.source === 'Program';
-          const match = financeSourceFilter === 'ALL' ? dinasSource : batch.source === financeSourceFilter;
+          const family = sourceFamily(batch.source);
+          const dinasSource = family === 'DAK' || family === 'DAU' || family === 'Program';
+          const match = financeSourceFilter === 'ALL' ? dinasSource : family === financeSourceFilter;
           if (!match) return;
           if (unit.id === 'gudang') gudangQty += batch.quantity; else satelliteQty += batch.quantity;
           valuation += batch.quantity * (batch.price ?? GET_DRUG_PRICE(med.id));
@@ -229,7 +230,7 @@ export default function LaporanView({
       let valuation = 0;
       units.forEach(unit => {
         const batches = stocks[unit.id]?.[med.id]?.batches || [];
-        batches.filter(batch => batch.source === 'JKN').forEach(batch => {
+        batches.filter(batch => sourceFamily(batch.source) === 'JKN').forEach(batch => {
           if (unit.id === 'gudang') gudangQty += batch.quantity;
           else if (unit.id === 'ruang_farmasi') apotekQty += batch.quantity;
           else otherUnitQty += batch.quantity;
