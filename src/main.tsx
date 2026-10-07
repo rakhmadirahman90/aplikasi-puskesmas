@@ -2,6 +2,7 @@ import React from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { installSmartNumericFormatting } from './utils/smartNumeric';
 
 class RootErrorBoundary extends React.Component<{children:React.ReactNode},{error:Error|null}> {
   state={error:null as Error|null};
@@ -22,6 +23,8 @@ class RootErrorBoundary extends React.Component<{children:React.ReactNode},{erro
     return this.props.children;
   }
 }
+
+installSmartNumericFormatting();
 
 createRoot(document.getElementById('root')!).render(
   <RootErrorBoundary><App /></RootErrorBoundary>
