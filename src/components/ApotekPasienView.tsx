@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Medicine, Prescription, PrescriptionItem, StockStore } from '../types';
-import { FileText, Plus, Search, Trash2, CheckCircle, Database, AlertCircle, ShoppingBag, Eye, Calendar, Edit, X, ArrowRight, ArrowDownLeft, Pill } from 'lucide-react';
+import { FileText, Plus, Search, Trash2, CheckCircle, Database, AlertCircle, ShoppingBag, Eye, Calendar, Edit, X, ArrowRight, ArrowDownLeft, Pill, Upload, UserRound, Stethoscope } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { supabase } from '../firebase';
 
 interface ApotekPasienViewProps {
   medicines: Medicine[];
@@ -40,6 +42,25 @@ export default function ApotekPasienView({
       onNotify?.('warning', message);
     }
   };
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [importingExcel,setImportingExcel]=useState(false);
+  const [importSummary,setImportSummary]=useState<{file:string;rows:number}|null>(null);
+  const importPatientExcel=async(file:File)=>{
+    if(!supabase){showNotice('error','Supabase belum terhubung.');return;}
+    setImportingExcel(true);
+    try{
+      const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true}); const ws=wb.Sheets[wb.SheetNames[0]];
+      const matrix=XLSX.utils.sheet_to_json<any[]>(ws,{header:1,defval:''}); const headerRow=matrix.findIndex(r=>String(r?.[0]||'').trim()==='No.');
+      if(headerRow<0) throw new Error('Header "No." tidak ditemukan. Gunakan format Laporan Harian - Pelayanan Pasien.');
+      const headers=(matrix[headerRow]||[]).map((x:any)=>String(x||'').trim()); const rows=matrix.slice(headerRow+1).filter(r=>r?.[0]!==''&&r?.[0]!=null);
+      const isoDate=(v:any)=>{if(!v)return null;const d=v instanceof Date?v:new Date(v);return Number.isNaN(d.getTime())?null:d.toISOString().slice(0,10)}; const isoTs=(v:any)=>{if(!v)return null;const d=v instanceof Date?v:new Date(v);return Number.isNaN(d.getTime())?null:d.toISOString()};
+      const val=(r:any[],h:string)=>r[headers.indexOf(h)]??''; const txt=(v:any)=>v===''||v==null?null:String(v);
+      const payload=rows.map((r:any[],idx:number)=>({source_file:file.name,source_row:headerRow+idx+2,visit_date:isoDate(val(r,'Tanggal')),patient_name:txt(val(r,'Nama Pasien')),erm_no:txt(val(r,'No. eRM')),nik:txt(val(r,'NIK')),kk_no:txt(val(r,'No. KK')),old_rm_no:txt(val(r,'No. RM Lama')),document_rm_no:txt(val(r,'No. Dokumen RM')),gender:txt(val(r,'Jenis Kelamin')),phone:txt(val(r,'No Telp')),address:txt(val(r,'Alamat')),rt:txt(val(r,'RT')),rw:txt(val(r,'RW')),occupation:txt(val(r,'Pekerjaan')),examination_at:isoTs(val(r,'Tanggal Pemeriksaan')),village:txt(val(r,'Kelurahan')),birth_place:txt(val(r,'Tempat Lahir')),birth_date:isoDate(val(r,'Tgl.Lahir')),age_year:txt(val(r,'Umur Tahun')),age_month:txt(val(r,'Umur Bulan')),age_day:txt(val(r,'Umur Hari')),father_name:txt(val(r,'Nama Ayah')),mother_name:txt(val(r,'Nama Ibu')),visit_type:txt(val(r,'Jenis Kunjungan')),clinic_room:txt(val(r,'Poli/Ruangan')),insurance:txt(val(r,'Asuransi')),insurance_no:txt(val(r,'No. Asuransi')),abnormality:txt(val(r,'Kelainan')),doctor_name:txt(val(r,'Dokter / Tenaga Medis')),care_provider:txt(val(r,'Perawat / Bidan / Nutrisionist / Sanitarian')),soap_assessment:txt(val(r,'SOAP Assessment')),soap_subjective:txt(val(r,'SOAP Subjective')),soap_objective:txt(val(r,'SOAP Objective')),soap_planning:txt(val(r,'SOAP Planning')),chief_complaint:txt(val(r,'Keluhan Utama')),additional_complaint:txt(val(r,'Keluhan Tambahan')),illness_duration:txt(val(r,'Lama Sakit')),smoking:txt(val(r,'Merokok')),alcohol:txt(val(r,'Konsumsi Alkohol')),low_fruit_vegetable:txt(val(r,'Kurang Sayur/Buah')),therapy:txt(val(r,'Terapi')),education:txt(val(r,'Edukasi')),nursing_action:txt(val(r,'Tindakan Keperawatan')),notes:txt(val(r,'Keterangan')),rps:txt(val(r,'RPS')),rpd:txt(val(r,'RPD')),rpk:txt(val(r,'RPK')),allergy:txt(val(r,'Alergi')),consciousness:txt(val(r,'Kesadaran')),triage:txt(val(r,'Triage')),height:txt(val(r,'Tinggi')),weight:txt(val(r,'Berat Badan')),waist:txt(val(r,'Lingkar Perut')),bmi:txt(val(r,'IMT')),bmi_result:txt(val(r,'Hasil IMT')),systolic:txt(val(r,'Sistole')),diastolic:txt(val(r,'Diastole')),respiration:txt(val(r,'Nafas')),pulse:txt(val(r,'Detak Nadi')),heart_rate:txt(val(r,'Detak Jantung')),temperature:txt(val(r,'Suhu')),functional_assessment:txt(val(r,'Aktifitas Fisik dan Assessment Fungsional')),pain_scale:txt(val(r,'Skala Nyeri')),icd1:txt(val(r,'ICD-X 1')),diagnosis1:txt(val(r,'Diagnosa 1')),case_type1:txt(val(r,'Jenis Kasus 1')),icd2:txt(val(r,'ICD-X 2')),diagnosis2:txt(val(r,'Diagnosa 2')),case_type2:txt(val(r,'Jenis Kasus 2')),icd3:txt(val(r,'ICD-X 3')),diagnosis3:txt(val(r,'Diagnosa 3')),case_type3:txt(val(r,'Jenis Kasus 3')),icd4:txt(val(r,'ICD-X 4')),diagnosis4:txt(val(r,'Diagnosa 4')),case_type4:txt(val(r,'Jenis Kasus 4')),icd5:txt(val(r,'ICD-X 5')),diagnosis5:txt(val(r,'Diagnosa 5')),case_type5:txt(val(r,'Jenis Kasus 5')),procedure_text:txt(val(r,'Tindakan')),prescription_text:txt(val(r,'Resep')),pharmacist:txt(val(r,'Apoteker')),internal_referral:txt(val(r,'Pendaftaran/Rujukan Internal')),queue_duration:txt(val(r,'Lama Antrean')),examination_duration:txt(val(r,'Lama Pemeriksaan')),medication_service_duration:txt(val(r,'Lama Pelayanan Obat')),registration_officer:txt(val(r,'Petugas Pendaftaran')),raw_data:Object.fromEntries(headers.map((h,i)=>[h,r[i] instanceof Date?r[i].toISOString():r[i]]))}));
+      for(let i=0;i<payload.length;i+=200){const {error}=await supabase.from('patient_service_imports').upsert(payload.slice(i,i+200),{onConflict:'source_file,source_row'});if(error)throw error;}
+      setImportSummary({file:file.name,rows:payload.length});showNotice('success',`${payload.length} data pelayanan pasien berhasil diimpor lengkap.`);
+    }catch(err:any){showNotice('error','Import Excel gagal: '+(err?.message||err));}finally{setImportingExcel(false);if(importInputRef.current)importInputRef.current.value='';}
+  };
+
   // Prescription Form State
   const [showForm, setShowForm] = useState(false);
   const [patientName, setPatientName] = useState('');
@@ -283,18 +304,16 @@ export default function ApotekPasienView({
           </p>
         </div>
 
-        {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition shadow-sm"
-            id="register-rx-btn"
-          >
-            <Plus className="w-4 h-4" /> Input Resep Baru (Pasien)
-          </button>
-        )}
+        {!showForm && <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <input ref={importInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={e=>e.target.files?.[0]&&importPatientExcel(e.target.files[0])}/>
+          <button onClick={()=>importInputRef.current?.click()} disabled={importingExcel} className="flex items-center justify-center gap-2 border border-emerald-200 bg-white text-emerald-700 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-emerald-50 disabled:opacity-50"><Upload className="w-4 h-4"/>{importingExcel?'Mengimpor…':'Import Excel Pasien'}</button>
+          <button onClick={() => setShowForm(true)} className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition shadow-sm" id="register-rx-btn"><Plus className="w-4 h-4" /> Input Resep Baru</button>
+        </div>}
       </div>
 
-      {/* RETAIL PRESCRIPTION INPUT FORM */}
+      {importSummary&&<div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs text-emerald-800"><b>Import terakhir:</b> {importSummary.file} • {importSummary.rows.toLocaleString('id-ID')} baris pelayanan pasien.</div>}
+
+            {/* RETAIL PRESCRIPTION INPUT FORM */}
       {showForm && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" id="prescription-input-card">
           <div className="bg-slate-50 p-5 border-b border-slate-100 flex items-center justify-between">
@@ -309,8 +328,9 @@ export default function ApotekPasienView({
             </button>
           </div>
 
-          <form onSubmit={handleSubmitPrescription} className="p-5 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <form onSubmit={handleSubmitPrescription} className="p-4 md:p-5 space-y-5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700"><UserRound className="w-4 h-4 text-emerald-600"/> Identitas Pasien & Kunjungan</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap Pasien</label>
                 <input
