@@ -61,6 +61,20 @@ export default function ApotekPasienView({
     }catch(err:any){showNotice('error','Import Excel gagal: '+(err?.message||err));}finally{setImportingExcel(false);if(importInputRef.current)importInputRef.current.value='';}
   };
 
+  type ImportedPatient = Record<string,any>;
+  const [patientLookup,setPatientLookup]=useState('');
+  const [patientMatches,setPatientMatches]=useState<ImportedPatient[]>([]);
+  const [patientSearching,setPatientSearching]=useState(false);
+  const [selectedImportedPatient,setSelectedImportedPatient]=useState<ImportedPatient|null>(null);
+  const searchImportedPatients=async(q:string)=>{
+    setPatientLookup(q); setSelectedImportedPatient(null); if(!supabase||q.trim().length<2){setPatientMatches([]);return;}
+    setPatientSearching(true); try{const safe=q.trim().replace(/[%_,]/g,' ');const {data,error}=await supabase.from('patient_service_imports').select('*').or(`patient_name.ilike.%${safe}%,nik.ilike.%${safe}%,erm_no.ilike.%${safe}%`).order('visit_date',{ascending:false}).limit(12);if(error)throw error;setPatientMatches(data||[]);}catch(e:any){showNotice('error','Pencarian pasien gagal: '+(e?.message||e));}finally{setPatientSearching(false);}
+  };
+  const applyImportedPatient=(p:ImportedPatient)=>{
+    setSelectedImportedPatient(p);setPatientLookup(p.patient_name||p.nik||p.erm_no||'');setPatientMatches([]);setPatientName(p.patient_name||'');setDrName(p.doctor_name||'');setAge(parseInt(p.age_year)||0);setRxType(String(p.visit_type||'').toLowerCase().includes('inap')?'Rawat Inap':'Rawat Jalan');setPaymentType(String(p.insurance||'').toLowerCase().includes('jkn')||String(p.insurance||'').toLowerCase().includes('bpjs')?'JKN':'Umum');
+    setShowForm(true); showNotice('success','Data pasien, dokter, diagnosis, resep, asuransi dan pelayanan berhasil dimuat dari hasil import Excel.');
+  };
+
   // Prescription Form State
   const [showForm, setShowForm] = useState(false);
   const [patientName, setPatientName] = useState('');
@@ -329,6 +343,13 @@ export default function ApotekPasienView({
           </div>
 
           <form onSubmit={handleSubmitPrescription} className="p-4 md:p-5 space-y-5">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4 space-y-3">
+              <div className="flex items-center gap-2"><Search className="w-4 h-4 text-emerald-600"/><div><div className="text-xs font-extrabold text-slate-800">Cari Pasien dari Data Import Excel</div><div className="text-[10px] text-slate-500">Cari berdasarkan nama pasien, NIK, atau No. eRM.</div></div></div>
+              <div className="relative"><input value={patientLookup} onChange={e=>searchImportedPatients(e.target.value)} placeholder="Ketik Nama / NIK / No. eRM…" className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 pr-10 text-sm outline-none focus:ring-2 focus:ring-emerald-100"/>{patientSearching&&<span className="absolute right-3 top-3 text-xs text-slate-400">Mencari…</span>}</div>
+              {patientMatches.length>0&&<div className="max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white divide-y divide-slate-100">{patientMatches.map(p=><button type="button" key={p.id} onClick={()=>applyImportedPatient(p)} className="w-full text-left p-3 hover:bg-emerald-50 transition"><div className="flex items-start justify-between gap-2"><div><div className="font-bold text-sm text-slate-800">{p.patient_name||'Tanpa nama'}</div><div className="text-[10px] text-slate-500 mt-0.5">eRM: {p.erm_no||'—'} • NIK: {p.nik||'—'}</div></div><div className="text-[10px] text-slate-400">{p.visit_date||''}</div></div><div className="text-[10px] text-slate-500 mt-1">{p.clinic_room||'—'} • {p.doctor_name||'Dokter belum tercatat'} • {p.insurance||'Pembiayaan belum tercatat'}</div></button>)}</div>}
+              {selectedImportedPatient&&<div className="rounded-xl bg-white border border-emerald-200 p-4"><div className="flex items-center justify-between gap-2 mb-3"><div className="font-extrabold text-sm text-emerald-800">{selectedImportedPatient.patient_name}</div><span className="text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">DATA EXCEL TERHUBUNG</span></div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs"><div><span className="text-slate-400">NIK / eRM</span><div className="font-semibold">{selectedImportedPatient.nik||'—'} / {selectedImportedPatient.erm_no||'—'}</div></div><div><span className="text-slate-400">Dokter / Poli</span><div className="font-semibold">{selectedImportedPatient.doctor_name||'—'} • {selectedImportedPatient.clinic_room||'—'}</div></div><div><span className="text-slate-400">Asuransi</span><div className="font-semibold">{selectedImportedPatient.insurance||'—'} {selectedImportedPatient.insurance_no?('• '+selectedImportedPatient.insurance_no):''}</div></div><div><span className="text-slate-400">Diagnosis</span><div className="font-semibold">{[selectedImportedPatient.icd1&&selectedImportedPatient.diagnosis1?selectedImportedPatient.icd1+' '+selectedImportedPatient.diagnosis1:null,selectedImportedPatient.icd2&&selectedImportedPatient.diagnosis2?selectedImportedPatient.icd2+' '+selectedImportedPatient.diagnosis2:null].filter(Boolean).join(' • ')||'—'}</div></div><div><span className="text-slate-400">Resep dari pelayanan</span><div className="font-semibold whitespace-pre-wrap">{selectedImportedPatient.prescription_text||'—'}</div></div><div><span className="text-slate-400">Terapi / Tindakan</span><div className="font-semibold">{selectedImportedPatient.therapy||selectedImportedPatient.procedure_text||'—'}</div></div></div></div>}
+            </div>
+
             <div className="flex items-center gap-2 text-xs font-bold text-slate-700"><UserRound className="w-4 h-4 text-emerald-600"/> Identitas Pasien & Kunjungan</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
